@@ -1,12 +1,7 @@
 {
   "name": "keeper.sh",
   "module": "index.ts",
-  "type": "module",
+  "license": "AGPL-3.0-only",
   "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+  "type": "module"
 }
