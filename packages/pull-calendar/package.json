@@ -1,10 +1,15 @@
 {
   "name": "@keeper.sh/pull-calendar",
-  "module": "src/index.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest",
-    "@keeper.sh/typescript-config": "workspace:*"
+    "@keeper.sh/typescript-config": "workspace:*",
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@keeper.sh/log": "workspace:*",
+    "ts-ics": "2.4.0"
   }
 }
