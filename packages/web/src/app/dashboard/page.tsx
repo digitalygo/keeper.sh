@@ -1,49 +1,55 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Calendar, CalendarEvent } from "@/components/calendar";
 
-const today = new Date();
-
-const exampleEvents: CalendarEvent[] = [
-  {
-    id: "1",
-    startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0),
-    endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 30),
-    calendarId: "work",
-    sourceName: "Work Calendar",
-  },
-  {
-    id: "2",
-    startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0),
-    endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 30),
-    calendarId: "work",
-    sourceName: "Work Calendar",
-  },
-  {
-    id: "3",
-    startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 10, 30),
-    endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 11, 30),
-    calendarId: "personal",
-    sourceName: "Personal",
-  },
-  {
-    id: "4",
-    startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 12, 0),
-    endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 13, 0),
-    calendarId: "personal",
-    sourceName: "Personal",
-  },
-  {
-    id: "5",
-    startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 10, 0),
-    endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 12, 0),
-    calendarId: "work",
-    sourceName: "Work Calendar",
-  },
-];
+interface ApiEvent {
+  id: string;
+  startTime: string;
+  endTime: string;
+  calendarId: string;
+  sourceName: string;
+}
 
 export default function DashboardPage() {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const response = await fetch("/api/events");
+        if (!response.ok) return;
+
+        const data: ApiEvent[] = await response.json();
+        const parsed = data.map((event) => ({
+          id: event.id,
+          startTime: new Date(event.startTime),
+          endTime: new Date(event.endTime),
+          calendarId: event.calendarId,
+          sourceName: event.sourceName,
+        }));
+
+        setEvents(parsed);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchEvents();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-500">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 min-w-0 min-h-0">
-      <Calendar events={exampleEvents} />
+      <Calendar events={events} />
     </div>
   );
 }
