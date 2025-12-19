@@ -11,6 +11,7 @@ import {
   ChangePasswordDialog,
   DeleteAccountDialog,
 } from "@/components/settings-dialogs";
+import { SectionHeader } from "@/components/section-header";
 import { updateUser, changePassword, deleteAccount, signOut } from "@/lib/auth";
 import {
   button,
@@ -52,12 +53,10 @@ export default function SettingsPage() {
   return (
     <div className="flex-1 flex flex-col gap-8">
       <section className={settingsSection()}>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Manage your personal information
-          </p>
-        </div>
+        <SectionHeader
+          title="Profile"
+          description="Manage your personal information"
+        />
 
         <div className={settingsCard()}>
           <div className="flex items-center justify-between">
@@ -81,12 +80,10 @@ export default function SettingsPage() {
       </section>
 
       <section className={settingsSection()}>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Security</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Manage your password and account security
-          </p>
-        </div>
+        <SectionHeader
+          title="Security"
+          description="Manage your password and account security"
+        />
 
         <div className={settingsCard()}>
           <div className="flex items-center justify-between">
@@ -105,26 +102,24 @@ export default function SettingsPage() {
       </section>
 
       <section className={settingsSection()}>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Danger Zone</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Irreversible actions for your account
-          </p>
-        </div>
+        <SectionHeader
+          title="Danger Zone"
+          description="Irreversible actions for your account"
+        />
 
         <div className="flex flex-col gap-4 p-4 border border-red-300 bg-red-50 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-red-500">
+              <div className="text-sm font-medium text-red-600">
                 Delete Account
               </div>
-              <div className="text-sm text-red-400">
+              <div className="text-sm text-red-500">
                 Permanently delete your account and all data
               </div>
             </div>
             <Button
               onClick={() => setIsDeletingAccount(true)}
-              className="inline-flex items-center justify-center py-2 px-4 rounded-md text-sm font-medium border border-red-300 text-red-500 bg-transparent hover:bg-red-100 transition-colors cursor-pointer"
+              className={button({ variant: "danger" })}
             >
               Delete
             </Button>

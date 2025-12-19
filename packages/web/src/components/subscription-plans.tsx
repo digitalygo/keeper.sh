@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Toast } from "@/components/toast-provider";
 import { PlanCard } from "@/components/plan-card";
+import { SectionHeader } from "@/components/section-header";
 import {
   BillingPeriodToggle,
   type BillingPeriod,
@@ -61,14 +62,10 @@ export function SubscriptionPlans({
 
   return (
     <section className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">
-          Subscription Plan
-        </h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Manage your subscription and billing details
-        </p>
-      </div>
+      <SectionHeader
+        title="Subscription Plan"
+        description="Manage your subscription and billing details"
+      />
 
       <div className="flex items-center gap-3">
         <BillingPeriodToggle value={billingPeriod} onChange={setBillingPeriodOverride} />

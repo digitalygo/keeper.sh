@@ -56,7 +56,10 @@ const PlanCardButton = ({
 }: PlanCardProps) => {
   if (isSubscriptionLoading) {
     return (
-      <Button className={clsx(button({ variant: "secondary" }), "!opacity-0")} disabled>
+      <Button
+        className={clsx(button({ variant: "secondary" }), "opacity-0!")}
+        disabled
+      >
         Upgrade
       </Button>
     );
@@ -79,7 +82,8 @@ const PlanCardButton = ({
   }
 
   if (isCurrent && !isCurrentInterval) {
-    const label = targetInterval === "yearly" ? "Switch to Yearly" : "Switch to Monthly";
+    const label =
+      targetInterval === "yearly" ? "Switch to Yearly" : "Switch to Monthly";
     return (
       <Button
         className={button({ variant: "primary" })}
@@ -121,7 +125,8 @@ export const PlanCard = ({
   onSwitchInterval,
   targetInterval,
 }: PlanCardProps) => {
-  const showCurrentBadge = !isSubscriptionLoading && isCurrent && isCurrentInterval;
+  const showCurrentBadge =
+    !isSubscriptionLoading && isCurrent && isCurrentInterval;
 
   return (
     <div
@@ -145,7 +150,9 @@ export const PlanCard = ({
             </span>
           )}
           {plan.popular && (
-            <span className={pricingBadge({ variant: "popular" })}>Popular</span>
+            <span className={pricingBadge({ variant: "popular" })}>
+              Popular
+            </span>
           )}
         </div>
       </div>

@@ -2,17 +2,16 @@
 
 import { Separator } from "@base-ui-components/react/separator";
 import { SubscriptionPlans } from "@/components/subscription-plans";
+import { SectionHeader } from "@/components/section-header";
 import { useSubscription } from "@/hooks/use-subscription";
 
 function BillingHistory() {
   return (
     <section className="flex flex-col gap-3">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">Billing History</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          View your past invoices and payment history
-        </p>
-      </div>
+      <SectionHeader
+        title="Billing History"
+        description="View your past invoices and payment history"
+      />
       <div className="text-sm text-gray-500 py-4 border border-gray-200 rounded-lg text-center">
         No billing history yet
       </div>

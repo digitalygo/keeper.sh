@@ -8,6 +8,8 @@ export const button = tv({
         "bg-gray-900 border border-gray-900 text-white hover:bg-gray-700 hover:border-gray-700 disabled:hover:bg-gray-900 disabled:hover:border-gray-900",
       secondary:
         "bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400",
+      danger:
+        "bg-transparent border border-red-300 text-red-600 hover:bg-red-50",
     },
   },
   defaultVariants: {
@@ -255,4 +257,50 @@ export const settingsLabel = tv({
 
 export const settingsValue = tv({
   base: "text-sm text-gray-900",
+});
+
+export const dialogBackdrop = tv({
+  base: "fixed inset-0 bg-black/40 z-50",
+});
+
+export const dialogPopup = tv({
+  base: "fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full",
+  variants: {
+    size: {
+      sm: "max-w-sm",
+      md: "max-w-md",
+      lg: "max-w-lg",
+    },
+  },
+  defaultVariants: {
+    size: "sm",
+  },
+});
+
+export const dialogTitle = tv({
+  base: "text-lg font-semibold text-gray-900 mb-1",
+});
+
+export const dialogDescription = tv({
+  base: "text-sm text-gray-500 mb-4",
+});
+
+export const dialogActions = tv({
+  base: "flex gap-2 justify-end mt-2",
+});
+
+export const sectionTitle = tv({
+  base: "text-lg font-semibold text-gray-900",
+});
+
+export const sectionDescription = tv({
+  base: "text-sm text-gray-500 mt-0.5",
+});
+
+export const formField = tv({
+  base: "flex flex-col gap-1",
+});
+
+export const formError = tv({
+  base: "text-sm text-red-600",
 });

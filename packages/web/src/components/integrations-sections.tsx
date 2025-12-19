@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@base-ui/react/button";
-import { Dialog } from "@base-ui/react/dialog";
 import { Toast } from "@/components/toast-provider";
+import { FormDialog } from "@/components/form-dialog";
+import { FormField } from "@/components/form-field";
+import { SectionHeader } from "@/components/section-header";
 import { useSources, type CalendarSource } from "@/hooks/use-sources";
 import {
   button,
   input,
-  label,
   integrationCard,
   integrationIcon,
   integrationInfo,
@@ -101,65 +102,43 @@ const AddSourceDialog = ({
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Trigger className={button({ variant: "secondary" })}>
-        Add iCal Link
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 bg-black/40 z-50" />
-        <Dialog.Popup className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-          <Dialog.Title className="text-lg font-semibold text-gray-900 mb-1">
-            Add Calendar Source
-          </Dialog.Title>
-          <Dialog.Description className="text-sm text-gray-500 mb-4">
-            Enter an iCal URL to import events from another calendar.
-          </Dialog.Description>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="source-name" className={label()}>
-                Name
-              </label>
-              <input
-                id="source-name"
-                name="name"
-                type="text"
-                placeholder="Work Calendar"
-                autoComplete="off"
-                required
-                className={input()}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="source-url" className={label()}>
-                iCal URL
-              </label>
-              <input
-                id="source-url"
-                name="url"
-                type="url"
-                placeholder="https://calendar.google.com/calendar/ical/..."
-                autoComplete="off"
-                required
-                className={input()}
-              />
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <div className="flex gap-2 justify-end mt-2">
-              <Dialog.Close className={button({ variant: "secondary" })}>
-                Cancel
-              </Dialog.Close>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className={button({ variant: "primary" })}
-              >
-                {isSubmitting ? "Adding..." : "Add Source"}
-              </Button>
-            </div>
-          </form>
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Add Calendar Source"
+      description="Enter an iCal URL to import events from another calendar."
+      size="md"
+      error={error}
+      isSubmitting={isSubmitting}
+      submitLabel="Add Source"
+      submittingLabel="Adding..."
+      submitVariant="primary"
+      onSubmit={handleSubmit}
+      trigger={
+        <Button className={button({ variant: "secondary" })}>
+          Add iCal Link
+        </Button>
+      }
+    >
+      <FormField
+        id="source-name"
+        name="name"
+        label="Name"
+        type="text"
+        placeholder="Work Calendar"
+        autoComplete="off"
+        required
+      />
+      <FormField
+        id="source-url"
+        name="url"
+        label="iCal URL"
+        type="url"
+        placeholder="https://calendar.google.com/calendar/ical/..."
+        autoComplete="off"
+        required
+      />
+    </FormDialog>
   );
 };
 
@@ -201,12 +180,10 @@ export const CalendarSourcesSection = () => {
 
   return (
     <section className="flex flex-col gap-3">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">Calendar Sources</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Add iCal links to import events from other calendars
-        </p>
-      </div>
+      <SectionHeader
+        title="Calendar Sources"
+        description="Add iCal links to import events from other calendars"
+      />
       <div className="flex flex-col gap-1.5">
         <SourcesList
           sources={sources}
@@ -272,12 +249,10 @@ const DestinationItem = ({ destination }: { destination: Destination }) => (
 
 export const DestinationsSection = () => (
   <section className="flex flex-col gap-3">
-    <div>
-      <h2 className="text-lg font-semibold text-gray-900">Destinations</h2>
-      <p className="text-sm text-gray-500 mt-0.5">
-        Push your aggregated events to other calendar apps
-      </p>
-    </div>
+    <SectionHeader
+      title="Destinations"
+      description="Push your aggregated events to other calendar apps"
+    />
     <div className="flex flex-col gap-1.5">
       {DESTINATIONS.map((destination) => (
         <DestinationItem key={destination.id} destination={destination} />
@@ -297,12 +272,10 @@ export const ICalLinkSection = () => {
 
   return (
     <section className="flex flex-col gap-3">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">Your iCal Link</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Subscribe to this link to view your aggregated events
-        </p>
-      </div>
+      <SectionHeader
+        title="Your iCal Link"
+        description="Subscribe to this link to view your aggregated events"
+      />
       <div className="flex gap-2">
         <input
           type="text"
