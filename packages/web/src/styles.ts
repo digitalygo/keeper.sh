@@ -11,9 +11,9 @@ export const button = tv({
       danger:
         "bg-transparent border border-red-300 text-red-600 hover:bg-red-50",
     },
-  },
-  defaultVariants: {
-    variant: "primary",
+    skeleton: {
+      true: "opacity-0",
+    },
   },
 });
 
@@ -92,6 +92,16 @@ export const calendarRow = tv({
 
 export const calendarCell = tv({
   base: "min-h-12 border-l border-b border-gray-100 hover:bg-gray-50 transition-colors",
+});
+
+export const calendarDayNumber = tv({
+  base: "text-lg font-semibold",
+  variants: {
+    today: {
+      true: "bg-gray-900 text-white w-8 h-8 rounded-full flex items-center justify-center",
+      false: "text-gray-900",
+    },
+  },
 });
 
 export const integrationCard = tv({
@@ -206,6 +216,9 @@ export const pricingBadge = tv({
       current: "bg-gray-900 text-white",
       popular: "bg-blue-100 text-blue-800",
     },
+    skeleton: {
+      true: "opacity-0",
+    },
   },
 });
 
@@ -227,6 +240,15 @@ export const pricingFeatureIcon = tv({
     included: {
       true: "text-green-600",
       false: "text-gray-300",
+    },
+  },
+});
+
+export const pricingFeatureText = tv({
+  variants: {
+    included: {
+      true: "",
+      false: "text-gray-400",
     },
   },
 });

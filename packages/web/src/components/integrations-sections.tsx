@@ -88,10 +88,14 @@ const AddSourceDialog = ({
     setError("");
 
     const formData = new FormData(event.currentTarget);
-    const name = formData.get("name") as string;
-    const url = formData.get("url") as string;
+    const name = formData.get("name") ?? "";
+    const url = formData.get("url") ?? "";
 
     try {
+      if (typeof name !== "string" || typeof url !== "string") {
+        throw Error("There was an issue with the submitted data");
+      }
+
       await onAdd(name, url);
       onOpenChange(false);
     } catch (error) {

@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { Check, X } from "lucide-react";
 import { Button } from "@base-ui/react/button";
 import {
@@ -9,6 +8,7 @@ import {
   pricingPeriod,
   pricingFeature,
   pricingFeatureIcon,
+  pricingFeatureText,
 } from "@/styles";
 
 interface PlanFeature {
@@ -57,7 +57,7 @@ const PlanCardButton = ({
   if (isSubscriptionLoading) {
     return (
       <Button
-        className={clsx(button({ variant: "secondary" }), "opacity-0!")}
+        className={button({ variant: "secondary", skeleton: true })}
         disabled
       >
         Upgrade
@@ -141,10 +141,10 @@ export const PlanCard = ({
         <div className="flex gap-1.5">
           {(isSubscriptionLoading || showCurrentBadge) && (
             <span
-              className={clsx(
-                pricingBadge({ variant: "current" }),
-                isSubscriptionLoading && "opacity-0",
-              )}
+              className={pricingBadge({
+                variant: "current",
+                skeleton: isSubscriptionLoading,
+              })}
             >
               Current
             </span>
@@ -168,7 +168,7 @@ export const PlanCard = ({
         {plan.features.map((feature) => (
           <li key={feature.name} className={pricingFeature()}>
             <FeatureIcon included={feature.included} />
-            <span className={clsx(!feature.included && "text-gray-400")}>
+            <span className={pricingFeatureText({ included: feature.included })}>
               {feature.name}
             </span>
           </li>

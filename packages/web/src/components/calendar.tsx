@@ -10,7 +10,7 @@ import {
 import {
   agendaContainer,
   agendaDaySection,
-  agendaDayHeading as agendaDayHeadingStyle,
+  agendaDayHeading,
   agendaEventList,
   agendaEventItem,
   agendaEventTime,
@@ -43,19 +43,24 @@ const DayEventList = ({ events }: { events: CalendarEvent[] }) => {
     <ul className={agendaEventList()}>
       {events.map((event) => (
         <li key={event.id} className={agendaEventItem()}>
-          <span className={agendaEventDot({ color: getColorFromUrl(event.sourceUrl) })} />
+          <span
+            className={agendaEventDot({
+              color: getColorFromUrl(event.sourceUrl),
+            })}
+          />
           <span>
             Busy from{" "}
             <span className={agendaEventTime()}>
               {formatTime(new Date(event.startTime))}
-            </span>
-            {" "}to{" "}
+            </span>{" "}
+            to{" "}
             <span className={agendaEventTime()}>
               {formatTime(new Date(event.endTime))}
             </span>
             {event.sourceName && (
               <>
-                {" "}according to an event from{" "}
+                {" "}
+                according to an event from{" "}
                 <span className={agendaEventSource()}>{event.sourceName}</span>
               </>
             )}
@@ -79,14 +84,17 @@ export const Calendar = ({
   const getEventsForDay = (date: Date): CalendarEvent[] => {
     return events
       .filter((event) => isSameDay(new Date(event.startTime), date))
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .sort(
+        (a, b) =>
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+      );
   };
 
   return (
     <div className={agendaContainer()}>
       {days.map((date) => (
         <section key={date.toISOString()} className={agendaDaySection()}>
-          <h2 className={agendaDayHeadingStyle()}>{formatDayHeading(date)}</h2>
+          <h2 className={agendaDayHeading()}>{formatDayHeading(date)}</h2>
           <DayEventList events={getEventsForDay(date)} />
         </section>
       ))}
