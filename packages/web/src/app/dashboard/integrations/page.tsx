@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import { Button } from "@base-ui-components/react/button";
+import { Dialog } from "@base-ui-components/react/dialog";
 import {
   button,
+  input,
+  label,
   integrationCard,
   integrationIcon,
   integrationInfo,
@@ -66,7 +71,54 @@ export default function IntegrationsPage() {
               <Button className={button({ variant: "secondary" })}>Remove</Button>
             </div>
           ))}
-          <Button className={button({ variant: "secondary" })}>Add iCal Link</Button>
+          <Dialog.Root>
+            <Dialog.Trigger className={button({ variant: "secondary" })}>
+              Add iCal Link
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Backdrop className="fixed inset-0 bg-black/40 z-50" />
+              <Dialog.Popup className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                <Dialog.Title className="text-lg font-semibold text-gray-900 mb-1">
+                  Add Calendar Source
+                </Dialog.Title>
+                <Dialog.Description className="text-sm text-gray-500 mb-4">
+                  Enter an iCal URL to import events from another calendar.
+                </Dialog.Description>
+                <form className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="source-name" className={label()}>
+                      Name
+                    </label>
+                    <input
+                      id="source-name"
+                      type="text"
+                      placeholder="Work Calendar"
+                      className={input()}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="source-url" className={label()}>
+                      iCal URL
+                    </label>
+                    <input
+                      id="source-url"
+                      type="url"
+                      placeholder="https://calendar.google.com/calendar/ical/..."
+                      className={input()}
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end mt-2">
+                    <Dialog.Close className={button({ variant: "secondary" })}>
+                      Cancel
+                    </Dialog.Close>
+                    <Button type="submit" className={button({ variant: "primary" })}>
+                      Add Source
+                    </Button>
+                  </div>
+                </form>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
         </div>
       </section>
 
