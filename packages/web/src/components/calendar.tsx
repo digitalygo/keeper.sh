@@ -1,22 +1,23 @@
 "use client";
 
-import { useRef } from "react";
-import { CalendarDayHeader } from "./calendar-day-header";
-import { getDaysFromDate, HOURS, formatHour } from "@/utils/calendar";
+import { getDaysFromDate } from "@/utils/calendar";
 import {
-  calendarScroll,
-  calendarGrid,
-  calendarRow,
-  calendarCell,
-  calendarEvent,
+  agendaContainer,
+  agendaDaySection,
+  agendaDayHeading,
+  agendaEventList,
+  agendaEventItem,
+  agendaEventTime,
+  agendaEventMeta,
+  agendaEmptyDay,
 } from "@/styles";
 
 export interface CalendarEvent {
   id: string;
   startTime: Date;
   endTime: Date;
-  title?: string;
   calendarId?: string;
+  sourceName?: string;
 }
 
 export interface CalendarProps {
@@ -32,7 +33,7 @@ const CALENDAR_COLORS: EventColor[] = ["blue", "green", "purple", "orange"];
 function getEventColor(calendarId?: string): EventColor {
   if (!calendarId) return "blue";
   const hash = calendarId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return CALENDAR_COLORS[hash % CALENDAR_COLORS.length];
+  return CALENDAR_COLORS[hash % CALENDAR_COLORS.length] ?? "blue";
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -43,12 +44,34 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-declare module "react" {
-  interface CSSProperties {
-    "--days"?: number;
-    "--event-top"?: string;
-    "--event-height"?: string;
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function formatDayHeading(date: Date): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  if (isSameDay(date, today)) {
+    return "Today";
   }
+
+  if (isSameDay(date, tomorrow)) {
+    return "Tomorrow";
+  }
+
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export function Calendar({
@@ -56,90 +79,48 @@ export function Calendar({
   startDate = new Date(),
   daysToShow = 14,
 }: CalendarProps) {
-  const headerScrollRef = useRef<HTMLDivElement>(null);
-
   const normalizedStartDate = new Date(startDate);
   normalizedStartDate.setHours(0, 0, 0, 0);
 
   const days = getDaysFromDate(normalizedStartDate, daysToShow);
 
-  function handleBodyScroll(event: React.UIEvent<HTMLDivElement>) {
-    if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = event.currentTarget.scrollLeft;
-    }
-  }
-
-  function getEventsForCell(date: Date, hour: number): CalendarEvent[] {
-    return events.filter((event) => {
-      const eventStart = new Date(event.startTime);
-      return isSameDay(eventStart, date) && eventStart.getHours() === hour;
-    });
-  }
-
-  function getEventPosition(event: CalendarEvent): { top: string; height: string } {
-    const start = new Date(event.startTime);
-    const end = new Date(event.endTime);
-
-    const startMinutes = start.getMinutes();
-    const durationMs = end.getTime() - start.getTime();
-    const durationHours = durationMs / (1000 * 60 * 60);
-
-    const top = `${(startMinutes / 60) * 100}%`;
-    const height = `${Math.max(durationHours * 100, 25)}%`;
-
-    return { top, height };
+  function getEventsForDay(date: Date): CalendarEvent[] {
+    return events
+      .filter((event) => isSameDay(new Date(event.startTime), date))
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }
 
   return (
-    <div className="w-full">
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
-        <div
-          ref={headerScrollRef}
-          className={calendarScroll({ hideScrollbar: true })}
-        >
-          <div className={calendarGrid()} style={{ "--days": daysToShow }}>
-            {days.map((date) => (
-              <CalendarDayHeader key={date.toISOString()} date={date} />
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className={agendaContainer()}>
+      {days.map((date) => {
+        const dayEvents = getEventsForDay(date);
 
-      <div className={calendarScroll()} onScroll={handleBodyScroll}>
-        <div className={calendarGrid()} style={{ "--days": daysToShow }}>
-          {HOURS.map((hour) => (
-            <div
-              key={hour}
-              className={calendarRow({ showTime: hour > 0 })}
-              {...(hour > 0 && { "data-time": formatHour(hour) })}
-            >
-              {days.map((date) => {
-                const cellEvents = getEventsForCell(date, hour);
-                return (
-                  <div
-                    key={`${date.toISOString()}-${hour}`}
-                    className={`${calendarCell()} relative`}
+        return (
+          <section key={date.toISOString()} className={agendaDaySection()}>
+            <h2 className={agendaDayHeading()}>{formatDayHeading(date)}</h2>
+
+            {dayEvents.length > 0 ? (
+              <ul className={agendaEventList()}>
+                {dayEvents.map((event) => (
+                  <li
+                    key={event.id}
+                    className={agendaEventItem({ color: getEventColor(event.calendarId) })}
                   >
-                    {cellEvents.map((event) => {
-                      const { top, height } = getEventPosition(event);
-                      return (
-                        <div
-                          key={event.id}
-                          className={calendarEvent({ color: getEventColor(event.calendarId) })}
-                          style={{ "--event-top": top, "--event-height": height, top: `var(--event-top)`, height: `var(--event-height)` }}
-                          title={event.title}
-                        >
-                          {event.title}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
+                    <span className={agendaEventTime()}>
+                      {formatTime(new Date(event.startTime))} – {formatTime(new Date(event.endTime))}
+                    </span>
+                    {event.sourceName && (
+                      <span className={agendaEventMeta()}>{event.sourceName}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={agendaEmptyDay()}>No events</p>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }

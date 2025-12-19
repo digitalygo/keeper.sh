@@ -15,7 +15,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1 shrink-0">
+    <nav className="flex flex-col gap-1 shrink-0 sticky top-2 self-start">
       {sidebarItems.map((item) => (
         <Link
           key={item.href}

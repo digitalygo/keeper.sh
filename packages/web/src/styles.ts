@@ -121,3 +121,54 @@ export const calendarEvent = tv({
     color: "blue",
   },
 });
+
+export const agendaContainer = tv({
+  base: "flex flex-col gap-6 max-w-2xl",
+});
+
+export const agendaDaySection = tv({
+  base: "flex flex-col gap-2",
+});
+
+export const agendaDayHeading = tv({
+  base: "text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2",
+});
+
+export const agendaEventList = tv({
+  base: "flex flex-col gap-1 list-none p-0 m-0",
+});
+
+export const agendaEventItem = tv({
+  base: "flex gap-4 py-3 px-4 rounded-lg border-l-2",
+  variants: {
+    color: {
+      blue: "border-blue-500 bg-blue-50/30",
+      green: "border-green-500 bg-green-50/30",
+      purple: "border-purple-500 bg-purple-50/30",
+      orange: "border-orange-500 bg-orange-50/30",
+    },
+  },
+  defaultVariants: {
+    color: "blue",
+  },
+});
+
+export const agendaEventTime = tv({
+  base: "text-sm text-gray-500 whitespace-nowrap tabular-nums w-36 shrink-0",
+});
+
+export const agendaEventContent = tv({
+  base: "flex flex-col gap-0.5 min-w-0",
+});
+
+export const agendaEventTitle = tv({
+  base: "text-sm font-medium text-gray-900 truncate",
+});
+
+export const agendaEventMeta = tv({
+  base: "text-xs text-gray-400",
+});
+
+export const agendaEmptyDay = tv({
+  base: "text-sm text-gray-400 italic py-2",
+});
