@@ -58,16 +58,18 @@ const addEvents = async (
 };
 
 export async function createSnapshot(sourceId: string, ical: string) {
+  log.trace("createSnapshot for source '%s' started", sourceId);
   await database.insert(calendarSnapshotsTable).values({ sourceId, ical });
-  log.debug("created snapshot for source '%s'", sourceId);
+  log.trace("createSnapshot for source '%s' complete", sourceId);
 }
 
 export async function syncSourceFromSnapshot(source: Source) {
-  log.debug("syncing source '%s' from snapshot", source.id);
+  log.trace("syncSourceFromSnapshot for source '%s' started", source.id);
 
   const icsCalendar = await getLatestSnapshot(source.id);
   if (!icsCalendar) {
     log.debug("no snapshot found for source '%s'", source.id);
+    log.trace("syncSourceFromSnapshot for source '%s' complete", source.id);
     return;
   }
 
@@ -87,15 +89,18 @@ export async function syncSourceFromSnapshot(source: Source) {
   if (toAdd.length === 0 && toRemove.length === 0) {
     log.debug("source '%s' is in sync", source.id);
   }
+
+  log.trace("syncSourceFromSnapshot for source '%s' complete", source.id);
 }
 
 export async function fetchAndSyncSource(source: Source) {
-  log.debug("fetching and syncing source '%s'", source.id);
+  log.trace("fetchAndSyncSource for source '%s' started", source.id);
 
   try {
     const { ical } = await pullRemoteCalendar("ical", source.url);
     await createSnapshot(source.id, ical);
     await syncSourceFromSnapshot(source);
+    log.trace("fetchAndSyncSource for source '%s' complete", source.id);
   } catch (error) {
     log.error(error, "failed to fetch and sync source '%s'", source.id);
     throw error;
