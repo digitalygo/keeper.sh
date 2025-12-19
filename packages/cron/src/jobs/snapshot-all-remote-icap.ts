@@ -43,7 +43,6 @@ const insertSnapshot = async (
 export default {
   name: import.meta.file,
   cron: "@every_1_minutes",
-  immediate: true,
   async callback() {
     const remoteSources = await database.select().from(remoteICalSourcesTable);
     log.debug("fetching %s remote sources", remoteSources.length);

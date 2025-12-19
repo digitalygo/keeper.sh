@@ -1,0 +1,23 @@
+{
+  "name": "@keeper.sh/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --bun next dev --turbopack -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001"
+  },
+  "dependencies": {
+    "@base-ui-components/react": "^1.0.0-alpha.14",
+    "@keeper.sh/auth": "workspace:*",
+    "better-auth": "^1.2.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  }
+}
