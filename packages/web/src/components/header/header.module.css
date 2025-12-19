@@ -1,9 +1,14 @@
 .header {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #e5e5e5;
+  max-width: 768px;
+  margin-inline: auto;
+  padding: 1rem;
 }
 
 .brand {

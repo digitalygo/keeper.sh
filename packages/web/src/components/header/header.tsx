@@ -5,10 +5,12 @@ import styles from "./header.module.css";
 export function Header() {
   return (
     <header className={styles.header}>
-      <Link href="/" className={styles.brand}>
-        Keeper
-      </Link>
-      <AuthNav />
+      <div className={styles.inner}>
+        <Link href="/" className={styles.brand}>
+          Keeper
+        </Link>
+        <AuthNav />
+      </div>
     </header>
   );
 }
