@@ -16,14 +16,14 @@ const pullAndLogRemoteCalendar = async (
   id: string,
   { url, userId }: PullAndLogRemoteCalendarOptions,
 ) => {
-  log.debug({ id }, "fetching remote calendar");
+  log.debug("fetching remote calendar '%s'", id);
 
   try {
     const result = await pullRemoteCalendar("icap", url);
-    log.debug({ id }, "fetched remote calendar");
+    log.debug("fetched remote calendar '%s'", id);
     return { result, userId };
   } catch (error) {
-    log.error({ error, id }, "could not fetch remote calendar");
+    log.error({ error }, "could not fetch remote calendar '%s'", id);
     throw error;
   }
 };
@@ -40,7 +40,7 @@ export const insertSnapshot = async (
 
 export default {
   name: import.meta.file,
-  cron: "@every_5_minutes",
+  cron: "@every_1_minutes",
   immediate: true,
   async callback() {
     const remoteSources = await database.select().from(remoteICalSourcesTable);
