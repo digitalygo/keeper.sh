@@ -16,11 +16,11 @@ const pullAndLogRemoteCalendar = async (
   id: string,
   { url, userId }: PullAndLogRemoteCalendarOptions,
 ) => {
-  log.info({ id }, "fetching remote calendar");
+  log.debug({ id }, "fetching remote calendar");
 
   try {
     const result = await pullRemoteCalendar("icap", url);
-    log.info({ id }, "fetched remote calendar");
+    log.debug({ id }, "fetched remote calendar");
     return { result, userId };
   } catch (error) {
     log.error({ error }, `could not fetch remote calendar '${id}'`);
@@ -45,10 +45,7 @@ export default {
   async callback() {
     const remoteSources = await database.select().from(remoteICalSourcesTable);
 
-    log.info(
-      { "remoteSources.length": remoteSources.length },
-      "got remote sources",
-    );
+    log.debug({ count: remoteSources.length }, "remote sources");
 
     const fetches = remoteSources.map(({ id, url, userId }) => {
       return pullAndLogRemoteCalendar(id, { url, userId });
