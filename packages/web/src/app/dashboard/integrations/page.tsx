@@ -108,6 +108,7 @@ export default function IntegrationsPage() {
                       id="source-name"
                       type="text"
                       placeholder="Work Calendar"
+                      autoComplete="off"
                       className={input()}
                     />
                   </div>
@@ -119,6 +120,7 @@ export default function IntegrationsPage() {
                       id="source-url"
                       type="url"
                       placeholder="https://calendar.google.com/calendar/ical/..."
+                      autoComplete="off"
                       className={input()}
                     />
                   </div>
