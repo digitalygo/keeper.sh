@@ -3,6 +3,7 @@ import { Field } from "@base-ui/react/field";
 import { Input } from "@base-ui/react/input";
 import { Button } from "@base-ui/react/button";
 import { input, label, submitButton } from "@/styles";
+import { PageTitle, TextBody, DangerText } from "@/components/typography";
 
 export function AuthFormContainer({ children }: { children: React.ReactNode }) {
   return (
@@ -30,15 +31,18 @@ export function AuthForm({
 }
 
 export function AuthFormTitle({ children }: { children: React.ReactNode }) {
-  return <h1 className="text-2xl font-bold mb-6 text-center">{children}</h1>;
+  return <PageTitle className="mb-6 text-center">{children}</PageTitle>;
 }
 
 export function AuthFormError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <div className="p-3 mb-4 rounded-md text-sm bg-red-50 text-red-600 border border-red-200">
+    <DangerText
+      as="div"
+      className="p-3 mb-4 rounded-md bg-red-50 border border-red-200"
+    >
       {message}
-    </div>
+    </DangerText>
   );
 }
 
@@ -92,5 +96,5 @@ export function AuthFormSubmit({
 }
 
 export function AuthFormFooter({ children }: { children: React.ReactNode }) {
-  return <p className="mt-6 text-center text-sm text-gray-500">{children}</p>;
+  return <TextBody className="mt-6 text-center">{children}</TextBody>;
 }

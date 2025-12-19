@@ -1,12 +1,13 @@
+import { createSourceSchema } from "@keeper.sh/data-schemas";
 import { auth } from "@keeper.sh/auth";
 import { database } from "@keeper.sh/database";
 import {
-  calendarSnapshotsTable,
   remoteICalSourcesTable,
   eventStatesTable,
 } from "@keeper.sh/database/schema";
 import { pullRemoteCalendar } from "@keeper.sh/pull-calendar";
 import { canAddSource } from "@keeper.sh/premium";
+import { fetchAndSyncSource } from "@keeper.sh/sync-calendar";
 import { log } from "@keeper.sh/log";
 import { BunRequest } from "bun";
 import { eq, and, inArray } from "drizzle-orm";
@@ -60,14 +61,15 @@ const server = Bun.serve({
       POST: withTracing(
         withAuth(async (request, userId) => {
           const body = await request.json();
-          const { name, url } = body as { name?: string; url?: string };
 
-          if (!url || !name) {
+          if (!createSourceSchema.allows(body)) {
             return Response.json(
               { error: "Name and URL are required" },
               { status: 400 },
             );
           }
+
+          const { name, url } = body;
 
           const existingSources = await database
             .select({ id: remoteICalSourcesTable.id })
@@ -95,6 +97,14 @@ const server = Bun.serve({
             .insert(remoteICalSourcesTable)
             .values({ userId, name, url })
             .returning();
+
+          if (!source) {
+            throw new Error("Failed to create source");
+          }
+
+          fetchAndSyncSource(source).catch((error) => {
+            log.error(error, "failed initial sync for source '%s'", source.id);
+          });
 
           return Response.json(source, { status: 201 });
         }),

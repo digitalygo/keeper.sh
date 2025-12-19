@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "@keeper.sh/auth": "workspace:*",
+    "@keeper.sh/data-schemas": "workspace:*",
     "@keeper.sh/database": "workspace:*",
     "@keeper.sh/log": "workspace:*",
     "@keeper.sh/premium": "workspace:*",
     "@keeper.sh/pull-calendar": "workspace:*",
+    "@keeper.sh/sync-calendar": "workspace:*",
     "drizzle-orm": "0.45.1"
   }
 }

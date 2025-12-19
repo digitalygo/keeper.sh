@@ -1,5 +1,6 @@
 import { isToday, formatWeekday } from "@/utils/calendar";
 import { calendarDayNumber } from "@/styles";
+import { TextMeta } from "@/components/typography";
 
 interface CalendarDayHeaderProps {
   date: Date;
@@ -12,10 +13,8 @@ export function CalendarDayHeader({ date }: CalendarDayHeaderProps) {
 
   return (
     <div className="flex flex-col items-center justify-center min-w-24 py-2 border-l border-gray-200">
-      <span className="text-xs font-medium text-gray-500">{weekday}</span>
-      <span className={calendarDayNumber({ today })}>
-        {dayNumber}
-      </span>
+      <TextMeta>{weekday}</TextMeta>
+      <span className={calendarDayNumber({ today })}>{dayNumber}</span>
     </div>
   );
 }

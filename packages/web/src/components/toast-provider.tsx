@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Toast } from "@base-ui/react/toast";
+import { TextLabel, TextBody } from "@/components/typography";
 
 function ToastList() {
   const { toasts } = Toast.useToastManager();
@@ -11,11 +12,9 @@ function ToastList() {
       toast={toast}
       className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 data-starting-style:opacity-0 data-starting-style:translate-y-2 data-ending-style:opacity-0 data-ending-style:translate-y-2 transition-all duration-200"
     >
-      <Toast.Title className="text-sm font-medium text-gray-900">
-        {toast.title}
-      </Toast.Title>
+      <Toast.Title render={<TextLabel />}>{toast.title}</Toast.Title>
       {toast.description && (
-        <Toast.Description className="text-sm text-gray-500 mt-0.5">
+        <Toast.Description render={<TextBody className="mt-0.5" />}>
           {toast.description}
         </Toast.Description>
       )}

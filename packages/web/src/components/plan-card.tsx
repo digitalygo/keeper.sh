@@ -10,6 +10,7 @@ import {
   pricingFeatureIcon,
   pricingFeatureText,
 } from "@/styles";
+import { SectionTitle, TextBody } from "@/components/typography";
 
 interface PlanFeature {
   name: string;
@@ -137,7 +138,7 @@ export const PlanCard = ({
       })}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
+        <SectionTitle as="h3">{plan.name}</SectionTitle>
         <div className="flex gap-1.5">
           {(isSubscriptionLoading || showCurrentBadge) && (
             <span
@@ -162,7 +163,7 @@ export const PlanCard = ({
         <span className={pricingPeriod()}>{plan.period}</span>
       </div>
 
-      <p className="text-sm text-gray-500 mb-6">{plan.description}</p>
+      <TextBody className="mb-6">{plan.description}</TextBody>
 
       <ul className="flex flex-col gap-3 mb-6 flex-1">
         {plan.features.map((feature) => (

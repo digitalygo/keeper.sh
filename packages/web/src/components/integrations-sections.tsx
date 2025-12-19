@@ -20,6 +20,7 @@ import {
   integrationName,
   integrationDescription,
 } from "@/styles";
+import { TextBody, BannerText } from "@/components/typography";
 
 const SourceItem = ({
   source,
@@ -49,15 +50,11 @@ const SourcesList = ({
   onRemove: (id: string) => void;
 }) => {
   if (isLoading) {
-    return <div className="text-sm text-gray-500 py-4">Loading...</div>;
+    return <TextBody className="py-4">Loading...</TextBody>;
   }
 
   if (!sources?.length) {
-    return (
-      <div className="text-sm text-gray-500 py-4">
-        No calendar sources added yet
-      </div>
-    );
+    return <TextBody className="py-4">No calendar sources added yet</TextBody>;
   }
 
   return (
@@ -75,9 +72,9 @@ const SourcesList = ({
 
 const UpgradeBanner = () => (
   <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
-    <span className="text-sm text-amber-800">
+    <BannerText variant="warning">
       You've reached the free plan limit of {FREE_SOURCE_LIMIT} sources.
-    </span>
+    </BannerText>
     <Link href="/dashboard/billing" className={button({ variant: "primary" })}>
       Upgrade to Pro
     </Link>

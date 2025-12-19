@@ -1,16 +1,13 @@
 {
-  "name": "@keeper.sh/premium",
+  "name": "@keeper.sh/data-schemas",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./constants": "./src/constants.ts"
+    ".": "./src/index.ts"
   },
   "type": "module",
   "private": true,
   "dependencies": {
-    "@keeper.sh/data-schemas": "workspace:*",
-    "@keeper.sh/database": "workspace:*",
-    "drizzle-orm": "^0.45.1"
+    "arktype": "^2.1.29"
   },
   "devDependencies": {
     "@keeper.sh/typescript-config": "workspace:*",

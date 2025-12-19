@@ -20,6 +20,7 @@ import {
   settingsLabel,
   settingsValue,
 } from "@/styles";
+import { DangerLabel, DangerText } from "@/components/typography";
 
 export default function SettingsPage() {
   const { user, refresh } = useAuth();
@@ -110,12 +111,10 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-4 p-4 border border-red-300 bg-red-50 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-red-600">
-                Delete Account
-              </div>
-              <div className="text-sm text-red-500">
+              <DangerLabel as="div">Delete Account</DangerLabel>
+              <DangerText as="div">
                 Permanently delete your account and all data
-              </div>
+              </DangerText>
             </div>
             <Button
               onClick={() => setIsDeletingAccount(true)}

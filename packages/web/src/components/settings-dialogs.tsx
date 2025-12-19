@@ -1,8 +1,13 @@
 "use client";
 
+import { stringSchema } from "@keeper.sh/data-schemas";
 import { useState } from "react";
 import { FormDialog } from "@/components/form-dialog";
 import { FormField } from "@/components/form-field";
+
+function getStringFromFormData(formData: FormData, key: string): string {
+  return stringSchema.assert(formData.get(key));
+}
 
 interface DialogProps {
   open: boolean;
@@ -84,9 +89,9 @@ export const ChangePasswordDialog = ({
     setError("");
 
     const formData = new FormData(event.currentTarget);
-    const currentPassword = formData.get("currentPassword") as string;
-    const newPassword = formData.get("newPassword") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
+    const currentPassword = getStringFromFormData(formData, "currentPassword");
+    const newPassword = getStringFromFormData(formData, "newPassword");
+    const confirmPassword = getStringFromFormData(formData, "confirmPassword");
 
     if (newPassword !== confirmPassword) {
       setError("New passwords do not match");
@@ -172,7 +177,7 @@ export const DeleteAccountDialog = ({
     setError("");
 
     const formData = new FormData(event.currentTarget);
-    const password = formData.get("password") as string;
+    const password = getStringFromFormData(formData, "password");
 
     try {
       await onDelete(password);

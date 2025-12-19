@@ -1,3 +1,7 @@
+import {
+  billingPeriodSchema,
+  type BillingPeriod,
+} from "@keeper.sh/data-schemas";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { Toggle } from "@base-ui/react/toggle";
 import {
@@ -6,7 +10,7 @@ import {
   billingSavingsBadge,
 } from "@/styles";
 
-export type BillingPeriod = "monthly" | "yearly";
+export type { BillingPeriod };
 
 interface BillingPeriodToggleProps {
   value: BillingPeriod;
@@ -22,7 +26,7 @@ export function BillingPeriodToggle({
       value={[value]}
       onValueChange={(values) => {
         if (values.length > 0) {
-          onChange(values[0] as BillingPeriod);
+          onChange(billingPeriodSchema.assert(values[0]));
         }
       }}
       className={billingToggleGroup()}

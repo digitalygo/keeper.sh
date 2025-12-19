@@ -4,6 +4,7 @@ import { Separator } from "@base-ui-components/react/separator";
 import { SubscriptionPlans } from "@/components/subscription-plans";
 import { SectionHeader } from "@/components/section-header";
 import { useSubscription } from "@/hooks/use-subscription";
+import { TextBody } from "@/components/typography";
 
 function BillingHistory() {
   return (
@@ -12,9 +13,9 @@ function BillingHistory() {
         title="Billing History"
         description="View your past invoices and payment history"
       />
-      <div className="text-sm text-gray-500 py-4 border border-gray-200 rounded-lg text-center">
+      <TextBody className="py-4 border border-gray-200 rounded-lg text-center">
         No billing history yet
-      </div>
+      </TextBody>
     </section>
   );
 }

@@ -1,7 +1,12 @@
 import { database } from "@keeper.sh/database";
 import { userSubscriptionsTable } from "@keeper.sh/database/schema";
 import { eq } from "drizzle-orm";
-import { FREE_SOURCE_LIMIT, PRO_SOURCE_LIMIT, type Plan } from "./constants";
+import {
+  FREE_SOURCE_LIMIT,
+  PRO_SOURCE_LIMIT,
+  planSchema,
+  type Plan,
+} from "./constants";
 
 export async function getUserPlan(userId: string): Promise<Plan> {
   const [subscription] = await database
@@ -10,7 +15,7 @@ export async function getUserPlan(userId: string): Promise<Plan> {
     .where(eq(userSubscriptionsTable.userId, userId))
     .limit(1);
 
-  return (subscription?.plan as Plan) ?? "free";
+  return planSchema.assert(subscription?.plan ?? "free");
 }
 
 export function getSourceLimit(plan: Plan): number {
