@@ -44,3 +44,18 @@ export const googleTokenResponseSchema = type({
   token_type: "string",
 });
 export type GoogleTokenResponse = typeof googleTokenResponseSchema.infer;
+
+export const socketMessageSchema = type({
+  event: "string",
+  "data?": "unknown",
+});
+export type SocketMessage = typeof socketMessageSchema.infer;
+
+export const syncStatusSchema = type({
+  provider: "string",
+  localEventCount: "number",
+  remoteEventCount: "number",
+  lastSyncedAt: "string",
+  inSync: "boolean",
+});
+export type SyncStatus = typeof syncStatusSchema.infer;

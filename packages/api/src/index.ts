@@ -10,9 +10,53 @@ import { pullRemoteCalendar } from "@keeper.sh/pull-calendar";
 import { canAddSource } from "@keeper.sh/premium";
 import { fetchAndSyncSource } from "@keeper.sh/sync-calendar";
 import { log } from "@keeper.sh/log";
-import { websocketHandler, type BroadcastData } from "@keeper.sh/broadcast";
+import {
+  createWebsocketHandler,
+  type BroadcastData,
+  type Socket,
+} from "@keeper.sh/broadcast";
 import { BunRequest } from "bun";
 import { eq, and, inArray, gte, lte, asc } from "drizzle-orm";
+import { socketTokens } from "./state";
+
+const TOKEN_TTL = 30_000;
+
+const generateSocketToken = (userId: string): string => {
+  const token = crypto.randomUUID();
+  const timeout = setTimeout(() => socketTokens.delete(token), TOKEN_TTL);
+  socketTokens.set(token, { userId, timeout });
+  return token;
+};
+
+const validateSocketToken = (token: string): string | null => {
+  const entry = socketTokens.get(token);
+  if (!entry) return null;
+  clearTimeout(entry.timeout);
+  socketTokens.delete(token);
+  return entry.userId;
+};
+
+const sendInitialSyncStatus = async (userId: string, socket: Socket) => {
+  const statuses = await database
+    .select()
+    .from(syncStatusTable)
+    .where(eq(syncStatusTable.userId, userId));
+
+  for (const status of statuses) {
+    socket.send(
+      JSON.stringify({
+        event: "sync:status",
+        data: {
+          provider: status.provider,
+          localEventCount: status.localEventCount,
+          remoteEventCount: status.remoteEventCount,
+          lastSyncedAt: status.lastSyncedAt?.toISOString(),
+          inSync: status.localEventCount === status.remoteEventCount,
+        },
+      }),
+    );
+  }
+};
 
 type BunRouteCallback = (request: BunRequest<string>) => Promise<Response>;
 
@@ -46,6 +90,10 @@ const withAuth = (
   };
 };
 
+const websocketHandler = createWebsocketHandler({
+  onConnect: sendInitialSyncStatus,
+});
+
 const server = Bun.serve<BroadcastData>({
   port: 3000,
   websocket: websocketHandler,
@@ -56,14 +104,18 @@ const server = Bun.serve<BroadcastData>({
       return undefined;
     }
 
-    const session = await getSession(request);
+    const token = url.searchParams.get("token");
+    const userId = token ? validateSocketToken(token) : null;
 
-    if (!session?.user?.id) {
+    if (!userId) {
+      log.debug("socket upgrade unauthorized - invalid or missing token");
       return new Response("Unauthorized", { status: 401 });
     }
 
+    log.debug({ userId }, "socket upgrade authorized");
+
     const upgraded = server.upgrade(request, {
-      data: { userId: session.user.id },
+      data: { userId },
     });
 
     if (!upgraded) {
@@ -263,6 +315,14 @@ const server = Bun.serve<BroadcastData>({
           }));
 
           return Response.json({ providers });
+        }),
+      ),
+    },
+    "/api/socket/token": {
+      GET: withTracing(
+        withAuth(async (_request, userId) => {
+          const token = generateSocketToken(userId);
+          return Response.json({ token });
         }),
       ),
     },

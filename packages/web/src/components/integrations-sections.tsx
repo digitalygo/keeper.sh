@@ -12,6 +12,7 @@ import { SectionHeader } from "@/components/section-header";
 import { useSources, type CalendarSource } from "@/hooks/use-sources";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useLinkedAccounts } from "@/hooks/use-linked-accounts";
+import { useSyncStatus } from "@/hooks/use-sync-status";
 import { authClient } from "@/lib/auth-client";
 import {
   button,
@@ -315,8 +316,21 @@ const DestinationAction = ({
   );
 };
 
+interface SyncStatusDisplayProps {
+  localCount: number;
+  remoteCount: number;
+  inSync: boolean;
+}
+
+const SyncStatusDisplay = ({ localCount, remoteCount, inSync }: SyncStatusDisplayProps) => (
+  <TextMuted>
+    {inSync ? `${remoteCount} events synced` : `${remoteCount}/${localCount} events`}
+  </TextMuted>
+);
+
 interface DestinationItemProps extends DestinationActionProps {
   destination: Destination;
+  syncStatus?: SyncStatusDisplayProps;
 }
 
 const DestinationItem = ({
@@ -325,6 +339,7 @@ const DestinationItem = ({
   isLoading,
   onConnect,
   onDisconnect,
+  syncStatus,
 }: DestinationItemProps) => (
   <div className={integrationCard()}>
     <div className={integrationIcon()}>
@@ -340,6 +355,7 @@ const DestinationItem = ({
     <div className={integrationInfo()}>
       <div className={integrationName()}>{destination.name}</div>
       <div className={integrationDescription()}>{destination.description}</div>
+      {isConnected && syncStatus && <SyncStatusDisplay {...syncStatus} />}
     </div>
     <DestinationAction
       comingSoon={destination.comingSoon}
@@ -359,9 +375,20 @@ export const DestinationsSection = () => {
   const toastManager = Toast.useToastManager();
   const [loadingProvider, setLoadingProvider] = useState<SupportedProvider | null>(null);
   const { data: accounts, mutate: mutateAccounts } = useLinkedAccounts();
+  const { data: syncStatus } = useSyncStatus();
 
   const isProviderConnected = (providerId: SupportedProvider) =>
     accounts?.some((account) => account.providerId === providerId) ?? false;
+
+  const getSyncStatus = (providerId: SupportedProvider) => {
+    const status = syncStatus?.get(providerId);
+    if (!status) return undefined;
+    return {
+      localCount: status.localEventCount,
+      remoteCount: status.remoteEventCount,
+      inSync: status.inSync,
+    };
+  };
 
   const handleConnect = async (providerId: SupportedProvider) => {
     setLoadingProvider(providerId);
@@ -409,6 +436,7 @@ export const DestinationsSection = () => {
               isLoading={connectable && loadingProvider === destination.providerId}
               onConnect={() => connectable && handleConnect(destination.providerId)}
               onDisconnect={() => connectable && handleDisconnect(destination.providerId)}
+              syncStatus={connectable ? getSyncStatus(destination.providerId) : undefined}
             />
           );
         })}

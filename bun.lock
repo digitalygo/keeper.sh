@@ -54,6 +54,7 @@
     "packages/broadcast": {
       "name": "@keeper.sh/broadcast",
       "dependencies": {
+        "@keeper.sh/data-schemas": "workspace:*",
         "@keeper.sh/log": "workspace:*",
       },
       "devDependencies": {
@@ -63,6 +64,9 @@
     },
     "packages/broadcast-client": {
       "name": "@keeper.sh/broadcast-client",
+      "dependencies": {
+        "@keeper.sh/data-schemas": "workspace:*",
+      },
       "devDependencies": {
         "@keeper.sh/typescript-config": "workspace:*",
       },
@@ -235,6 +239,7 @@
       "dependencies": {
         "@base-ui/react": "1.0.0",
         "@keeper.sh/auth": "workspace:*",
+        "@keeper.sh/broadcast-client": "workspace:*",
         "@keeper.sh/data-schemas": "workspace:*",
         "@keeper.sh/database": "workspace:*",
         "@keeper.sh/log": "workspace:*",

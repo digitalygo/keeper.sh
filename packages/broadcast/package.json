@@ -9,6 +9,7 @@
     "@types/bun": "latest"
   },
   "dependencies": {
+    "@keeper.sh/data-schemas": "workspace:*",
     "@keeper.sh/log": "workspace:*"
   }
 }

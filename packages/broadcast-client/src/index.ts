@@ -1,3 +1,5 @@
+import { socketMessageSchema } from "@keeper.sh/data-schemas";
+
 type EventCallback = (data: unknown) => void;
 
 export class BroadcastClient {
@@ -17,12 +19,18 @@ export class BroadcastClient {
     };
 
     this.socket.onmessage = (messageEvent) => {
-      try {
-        const { event, data } = JSON.parse(messageEvent.data as string);
-        this.listeners.get(event)?.forEach((callback) => callback(data));
-      } catch (error) {
-        console.warn("invalid broadcast message received", error);
+      const data = JSON.parse(String(messageEvent.data));
+      if (!socketMessageSchema.allows(data)) {
+        console.warn("invalid broadcast message");
+        return;
       }
+
+      if (data.event === "ping") {
+        this.socket?.send(JSON.stringify({ event: "pong" }));
+        return;
+      }
+
+      this.listeners.get(data.event)?.forEach((callback) => callback(data.data));
     };
 
     this.socket.onclose = () => {

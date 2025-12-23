@@ -1,8 +1,15 @@
 import { log } from "@keeper.sh/log";
-import { connections } from "./state";
+import { socketMessageSchema } from "@keeper.sh/data-schemas";
+import { connections, pingIntervals } from "./state";
 import type { Socket } from "./types";
 
 export type { BroadcastData, Socket } from "./types";
+
+export type OnConnectCallback = (userId: string, socket: Socket) => void;
+
+export interface WebsocketHandlerOptions {
+  onConnect?: OnConnectCallback;
+}
 
 export const emit = (userId: string, event: string, data: unknown): void => {
   const userConnections = connections.get(userId);
@@ -49,14 +56,46 @@ export const getConnectionCount = (userId: string): number => {
   return connections.get(userId)?.size ?? 0;
 };
 
-export const websocketHandler = {
+const sendPing = (socket: Socket) => {
+  socket.send(JSON.stringify({ event: "ping" }));
+};
+
+const startPing = (socket: Socket) => {
+  sendPing(socket);
+
+  const interval = setInterval(() => {
+    if (socket.readyState !== 1) {
+      clearInterval(interval);
+      return;
+    }
+    sendPing(socket);
+  }, 10_000);
+
+  return interval;
+};
+
+export const createWebsocketHandler = (options?: WebsocketHandlerOptions) => ({
+  idleTimeout: 60,
   open(socket: Socket) {
     addConnection(socket.data.userId, socket);
+    pingIntervals.set(socket, startPing(socket));
+    options?.onConnect?.(socket.data.userId, socket);
   },
   close(socket: Socket) {
-    removeConnection(socket.data.userId, socket);
+    const interval = pingIntervals.get(socket);
+    if (!interval) return removeConnection(socket.data.userId, socket);
+    clearInterval(interval);
+    pingIntervals.delete(socket);
   },
-  message(_socket: Socket, _message: string | Buffer) {
-    // Client-to-server messages not implemented
+  message(socket: Socket, message: string | Buffer) {
+    const data = JSON.parse(message.toString());
+    if (!socketMessageSchema.allows(data)) {
+      log.warn({ userId: socket.data.userId }, "invalid socket message");
+      return;
+    }
+
+    if (data.event === "pong") {
+      return;
+    }
   },
-};
+});
