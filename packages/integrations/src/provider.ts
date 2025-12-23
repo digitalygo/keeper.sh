@@ -8,6 +8,7 @@ import type {
 } from "./types";
 import { generateEventUid, isKeeperEvent } from "./event-identity";
 import { log } from "@keeper.sh/log";
+import { emit } from "@keeper.sh/broadcast";
 import { database } from "@keeper.sh/database";
 import { syncStatusTable } from "@keeper.sh/database/schema";
 
@@ -41,9 +42,11 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
       "diff complete",
     );
 
-    if (toAdd.length === 0 && toRemove.length === 0) {
+    const inSync = toAdd.length === 0 && toRemove.length === 0;
+
+    if (inSync) {
       this.childLog.debug({ userId: this.config.userId }, "destination in sync");
-      await this.updateSyncStatus(localEvents.length, remoteEvents.length);
+      await this.updateSyncStatus(localEvents.length, remoteEvents.length, true);
       return { added: 0, removed: 0 };
     }
 
@@ -56,7 +59,7 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
     }
 
     const finalRemoteCount = remoteEvents.length + toAdd.length - toRemove.length;
-    await this.updateSyncStatus(localEvents.length, finalRemoteCount);
+    await this.updateSyncStatus(localEvents.length, finalRemoteCount, true);
 
     this.childLog.info(
       { userId: this.config.userId, added: toAdd.length, removed: toRemove.length },
@@ -69,6 +72,7 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
   private async updateSyncStatus(
     localEventCount: number,
     remoteEventCount: number,
+    inSync: boolean,
   ): Promise<void> {
     const { userId } = this.config;
     const now = new Date();
@@ -92,6 +96,14 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
           updatedAt: now,
         },
       });
+
+    emit(userId, "sync:status", {
+      provider: this.id,
+      localEventCount,
+      remoteEventCount,
+      lastSyncedAt: now,
+      inSync,
+    });
   }
 
   private diffEvents(

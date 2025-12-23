@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@keeper.sh/auth": "workspace:*",
+    "@keeper.sh/broadcast": "workspace:*",
     "@keeper.sh/data-schemas": "workspace:*",
     "@keeper.sh/database": "workspace:*",
     "@keeper.sh/log": "workspace:*",

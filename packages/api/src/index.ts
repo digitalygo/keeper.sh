@@ -10,6 +10,7 @@ import { pullRemoteCalendar } from "@keeper.sh/pull-calendar";
 import { canAddSource } from "@keeper.sh/premium";
 import { fetchAndSyncSource } from "@keeper.sh/sync-calendar";
 import { log } from "@keeper.sh/log";
+import { websocketHandler, type BroadcastData } from "@keeper.sh/broadcast";
 import { BunRequest } from "bun";
 import { eq, and, inArray, gte, lte, asc } from "drizzle-orm";
 
@@ -45,8 +46,32 @@ const withAuth = (
   };
 };
 
-const server = Bun.serve({
+const server = Bun.serve<BroadcastData>({
   port: 3000,
+  websocket: websocketHandler,
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    if (url.pathname !== "/socket") {
+      return undefined;
+    }
+
+    const session = await getSession(request);
+
+    if (!session?.user?.id) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const upgraded = server.upgrade(request, {
+      data: { userId: session.user.id },
+    });
+
+    if (!upgraded) {
+      return new Response("WebSocket upgrade failed", { status: 500 });
+    }
+
+    return undefined;
+  },
   routes: {
     "/api/ics": {
       GET: withTracing(
@@ -80,7 +105,10 @@ const server = Bun.serve({
           const allowed = await canAddSource(userId, existingSources.length);
           if (!allowed) {
             return Response.json(
-              { error: "Source limit reached. Upgrade to Pro for unlimited sources." },
+              {
+                error:
+                  "Source limit reached. Upgrade to Pro for unlimited sources.",
+              },
               { status: 402 },
             );
           }
@@ -145,7 +173,10 @@ const server = Bun.serve({
           const fromParam = url.searchParams.get("from");
           const toParam = url.searchParams.get("to");
 
-          log.debug({ fromParam, toParam, url: request.url }, "events query params");
+          log.debug(
+            { fromParam, toParam, url: request.url },
+            "events query params",
+          );
 
           const now = new Date();
           const fromDate = fromParam ? new Date(fromParam) : now;
@@ -176,7 +207,10 @@ const server = Bun.serve({
 
           const sourceIds = sources.map((source) => source.id);
           const sourceMap = new Map(
-            sources.map((source) => [source.id, { name: source.name, url: source.url }]),
+            sources.map((source) => [
+              source.id,
+              { name: source.name, url: source.url },
+            ]),
           );
 
           const events = await database

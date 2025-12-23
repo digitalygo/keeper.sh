@@ -9,6 +9,7 @@
       "name": "@keeper.sh/api",
       "dependencies": {
         "@keeper.sh/auth": "workspace:*",
+        "@keeper.sh/broadcast": "workspace:*",
         "@keeper.sh/data-schemas": "workspace:*",
         "@keeper.sh/database": "workspace:*",
         "@keeper.sh/log": "workspace:*",
@@ -48,6 +49,22 @@
       "devDependencies": {
         "@keeper.sh/typescript-config": "workspace:*",
         "@types/bun": "latest",
+      },
+    },
+    "packages/broadcast": {
+      "name": "@keeper.sh/broadcast",
+      "dependencies": {
+        "@keeper.sh/log": "workspace:*",
+      },
+      "devDependencies": {
+        "@keeper.sh/typescript-config": "workspace:*",
+        "@types/bun": "latest",
+      },
+    },
+    "packages/broadcast-client": {
+      "name": "@keeper.sh/broadcast-client",
+      "devDependencies": {
+        "@keeper.sh/typescript-config": "workspace:*",
       },
     },
     "packages/cron": {
@@ -128,6 +145,7 @@
       "name": "@keeper.sh/integrations",
       "version": "0.0.1",
       "dependencies": {
+        "@keeper.sh/broadcast": "workspace:*",
         "@keeper.sh/database": "workspace:*",
         "@keeper.sh/log": "workspace:*",
       },
@@ -400,6 +418,10 @@
     "@keeper.sh/auth": ["@keeper.sh/auth@workspace:packages/auth"],
 
     "@keeper.sh/auth-plugin-username-only": ["@keeper.sh/auth-plugin-username-only@workspace:packages/auth-plugin-username-only"],
+
+    "@keeper.sh/broadcast": ["@keeper.sh/broadcast@workspace:packages/broadcast"],
+
+    "@keeper.sh/broadcast-client": ["@keeper.sh/broadcast-client@workspace:packages/broadcast-client"],
 
     "@keeper.sh/cron": ["@keeper.sh/cron@workspace:packages/cron"],
 
