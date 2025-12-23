@@ -1,10 +1,12 @@
 import {
   boolean,
+  integer,
   text,
   pgTable,
   timestamp,
   uuid,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
@@ -51,3 +53,21 @@ export const userSubscriptionsTable = pgTable("user_subscriptions", {
   polarSubscriptionId: text(),
   updatedAt: timestamp().notNull().defaultNow(),
 });
+
+export const syncStatusTable = pgTable(
+  "sync_status",
+  {
+    id: uuid().notNull().primaryKey().defaultRandom(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    provider: text().notNull(),
+    localEventCount: integer().notNull().default(0),
+    remoteEventCount: integer().notNull().default(0),
+    lastSyncedAt: timestamp(),
+    updatedAt: timestamp().notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("sync_status_user_provider_idx").on(table.userId, table.provider),
+  ],
+);

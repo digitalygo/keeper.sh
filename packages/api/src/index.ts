@@ -4,6 +4,7 @@ import { database } from "@keeper.sh/database";
 import {
   remoteICalSourcesTable,
   eventStatesTable,
+  syncStatusTable,
 } from "@keeper.sh/database/schema";
 import { pullRemoteCalendar } from "@keeper.sh/pull-calendar";
 import { canAddSource } from "@keeper.sh/premium";
@@ -208,6 +209,26 @@ const server = Bun.serve({
           });
 
           return Response.json(result);
+        }),
+      ),
+    },
+    "/api/sync/status": {
+      GET: withTracing(
+        withAuth(async (_request, userId) => {
+          const statuses = await database
+            .select()
+            .from(syncStatusTable)
+            .where(eq(syncStatusTable.userId, userId));
+
+          const providers = statuses.map((status) => ({
+            provider: status.provider,
+            localEventCount: status.localEventCount,
+            remoteEventCount: status.remoteEventCount,
+            lastSyncedAt: status.lastSyncedAt,
+            inSync: status.localEventCount === status.remoteEventCount,
+          }));
+
+          return Response.json({ providers });
         }),
       ),
     },
