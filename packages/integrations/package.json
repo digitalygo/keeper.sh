@@ -7,6 +7,7 @@
   "types": "src/index.ts",
   "dependencies": {
     "@keeper.sh/broadcast": "workspace:*",
+    "@keeper.sh/data-schemas": "workspace:*",
     "@keeper.sh/database": "workspace:*",
     "@keeper.sh/log": "workspace:*"
   },

@@ -49,6 +49,7 @@ const sendInitialSyncStatus = async (userId: string, socket: Socket) => {
         event: "sync:status",
         data: {
           provider: status.provider,
+          status: "idle",
           localEventCount: status.localEventCount,
           remoteEventCount: status.remoteEventCount,
           lastSyncedAt: status.lastSyncedAt?.toISOString(),

@@ -317,16 +317,43 @@ const DestinationAction = ({
 };
 
 interface SyncStatusDisplayProps {
+  status: "idle" | "syncing";
+  stage?: "fetching" | "comparing" | "pushing" | "deleting";
   localCount: number;
   remoteCount: number;
+  progress?: { current: number; total: number };
   inSync: boolean;
 }
 
-const SyncStatusDisplay = ({ localCount, remoteCount, inSync }: SyncStatusDisplayProps) => (
-  <TextMuted>
-    {inSync ? `${remoteCount} events synced` : `${remoteCount}/${localCount} events`}
-  </TextMuted>
-);
+const STAGE_LABELS: Record<string, string> = {
+  fetching: "Fetching remote events...",
+  comparing: "Comparing events...",
+  pushing: "Pushing events...",
+  deleting: "Removing events...",
+};
+
+const SyncStatusDisplay = ({
+  status,
+  stage,
+  localCount,
+  remoteCount,
+  progress,
+  inSync,
+}: SyncStatusDisplayProps) => {
+  if (status === "syncing" && stage) {
+    const label = STAGE_LABELS[stage] ?? "Syncing...";
+    if (progress && progress.total > 0) {
+      return <TextMuted>{label} ({progress.current}/{progress.total})</TextMuted>;
+    }
+    return <TextMuted>{label}</TextMuted>;
+  }
+
+  return (
+    <TextMuted>
+      {inSync ? `${remoteCount} events synced` : `${remoteCount}/${localCount} events`}
+    </TextMuted>
+  );
+};
 
 interface DestinationItemProps extends DestinationActionProps {
   destination: Destination;
@@ -380,13 +407,16 @@ export const DestinationsSection = () => {
   const isProviderConnected = (providerId: SupportedProvider) =>
     accounts?.some((account) => account.providerId === providerId) ?? false;
 
-  const getSyncStatus = (providerId: SupportedProvider) => {
-    const status = syncStatus?.[providerId];
-    if (!status) return undefined;
+  const getSyncStatus = (providerId: SupportedProvider): SyncStatusDisplayProps | undefined => {
+    const providerStatus = syncStatus?.[providerId];
+    if (!providerStatus) return undefined;
     return {
-      localCount: status.localEventCount,
-      remoteCount: status.remoteEventCount,
-      inSync: status.inSync,
+      status: providerStatus.status,
+      stage: providerStatus.stage,
+      localCount: providerStatus.localEventCount,
+      remoteCount: providerStatus.remoteEventCount,
+      progress: providerStatus.progress,
+      inSync: providerStatus.inSync,
     };
   };
 
