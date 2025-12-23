@@ -2,14 +2,10 @@
 
 import { createContext, useContext } from "react";
 import useSWR from "swr";
-import { getSession } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client";
 
-interface User {
-  id: string;
-  username: string;
-  name: string;
-  email: string;
-}
+type Session = typeof authClient.$Infer.Session;
+type User = Session["user"] & { username: string };
 
 interface AuthContextValue {
   user: User | null;
@@ -18,8 +14,9 @@ interface AuthContextValue {
 }
 
 async function fetchSession(): Promise<User | null> {
-  const session = await getSession();
-  return session?.user ?? null;
+  const { data } = await authClient.getSession();
+  if (!data?.user) return null;
+  return data.user as User;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);

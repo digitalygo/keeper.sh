@@ -1,6 +1,7 @@
 "use client";
 
 import type { RefCallback } from "react";
+import type { CalendarEvent } from "@/hooks/use-events";
 import {
   getDaysFromDate,
   isSameDay,
@@ -55,15 +56,6 @@ export const CalendarSkeleton = ({ days = 7 }: { days?: number }) => (
     ))}
   </div>
 );
-
-export interface CalendarEvent {
-  id: string;
-  startTime: Date;
-  endTime: Date;
-  calendarId?: string;
-  sourceName?: string;
-  sourceUrl?: string;
-}
 
 export interface CalendarProps {
   events?: CalendarEvent[];

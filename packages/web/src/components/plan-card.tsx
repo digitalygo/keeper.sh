@@ -1,5 +1,6 @@
 import { Check, X } from "lucide-react";
 import { Button } from "@base-ui/react/button";
+import type { PlanConfig } from "@/config/plans";
 import {
   button,
   pricingCard,
@@ -12,20 +13,10 @@ import {
 } from "@/styles";
 import { SectionTitle, TextBody } from "@/components/typography";
 
-interface PlanFeature {
-  name: string;
-  included: boolean;
-}
-
-interface Plan {
-  id: string;
-  name: string;
-  description: string;
+type Plan = Omit<PlanConfig, "monthlyPrice" | "yearlyPrice" | "monthlyProductId" | "yearlyProductId"> & {
   price: number;
   period: string;
-  features: PlanFeature[];
-  popular?: boolean;
-}
+};
 
 interface PlanCardProps {
   plan: Plan;

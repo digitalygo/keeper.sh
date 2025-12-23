@@ -3,18 +3,8 @@ import type { CustomerOrder } from "@polar-sh/sdk/models/components/customerorde
 import { authClient } from "@/lib/auth-client";
 
 async function fetchOrders(): Promise<CustomerOrder[]> {
-  const response = await authClient.customer.orders.list();
-
-  if (!response.data) {
-    return [];
-  }
-
-  const page = await response.data.next();
-  if (page.done || !page.value) {
-    return [];
-  }
-
-  return page.value.result.items;
+  const { data } = await authClient.customer.orders.list();
+  return data?.result?.items ?? [];
 }
 
 export function useOrders() {
