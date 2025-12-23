@@ -106,6 +106,17 @@
         "@types/bun": "latest",
       },
     },
+    "packages/integration-google-calendar": {
+      "name": "@keeper.sh/integration-google-calendar",
+      "version": "0.0.1",
+      "dependencies": {
+        "@keeper.sh/integrations": "workspace:*",
+      },
+      "devDependencies": {
+        "@keeper.sh/typescript-config": "workspace:*",
+        "@types/bun": "latest",
+      },
+    },
     "packages/integrations": {
       "name": "@keeper.sh/integrations",
       "version": "0.0.1",
@@ -389,6 +400,8 @@
     "@keeper.sh/database": ["@keeper.sh/database@workspace:packages/database"],
 
     "@keeper.sh/env": ["@keeper.sh/env@workspace:packages/env"],
+
+    "@keeper.sh/integration-google-calendar": ["@keeper.sh/integration-google-calendar@workspace:packages/integration-google-calendar"],
 
     "@keeper.sh/integrations": ["@keeper.sh/integrations@workspace:packages/integrations"],
 

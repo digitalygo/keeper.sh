@@ -10,7 +10,7 @@ export abstract class CalendarProvider {
   abstract readonly name: string;
   abstract readonly id: string;
 
-  constructor(private readonly config: ProviderConfig) {}
+  constructor(protected readonly config: ProviderConfig) {}
 
   abstract pushEvents(events: SyncableEvent[]): Promise<PushResult[]>;
   abstract deleteEvents(eventIds: string[]): Promise<DeleteResult[]>;

@@ -7,4 +7,6 @@ export default arkenv({
   NO_EMAIL_REQUIRED: "boolean?",
   POLAR_ACCESS_TOKEN: "string?",
   POLAR_MODE: "'sandbox' | 'production' | undefined",
+  GOOGLE_CLIENT_ID: "string?",
+  GOOGLE_CLIENT_SECRET: "string?",
 });

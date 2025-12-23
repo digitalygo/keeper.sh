@@ -37,6 +37,18 @@ if (polarClient) {
   );
 }
 
+const socialProviders: Parameters<typeof betterAuth>[0]["socialProviders"] = {};
+
+if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+  socialProviders.google = {
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    accessType: "offline",
+    prompt: "consent",
+    scope: ["https://www.googleapis.com/auth/calendar"],
+  };
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(database, {
     provider: "pg",
@@ -47,6 +59,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: !env.NO_EMAIL_REQUIRED,
   },
+  socialProviders,
   user: {
     deleteUser: {
       enabled: true,
