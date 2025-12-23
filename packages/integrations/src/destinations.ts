@@ -1,8 +1,9 @@
 import type { SyncResult } from "./types";
 import { log } from "@keeper.sh/log";
+import { startSync, endSync, isSyncCurrent, type SyncContext } from "./sync-coordinator";
 
 export interface DestinationProvider {
-  syncForUser(userId: string): Promise<SyncResult | null>;
+  syncForUser(userId: string, context: SyncContext): Promise<SyncResult | null>;
 }
 
 const providers: DestinationProvider[] = [];
@@ -14,13 +15,21 @@ export function registerDestinationProvider(
 }
 
 export async function syncDestinationsForUser(userId: string): Promise<void> {
-  const results = await Promise.allSettled(
-    providers.map((provider) => provider.syncForUser(userId)),
-  );
+  const context = await startSync(userId);
 
-  for (const result of results) {
-    if (result.status === "rejected") {
-      log.error(result.reason, "destination sync failed for user '%s'", userId);
+  try {
+    const results = await Promise.allSettled(
+      providers.map((provider) => provider.syncForUser(userId, context)),
+    );
+
+    const isCurrent = await isSyncCurrent(context);
+
+    for (const result of results) {
+      if (result.status === "rejected" && isCurrent) {
+        log.error(result.reason, "destination sync failed for user '%s'", userId);
+      }
     }
+  } finally {
+    await endSync(context);
   }
 }

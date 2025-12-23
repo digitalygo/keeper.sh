@@ -6,6 +6,7 @@ import {
   type RemoteEvent,
   type SyncResult,
   type GoogleCalendarConfig,
+  type SyncContext,
 } from "@keeper.sh/integrations";
 import {
   googleEventSchema,
@@ -44,7 +45,7 @@ export class GoogleCalendarProvider extends CalendarProvider<GoogleCalendarConfi
     this.currentAccessToken = config.accessToken;
   }
 
-  static async syncForUser(userId: string): Promise<SyncResult | null> {
+  static async syncForUser(userId: string, context: SyncContext): Promise<SyncResult | null> {
     const googleAccount = await getGoogleAccountForUser(userId);
     if (!googleAccount) return null;
 
@@ -58,7 +59,7 @@ export class GoogleCalendarProvider extends CalendarProvider<GoogleCalendarConfi
     });
 
     const localEvents = await getUserEvents(userId);
-    return provider.sync(localEvents);
+    return provider.sync(localEvents, context);
   }
 
   private get headers(): Record<string, string> {

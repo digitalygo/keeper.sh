@@ -318,18 +318,27 @@ const DestinationAction = ({
 
 interface SyncStatusDisplayProps {
   status: "idle" | "syncing";
-  stage?: "fetching" | "comparing" | "pushing" | "deleting";
+  stage?: "fetching" | "comparing" | "processing";
   localCount: number;
   remoteCount: number;
   progress?: { current: number; total: number };
+  lastOperation?: { type: "add" | "remove"; eventTime: string };
   inSync: boolean;
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  fetching: "Fetching remote events...",
-  comparing: "Comparing events...",
-  pushing: "Pushing events...",
-  deleting: "Removing events...",
+  fetching: "Fetching remote events",
+  comparing: "Comparing events",
+  processing: "Processing",
+};
+
+const formatOperationType = (type: "add" | "remove"): string => {
+  return type === "add" ? "Adding" : "Removing";
+};
+
+const formatEventTime = (isoTime: string): string => {
+  const date = new Date(isoTime);
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 };
 
 const SyncStatusDisplay = ({
@@ -338,14 +347,26 @@ const SyncStatusDisplay = ({
   localCount,
   remoteCount,
   progress,
+  lastOperation,
   inSync,
 }: SyncStatusDisplayProps) => {
   if (status === "syncing" && stage) {
-    const label = STAGE_LABELS[stage] ?? "Syncing...";
-    if (progress && progress.total > 0) {
-      return <TextMuted>{label} ({progress.current}/{progress.total})</TextMuted>;
+    const baseLabel = STAGE_LABELS[stage] ?? "Syncing";
+
+    if (stage === "processing" && lastOperation && progress) {
+      const operationLabel = formatOperationType(lastOperation.type);
+      const timeLabel = formatEventTime(lastOperation.eventTime);
+      return (
+        <TextMuted>
+          {operationLabel} event at {timeLabel} ({progress.current + 1}/{progress.total})
+        </TextMuted>
+      );
     }
-    return <TextMuted>{label}</TextMuted>;
+
+    if (progress && progress.total > 0) {
+      return <TextMuted>{baseLabel} ({progress.current}/{progress.total})</TextMuted>;
+    }
+    return <TextMuted>{baseLabel}...</TextMuted>;
   }
 
   return (
@@ -416,6 +437,7 @@ export const DestinationsSection = () => {
       localCount: providerStatus.localEventCount,
       remoteCount: providerStatus.remoteEventCount,
       progress: providerStatus.progress,
+      lastOperation: providerStatus.lastOperation,
       inSync: providerStatus.inSync,
     };
   };

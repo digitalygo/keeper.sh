@@ -33,7 +33,7 @@ export interface RemoteEvent {
 
 export type SyncOperation =
   | { type: "add"; event: SyncableEvent }
-  | { type: "remove"; uid: string };
+  | { type: "remove"; uid: string; startTime: Date };
 
 export interface SlotOperations {
   startTime: number;

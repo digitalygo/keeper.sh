@@ -10,6 +10,7 @@ import type {
 } from "./types";
 import type { SyncStatus } from "@keeper.sh/data-schemas";
 import { generateEventUid, isKeeperEvent } from "./event-identity";
+import { isSyncCurrent, type SyncContext } from "./sync-coordinator";
 import { log } from "@keeper.sh/log";
 import { emit } from "@keeper.sh/broadcast";
 import { database } from "@keeper.sh/database";
@@ -27,11 +28,11 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
   abstract deleteEvents(eventIds: string[]): Promise<DeleteResult[]>;
   abstract listRemoteEvents(): Promise<RemoteEvent[]>;
 
-  async sync(localEvents: SyncableEvent[]): Promise<SyncResult> {
+  async sync(localEvents: SyncableEvent[], context: SyncContext): Promise<SyncResult> {
     const { userId } = this.config;
 
     this.childLog.debug(
-      { userId, localCount: localEvents.length },
+      { userId, localCount: localEvents.length, generation: context.generation },
       "starting sync",
     );
 
@@ -43,7 +44,17 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
       inSync: false,
     });
 
+    if (!(await isSyncCurrent(context))) {
+      this.childLog.debug({ userId }, "sync superseded before fetch");
+      return { added: 0, removed: 0 };
+    }
+
     const remoteEvents = await this.listRemoteEvents();
+
+    if (!(await isSyncCurrent(context))) {
+      this.childLog.debug({ userId }, "sync superseded after fetch");
+      return { added: 0, removed: 0 };
+    }
 
     this.emitStatus({
       status: "syncing",
@@ -68,36 +79,78 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
       return { added: 0, removed: 0 };
     }
 
-    this.emitStatus({
-      status: "syncing",
-      stage: "pushing",
+    const processed = await this.processOperations(operations, {
       localEventCount: localEvents.length,
       remoteEventCount: remoteEvents.length,
-      progress: { current: 0, total: operations.length },
-      inSync: false,
+      context,
     });
 
-    await this.processOperations(operations);
+    if (!(await isSyncCurrent(context))) {
+      this.childLog.debug({ userId }, "sync superseded during processing");
+      return processed;
+    }
 
-    const finalRemoteCount = remoteEvents.length + addCount - removeCount;
+    const finalRemoteCount = remoteEvents.length + processed.added - processed.removed;
     await this.persistAndEmitFinalStatus(localEvents.length, finalRemoteCount);
 
     this.childLog.info(
-      { userId, added: addCount, removed: removeCount },
+      { userId, added: processed.added, removed: processed.removed },
       "sync complete",
     );
 
-    return { added: addCount, removed: removeCount };
+    return processed;
   }
 
-  private async processOperations(operations: SyncOperation[]): Promise<void> {
+  private async processOperations(
+    operations: SyncOperation[],
+    params: {
+      localEventCount: number;
+      remoteEventCount: number;
+      context: SyncContext;
+    },
+  ): Promise<SyncResult> {
+    const total = operations.length;
+    let current = 0;
+    let added = 0;
+    let removed = 0;
+
     for (const operation of operations) {
+      if (!(await isSyncCurrent(params.context))) {
+        this.childLog.debug("sync superseded, stopping processing");
+        break;
+      }
+
+      const eventTime = this.getOperationEventTime(operation);
+
+      this.emitStatus({
+        status: "syncing",
+        stage: "processing",
+        localEventCount: params.localEventCount,
+        remoteEventCount: params.remoteEventCount,
+        progress: { current, total },
+        lastOperation: { type: operation.type, eventTime: eventTime.toISOString() },
+        inSync: false,
+      });
+
       if (operation.type === "add") {
         await this.pushEvents([operation.event]);
+        added++;
       } else {
         await this.deleteEvents([operation.uid]);
+        removed++;
       }
+
+      current++;
     }
+
+    return { added, removed };
+  }
+
+  private getOperationEventTime(operation: SyncOperation): Date {
+    if (operation.type === "add") {
+      return operation.event.startTime;
+    }
+    return operation.startTime;
   }
 
   private emitStatus(status: Omit<SyncStatus, "provider">): void {
@@ -203,7 +256,7 @@ export abstract class CalendarProvider<TConfig extends ProviderConfig = Provider
 
         const toRemoveFromSlot = [...unmatched, ...matched].slice(0, surplus);
         for (const event of toRemoveFromSlot) {
-          operations.push({ type: "remove", uid: event.uid });
+          operations.push({ type: "remove", uid: event.uid, startTime: event.startTime });
         }
       }
 

@@ -51,13 +51,20 @@ export const socketMessageSchema = type({
 });
 export type SocketMessage = typeof socketMessageSchema.infer;
 
+export const syncOperationSchema = type({
+  type: "'add' | 'remove'",
+  eventTime: "string",
+});
+export type SyncOperation = typeof syncOperationSchema.infer;
+
 export const syncStatusSchema = type({
   provider: "string",
   status: "'idle' | 'syncing'",
-  "stage?": "'fetching' | 'comparing' | 'pushing' | 'deleting'",
+  "stage?": "'fetching' | 'comparing' | 'processing'",
   localEventCount: "number",
   remoteEventCount: "number",
   "progress?": { current: "number", total: "number" },
+  "lastOperation?": syncOperationSchema,
   "lastSyncedAt?": "string",
   inSync: "boolean",
 });
