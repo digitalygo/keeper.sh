@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, MinusIcon } from "lucide-react";
 import { Button } from "@base-ui/react/button";
 import { tv } from "tailwind-variants";
 import type { PlanConfig } from "@/config/plans";
@@ -80,7 +80,7 @@ interface PlanCardProps {
 }
 
 const FeatureIcon = ({ included }: { included: boolean }) => {
-  const Icon = included ? Check : X;
+  const Icon = included ? Check : MinusIcon;
   return <Icon className={pricingFeatureIcon({ included })} />;
 };
 

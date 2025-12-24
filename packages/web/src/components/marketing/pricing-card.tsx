@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import Link from "next/link";
-import { Check, X } from "lucide-react";
+import { Check, MinusIcon } from "lucide-react";
 import { Button } from "@base-ui/react/button";
 import { Switch } from "@base-ui/react/switch";
 import { tv } from "tailwind-variants";
@@ -47,8 +47,16 @@ export const PricingCard: FC<PricingCardProps> = ({
   return (
     <div className={card({ featured: plan.popular })}>
       <PricingCardHeader name={plan.name} popular={plan.popular} />
-      <PricingCardPrice price={price} period={isYearly ? "/year" : "/month"} showPeriod={!isFree} />
-      <BillingToggle isYearly={isYearly} onChange={onBillingChange} hidden={isFree} />
+      <PricingCardPrice
+        price={price}
+        period={isYearly ? "/year" : "/month"}
+        showPeriod={!isFree}
+      />
+      <BillingToggle
+        isYearly={isYearly}
+        onChange={onBillingChange}
+        hidden={isFree}
+      />
       <p className="text-sm text-foreground-muted mb-4">{plan.description}</p>
       <PricingCardFeatures features={plan.features} />
       <Button
@@ -88,7 +96,9 @@ const PricingCardPrice: FC<{
       ${price}
     </span>
     {showPeriod && (
-      <span className="text-sm text-foreground-muted font-normal">{period}</span>
+      <span className="text-sm text-foreground-muted font-normal">
+        {period}
+      </span>
     )}
   </div>
 );
@@ -122,7 +132,7 @@ const PricingCardFeatures: FC<{
 }> = ({ features }) => (
   <ul className="flex flex-col gap-2 mb-5 flex-1">
     {features.map((feature) => {
-      const Icon = feature.included ? Check : X;
+      const Icon = feature.included ? Check : MinusIcon;
       return (
         <li
           key={feature.name}

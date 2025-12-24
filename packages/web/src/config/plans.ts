@@ -28,7 +28,7 @@ export const plans: PlanConfig[] = [
       { name: `Up to ${FREE_SOURCE_LIMIT} calendar sources`, included: true },
       { name: "Aggregate iCal feed", included: true },
       { name: "Push to external calendars", included: true },
-      { name: "Priority sync (every 5 min)", included: false },
+      { name: "Standard syncing every 30 minutes", included: false },
     ],
   },
   {
@@ -46,7 +46,7 @@ export const plans: PlanConfig[] = [
       { name: "Unlimited calendar sources", included: true },
       { name: "Aggregate iCal feed", included: true },
       { name: "Push to external calendars", included: true },
-      { name: "Priority sync (every 5 min)", included: true },
+      { name: "Priority syncing every minute", included: true },
     ],
   },
 ];
