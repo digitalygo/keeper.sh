@@ -127,6 +127,13 @@
       "when": 1766603531782,
       "tag": "0017_outstanding_eddie_brock",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1766603987204,
+      "tag": "0018_whole_loa",
+      "breakpoints": true
     }
   ]
 }
