@@ -1,3 +1,5 @@
+import type { FC } from "react";
+import { FieldLabel } from "@/components/typography";
 import { input } from "@/styles";
 
 interface FormFieldProps {
@@ -16,7 +18,7 @@ interface FormFieldProps {
   readOnly?: boolean;
 }
 
-export function FormField({
+export const FormField: FC<FormFieldProps> = ({
   id,
   name,
   label: labelText,
@@ -30,30 +32,23 @@ export function FormField({
   minLength,
   maxLength,
   readOnly,
-}: FormFieldProps) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label
-        htmlFor={id}
-        className="text-xs font-medium text-zinc-600"
-      >
-        {labelText}
-      </label>
-      <input
-        id={id}
-        name={name}
-        type={type}
-        value={value}
-        defaultValue={defaultValue}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        autoComplete={autoComplete}
-        minLength={minLength}
-        maxLength={maxLength}
-        readOnly={readOnly}
-        className={input({ readonly: readOnly, size: "sm" })}
-      />
-    </div>
-  );
-}
+}) => (
+  <div className="flex flex-col gap-1">
+    <FieldLabel htmlFor={id}>{labelText}</FieldLabel>
+    <input
+      id={id}
+      name={name}
+      type={type}
+      value={value}
+      defaultValue={defaultValue}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      autoComplete={autoComplete}
+      minLength={minLength}
+      maxLength={maxLength}
+      readOnly={readOnly}
+      className={input({ readonly: readOnly, size: "sm" })}
+    />
+  </div>
+);

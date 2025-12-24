@@ -1,5 +1,6 @@
 "use client";
 
+import type { FC } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@base-ui/react/button";
@@ -7,11 +8,18 @@ import { useAuth } from "@/components/auth-provider";
 import { signOut } from "@/lib/auth";
 import { button } from "@/styles";
 
-const AuthNavSkeleton = ({ isDashboard }: { isDashboard: boolean }) => {
+interface AuthNavSkeletonProps {
+  isDashboard: boolean;
+}
+
+const AuthNavSkeleton: FC<AuthNavSkeletonProps> = ({ isDashboard }) => {
   if (isDashboard) {
     return (
       <nav className="flex gap-2">
-        <Button className={button({ variant: "secondary", size: "xs", skeleton: true })} disabled>
+        <Button
+          className={button({ variant: "secondary", size: "xs", skeleton: true })}
+          disabled
+        >
           Logout
         </Button>
       </nav>
@@ -20,17 +28,27 @@ const AuthNavSkeleton = ({ isDashboard }: { isDashboard: boolean }) => {
 
   return (
     <nav className="flex gap-2">
-      <Button className={button({ variant: "secondary", size: "xs", skeleton: true })} disabled>
+      <Button
+        className={button({ variant: "secondary", size: "xs", skeleton: true })}
+        disabled
+      >
         Login
       </Button>
-      <Button className={button({ variant: "primary", size: "xs", skeleton: true })} disabled>
+      <Button
+        className={button({ variant: "primary", size: "xs", skeleton: true })}
+        disabled
+      >
         Register
       </Button>
     </nav>
   );
 };
 
-const DashboardNav = ({ onLogout }: { onLogout: () => void }) => (
+interface DashboardNavProps {
+  onLogout: () => void;
+}
+
+const DashboardNav: FC<DashboardNavProps> = ({ onLogout }) => (
   <nav className="flex gap-2">
     <Button onClick={onLogout} className={button({ variant: "secondary", size: "xs" })}>
       Logout
@@ -38,7 +56,7 @@ const DashboardNav = ({ onLogout }: { onLogout: () => void }) => (
   </nav>
 );
 
-const AuthenticatedMarketingNav = () => (
+const AuthenticatedMarketingNav: FC = () => (
   <nav className="flex gap-2">
     <Button
       render={<Link href="/dashboard" />}
@@ -50,7 +68,7 @@ const AuthenticatedMarketingNav = () => (
   </nav>
 );
 
-const UnauthenticatedNav = () => (
+const UnauthenticatedNav: FC = () => (
   <nav className="flex gap-2">
     <Button
       render={<Link href="/login" />}
@@ -69,7 +87,7 @@ const UnauthenticatedNav = () => (
   </nav>
 );
 
-export function AuthNav() {
+export const AuthNav: FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, refresh } = useAuth();
@@ -93,4 +111,4 @@ export function AuthNav() {
   }
 
   return <UnauthenticatedNav />;
-}
+};

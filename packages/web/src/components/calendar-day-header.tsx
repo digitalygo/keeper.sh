@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { tv } from "tailwind-variants";
 import { isToday, formatWeekday } from "@/utils/calendar";
 import { TextMeta } from "@/components/typography";
@@ -16,7 +17,7 @@ interface CalendarDayHeaderProps {
   date: Date;
 }
 
-export function CalendarDayHeader({ date }: CalendarDayHeaderProps) {
+export const CalendarDayHeader: FC<CalendarDayHeaderProps> = ({ date }) => {
   const today = isToday(date);
   const weekday = formatWeekday(date);
   const dayNumber = date.getDate();
@@ -27,4 +28,4 @@ export function CalendarDayHeader({ date }: CalendarDayHeaderProps) {
       <span className={calendarDayNumber({ today })}>{dayNumber}</span>
     </div>
   );
-}
+};

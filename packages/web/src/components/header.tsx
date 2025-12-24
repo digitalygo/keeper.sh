@@ -1,5 +1,6 @@
 "use client";
 
+import type { FC } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthNav } from "@/components/auth-nav";
@@ -7,7 +8,7 @@ import { MarketingNav } from "@/components/marketing-nav";
 
 const authRoutes = ["/login", "/register"];
 
-export function Header() {
+export const Header: FC = () => {
   const pathname = usePathname();
   const isDashboard = pathname.startsWith("/dashboard");
   const isAuthRoute = authRoutes.includes(pathname);
@@ -29,4 +30,4 @@ export function Header() {
       </div>
     </header>
   );
-}
+};

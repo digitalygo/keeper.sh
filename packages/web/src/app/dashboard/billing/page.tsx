@@ -6,6 +6,7 @@ import { SubscriptionPlans } from "@/components/subscription-plans";
 import { PageContent } from "@/components/page-content";
 import { Section } from "@/components/section";
 import { SectionHeader } from "@/components/section-header";
+import { TextBody, TextMeta, FieldValue } from "@/components/typography";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useOrders } from "@/hooks/use-orders";
 
@@ -27,7 +28,7 @@ function formatDate(date: Date) {
 const BillingHistoryEmptyState = () => (
   <div className="flex flex-col items-center gap-2 py-6 border border-dashed border-zinc-300 rounded-md">
     <Receipt size={20} className="text-zinc-400" />
-    <p className="text-sm text-zinc-600">No billing history yet</p>
+    <TextBody>No billing history yet</TextBody>
   </div>
 );
 
@@ -73,33 +74,35 @@ function BillingHistory() {
         <table className="w-full">
           <thead className="bg-zinc-50 border-b border-zinc-200">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-500 tracking-tight">
-                Date
+              <th className="px-3 py-2 text-left">
+                <TextMeta>Date</TextMeta>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-500 tracking-tight">
-                Description
+              <th className="px-3 py-2 text-left">
+                <TextMeta>Description</TextMeta>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-500 tracking-tight">
-                Amount
+              <th className="px-3 py-2 text-left">
+                <TextMeta>Amount</TextMeta>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-500 tracking-tight">
-                Status
+              <th className="px-3 py-2 text-left">
+                <TextMeta>Status</TextMeta>
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200">
             {orders.map((order) => (
               <tr key={order.id}>
-                <td className="px-3 py-2 text-sm text-zinc-900 tracking-tight">
-                  {formatDate(order.createdAt)}
+                <td className="px-3 py-2">
+                  <FieldValue>{formatDate(order.createdAt)}</FieldValue>
                 </td>
-                <td className="px-3 py-2 text-sm text-zinc-900 tracking-tight">
-                  {order.product?.name ?? order.description}
+                <td className="px-3 py-2">
+                  <FieldValue>{order.product?.name ?? order.description}</FieldValue>
                 </td>
-                <td className="px-3 py-2 text-sm text-zinc-900 tabular-nums tracking-tight">
-                  {formatCurrency(order.totalAmount, order.currency)}
+                <td className="px-3 py-2">
+                  <FieldValue className="tabular-nums">
+                    {formatCurrency(order.totalAmount, order.currency)}
+                  </FieldValue>
                 </td>
-                <td className="px-3 py-2 text-sm">
+                <td className="px-3 py-2">
                   <span
                     className={
                       order.paid

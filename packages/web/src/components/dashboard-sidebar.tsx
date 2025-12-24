@@ -1,5 +1,6 @@
 "use client";
 
+import type { FC } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -31,7 +32,7 @@ const sidebarItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-export function DashboardSidebar() {
+export const DashboardSidebar: FC = () => {
   const pathname = usePathname();
 
   return (
@@ -48,4 +49,4 @@ export function DashboardSidebar() {
       ))}
     </nav>
   );
-}
+};

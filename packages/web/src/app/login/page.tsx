@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/header";
@@ -14,32 +13,26 @@ import {
   AuthFormSubmit,
   AuthFormFooter,
 } from "@/components/auth-form";
+import { useFormSubmit } from "@/hooks/use-form-submit";
 import { signIn } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { isSubmitting, error, submit } = useFormSubmit();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setIsLoading(true);
 
     const formData = new FormData(event.currentTarget);
     const username = String(formData.get("username") ?? "");
     const password = String(formData.get("password") ?? "");
 
-    try {
+    await submit(async () => {
       await signIn(username, password);
       await refresh();
       router.push("/dashboard");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Sign in failed");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   }
 
   return (
@@ -62,7 +55,7 @@ export default function LoginPage() {
             required
             autoComplete="current-password"
           />
-          <AuthFormSubmit isLoading={isLoading} loadingText="Signing in...">
+          <AuthFormSubmit isLoading={isSubmitting} loadingText="Signing in...">
             Sign in
           </AuthFormSubmit>
           <AuthFormFooter>

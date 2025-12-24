@@ -1,3 +1,5 @@
-export function Section({ children }: { children: React.ReactNode }) {
-  return <section className="flex flex-col gap-3">{children}</section>;
-}
+import type { FC, PropsWithChildren } from "react";
+
+export const Section: FC<PropsWithChildren> = ({ children }) => (
+  <section className="flex flex-col gap-3">{children}</section>
+);

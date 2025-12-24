@@ -2,7 +2,7 @@ import {
   CalendarSourcesSection,
   DestinationsSection,
   ICalLinkSection,
-} from "@/components/integrations-sections";
+} from "@/components/integrations";
 import { PageContent } from "@/components/page-content";
 
 export default function IntegrationsPage() {

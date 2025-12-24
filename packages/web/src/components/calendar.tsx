@@ -27,8 +27,10 @@ const agendaEventDot = tv({
   },
 });
 
-const SkeletonBar = ({ className = "" }: { className?: string }) => (
-  <div className={`bg-zinc-200 rounded animate-pulse ${className}`} />
+const skeletonBar = tv({ base: "bg-zinc-200 rounded animate-pulse" });
+
+const SkeletonBar = ({ className }: { className?: string }) => (
+  <div className={skeletonBar({ className })} />
 );
 
 const SkeletonEventItem = () => (
@@ -46,8 +48,8 @@ const SkeletonDaySection = ({ index }: { index: number }) => {
         <SkeletonBar className="h-6 w-48" />
       </div>
       <ul className="flex flex-col list-none p-0 m-0">
-        {Array.from({ length: eventCount }).map((_, i) => (
-          <SkeletonEventItem key={i} />
+        {Array.from({ length: eventCount }).map((_, eventIndex) => (
+          <SkeletonEventItem key={eventIndex} />
         ))}
       </ul>
     </section>
@@ -56,8 +58,8 @@ const SkeletonDaySection = ({ index }: { index: number }) => {
 
 export const CalendarSkeleton = ({ days = 7 }: { days?: number }) => (
   <div className="flex flex-col gap-6 max-w-2xl">
-    {Array.from({ length: days }).map((_, i) => (
-      <SkeletonDaySection key={i} index={i} />
+    {Array.from({ length: days }).map((_, dayIndex) => (
+      <SkeletonDaySection key={dayIndex} index={dayIndex} />
     ))}
   </div>
 );
@@ -80,7 +82,7 @@ const DayEventList = ({ events }: { events: CalendarEvent[] }) => {
       {events.map((event) => (
         <li
           key={event.id}
-          className="flex items-center gap-2 py-1 text-sm text-zinc-500"
+          className="flex items-center gap-2 py-1 text-sm text-zinc-500 tracking-tight"
         >
           <span
             className={agendaEventDot({

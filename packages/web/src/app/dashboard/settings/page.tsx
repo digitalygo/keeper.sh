@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@base-ui/react/button";
 import { Separator } from "@base-ui/react/separator";
 import { useAuth } from "@/components/auth-provider";
+import { Card } from "@/components/card";
 import { Toast } from "@/components/toast-provider";
 import {
   EditNameDialog,
@@ -14,6 +15,12 @@ import {
 import { PageContent } from "@/components/page-content";
 import { Section } from "@/components/section";
 import { SectionHeader } from "@/components/section-header";
+import {
+  FieldLabel,
+  FieldValue,
+  DangerFieldLabel,
+  DangerFieldValue,
+} from "@/components/typography";
 import { updateUser, changePassword, deleteAccount, signOut } from "@/lib/auth";
 import { button } from "@/styles";
 
@@ -54,15 +61,11 @@ export default function SettingsPage() {
           description="Manage your personal information"
         />
 
-        <div className="flex flex-col gap-3 p-3 border border-zinc-200 rounded-md">
+        <Card padding="sm" className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs font-medium text-zinc-500 tracking-tight">
-                Display Name
-              </div>
-              <div className="text-sm text-zinc-900 tracking-tight">
-                {user?.name || "Not set"}
-              </div>
+              <FieldLabel as="div">Display Name</FieldLabel>
+              <FieldValue as="div">{user?.name || "Not set"}</FieldValue>
             </div>
             <Button
               onClick={() => setIsEditingName(true)}
@@ -73,14 +76,10 @@ export default function SettingsPage() {
           </div>
           <Separator className="bg-zinc-200 h-px" />
           <div>
-            <div className="text-xs font-medium text-zinc-500 tracking-tight">
-              Username
-            </div>
-            <div className="text-sm text-zinc-900 tracking-tight">
-              {user?.username}
-            </div>
+            <FieldLabel as="div">Username</FieldLabel>
+            <FieldValue as="div">{user?.username}</FieldValue>
           </div>
-        </div>
+        </Card>
       </Section>
 
       <Section>
@@ -89,15 +88,11 @@ export default function SettingsPage() {
           description="Manage your password and account security"
         />
 
-        <div className="flex flex-col gap-3 p-3 border border-zinc-200 rounded-md">
+        <Card padding="sm" className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs font-medium text-zinc-500 tracking-tight">
-                Password
-              </div>
-              <div className="text-sm text-zinc-900 tracking-tight">
-                ••••••••
-              </div>
+              <FieldLabel as="div">Password</FieldLabel>
+              <FieldValue as="div">••••••••</FieldValue>
             </div>
             <Button
               onClick={() => setIsChangingPassword(true)}
@@ -106,7 +101,7 @@ export default function SettingsPage() {
               Change
             </Button>
           </div>
-        </div>
+        </Card>
       </Section>
 
       <Section>
@@ -115,15 +110,13 @@ export default function SettingsPage() {
           description="Irreversible actions for your account"
         />
 
-        <div className="flex flex-col gap-3 p-3 border border-red-300 bg-red-50 rounded-md">
+        <Card variant="danger" padding="sm" className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs font-medium text-red-700 tracking-tight">
-                Delete Account
-              </div>
-              <div className="text-sm text-red-600 tracking-tight">
+              <DangerFieldLabel as="div">Delete Account</DangerFieldLabel>
+              <DangerFieldValue as="div">
                 Permanently delete your account and all data
-              </div>
+              </DangerFieldValue>
             </div>
             <Button
               onClick={() => setIsDeletingAccount(true)}
@@ -132,7 +125,7 @@ export default function SettingsPage() {
               Delete
             </Button>
           </div>
-        </div>
+        </Card>
       </Section>
 
       <EditNameDialog

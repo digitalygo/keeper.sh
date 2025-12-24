@@ -1,5 +1,6 @@
 "use client";
 
+import type { FC } from "react";
 import { useState } from "react";
 import { Toast } from "@/components/toast-provider";
 import { PlanCard } from "@/components/plan-card";
@@ -19,17 +20,26 @@ interface SubscriptionPlansProps {
   onSubscriptionChange: () => void;
 }
 
-export function SubscriptionPlans({
+const deriveBillingPeriod = (
+  override: BillingPeriod | null,
+  interval: "month" | "year" | "week" | "day" | null | undefined,
+): BillingPeriod => {
+  if (override) return override;
+  return interval === "year" ? "yearly" : "monthly";
+};
+
+export const SubscriptionPlans: FC<SubscriptionPlansProps> = ({
   currentPlan,
   currentInterval,
   isSubscriptionLoading,
   onSubscriptionChange,
-}: SubscriptionPlansProps) {
+}) => {
   const toastManager = Toast.useToastManager();
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
-  const [billingPeriodOverride, setBillingPeriodOverride] = useState<BillingPeriod | null>(null);
+  const [billingPeriodOverride, setBillingPeriodOverride] =
+    useState<BillingPeriod | null>(null);
 
-  const billingPeriod = billingPeriodOverride ?? (currentInterval === "year" ? "yearly" : "monthly");
+  const billingPeriod = deriveBillingPeriod(billingPeriodOverride, currentInterval);
 
   const handleUpgrade = async (productId: string) => {
     setIsCheckoutLoading(true);
@@ -72,9 +82,7 @@ export function SubscriptionPlans({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl">
         {plans.map((plan) => {
-          const productId = isYearly
-            ? plan.yearlyProductId
-            : plan.monthlyProductId;
+          const productId = isYearly ? plan.yearlyProductId : plan.monthlyProductId;
 
           return (
             <PlanCard
@@ -98,4 +106,4 @@ export function SubscriptionPlans({
       </div>
     </Section>
   );
-}
+};

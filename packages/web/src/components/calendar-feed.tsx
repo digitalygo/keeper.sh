@@ -1,5 +1,6 @@
 "use client";
 
+import type { FC } from "react";
 import { useEffect, use } from "react";
 import { Calendar } from "@/components/calendar";
 import { useEvents } from "@/hooks/use-events";
@@ -9,7 +10,7 @@ const DAYS_PER_PAGE = 7;
 
 const neverResolves = new Promise<never>(() => {});
 
-export function CalendarFeed() {
+export const CalendarFeed: FC = () => {
   if (typeof window === "undefined") use(neverResolves);
 
   const { events, isLoadingMore, loadMore, size } = useEvents();
@@ -29,4 +30,4 @@ export function CalendarFeed() {
       lastSectionRef={ref}
     />
   );
-}
+};

@@ -76,3 +76,10 @@ export const broadcastMessageSchema = type({
   data: "unknown",
 });
 export type BroadcastMessage = typeof broadcastMessageSchema.infer;
+
+export const userSchema = type({
+  id: "string",
+  username: "string",
+  "name?": "string",
+});
+export type User = typeof userSchema.infer;

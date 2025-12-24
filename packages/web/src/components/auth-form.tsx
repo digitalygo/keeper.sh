@@ -1,59 +1,61 @@
+import type { FC, PropsWithChildren } from "react";
 import { Form } from "@base-ui/react/form";
 import { Field } from "@base-ui/react/field";
 import { Input } from "@base-ui/react/input";
 import { Button } from "@base-ui/react/button";
+import { tv } from "tailwind-variants";
+import { CardTitle, FieldLabel, TextBody, DangerText } from "@/components/typography";
 
-export function AuthFormContainer({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex-1 flex flex-col items-center justify-center p-4">
-      {children}
-    </main>
-  );
+const authFormSubmit = tv({
+  base: "w-full py-1.5 px-3 mt-1 border-none rounded-md text-sm font-medium bg-zinc-900 text-white cursor-pointer transition-colors duration-150 hover:bg-zinc-700 disabled:bg-zinc-400 disabled:cursor-not-allowed",
+});
+
+const authFormInput = tv({
+  base: "w-full py-1.5 px-2 border border-zinc-300 rounded-md text-sm transition-[border-color,box-shadow] duration-150 focus:outline-none focus:border-zinc-900 focus:ring-3 focus:ring-black/10",
+});
+
+export const AuthFormContainer: FC<PropsWithChildren> = ({ children }) => (
+  <main className="flex-1 flex flex-col items-center justify-center p-4">
+    {children}
+  </main>
+);
+
+interface AuthFormProps {
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
-export function AuthForm({
+export const AuthForm: FC<PropsWithChildren<AuthFormProps>> = ({
   onSubmit,
   children,
-}: {
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Form
-      className="w-full max-w-xs p-4 border border-zinc-200 rounded-md bg-white"
-      onSubmit={onSubmit}
-    >
-      {children}
-    </Form>
-  );
+}) => (
+  <Form
+    className="w-full max-w-xs p-4 border border-zinc-200 rounded-md bg-white"
+    onSubmit={onSubmit}
+  >
+    {children}
+  </Form>
+);
+
+export const AuthFormTitle: FC<PropsWithChildren> = ({ children }) => (
+  <CardTitle as="h1" className="mb-3 text-center">
+    {children}
+  </CardTitle>
+);
+
+interface AuthFormErrorProps {
+  message: string | null;
 }
 
-export function AuthFormTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h1 className="text-sm font-semibold text-zinc-900 tracking-tight mb-3 text-center">
-      {children}
-    </h1>
-  );
-}
-
-export function AuthFormError({ message }: { message: string | null }) {
+export const AuthFormError: FC<AuthFormErrorProps> = ({ message }) => {
   if (!message) return null;
   return (
-    <div className="text-xs text-red-600 p-2 mb-3 rounded-md bg-red-50 border border-red-200">
-      {message}
+    <div className="p-2 mb-3 rounded-md bg-red-50 border border-red-200">
+      <DangerText className="text-xs">{message}</DangerText>
     </div>
   );
-}
+};
 
-export function AuthFormField({
-  name,
-  label: labelText,
-  type = "text",
-  required = false,
-  autoComplete,
-  minLength,
-  maxLength,
-}: {
+interface AuthFormFieldProps {
   name: string;
   label: string;
   type?: string;
@@ -61,45 +63,48 @@ export function AuthFormField({
   autoComplete?: string;
   minLength?: number;
   maxLength?: number;
-}) {
-  return (
-    <Field.Root name={name} className="mb-3">
-      <Field.Label className="text-xs font-medium text-zinc-600 mb-1 block">
-        {labelText}
-      </Field.Label>
-      <Input
-        name={name}
-        type={type}
-        required={required}
-        autoComplete={autoComplete}
-        minLength={minLength}
-        maxLength={maxLength}
-        className="w-full py-1.5 px-2 border border-zinc-300 rounded-md text-sm transition-[border-color,box-shadow] duration-150 focus:outline-none focus:border-zinc-900 focus:ring-3 focus:ring-black/10"
-      />
-    </Field.Root>
-  );
 }
 
-export function AuthFormSubmit({
+export const AuthFormField: FC<AuthFormFieldProps> = ({
+  name,
+  label: labelText,
+  type = "text",
+  required = false,
+  autoComplete,
+  minLength,
+  maxLength,
+}) => (
+  <Field.Root name={name} className="mb-3">
+    <FieldLabel as="span" className="mb-1 block">
+      {labelText}
+    </FieldLabel>
+    <Input
+      name={name}
+      type={type}
+      required={required}
+      autoComplete={autoComplete}
+      minLength={minLength}
+      maxLength={maxLength}
+      className={authFormInput()}
+    />
+  </Field.Root>
+);
+
+interface AuthFormSubmitProps {
+  isLoading: boolean;
+  loadingText: string;
+}
+
+export const AuthFormSubmit: FC<PropsWithChildren<AuthFormSubmitProps>> = ({
   isLoading,
   children,
   loadingText,
-}: {
-  isLoading: boolean;
-  children: React.ReactNode;
-  loadingText: string;
-}) {
-  return (
-    <Button
-      type="submit"
-      disabled={isLoading}
-      className="w-full py-1.5 px-3 mt-1 border-none rounded-md text-sm font-medium bg-zinc-900 text-white cursor-pointer transition-colors duration-150 hover:bg-zinc-700 disabled:bg-zinc-400 disabled:cursor-not-allowed"
-    >
-      {isLoading ? loadingText : children}
-    </Button>
-  );
-}
+}) => (
+  <Button type="submit" disabled={isLoading} className={authFormSubmit()}>
+    {isLoading ? loadingText : children}
+  </Button>
+);
 
-export function AuthFormFooter({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs text-zinc-500 mt-3 text-center">{children}</p>;
-}
+export const AuthFormFooter: FC<PropsWithChildren> = ({ children }) => (
+  <TextBody className="text-xs mt-3 text-center">{children}</TextBody>
+);

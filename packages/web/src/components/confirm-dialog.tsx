@@ -1,12 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "@base-ui/react/button";
 import { Dialog } from "@base-ui/react/dialog";
 import { button, input, dialogPopup } from "@/styles";
+import { CardTitle, TextBody, TextCaption } from "@/components/typography";
 
-const CopyablePhrase = ({ phrase }: { phrase: string }) => {
+interface CopyablePhraseProps {
+  phrase: string;
+}
+
+const CopyablePhrase: FC<CopyablePhraseProps> = ({ phrase }) => {
   const [copied, setCopied] = useState(false);
 
   const handleClick = async (event: React.MouseEvent) => {
@@ -40,7 +46,7 @@ interface ConfirmDialogProps {
   requirePhrase?: string;
 }
 
-export function ConfirmDialog({
+export const ConfirmDialog: FC<ConfirmDialogProps> = ({
   open,
   onOpenChange,
   title,
@@ -51,33 +57,32 @@ export function ConfirmDialog({
   isConfirming,
   onConfirm,
   requirePhrase,
-}: ConfirmDialogProps) {
+}) => {
   const [inputValue, setInputValue] = useState("");
 
-  useEffect(() => {
-    if (!open) setInputValue("");
-  }, [open]);
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) setInputValue("");
+    onOpenChange(nextOpen);
+  };
 
   const phraseMatches = requirePhrase
     ? inputValue.toLowerCase() === requirePhrase.toLowerCase()
     : true;
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 bg-black/40 z-50" />
         <Dialog.Popup className={dialogPopup({ size: "sm" })}>
-          <Dialog.Title className="text-sm font-semibold text-zinc-900 tracking-tight">
-            {title}
-          </Dialog.Title>
-          <Dialog.Description className="text-sm text-zinc-500 mt-1 mb-3">
+          <Dialog.Title render={<CardTitle />}>{title}</Dialog.Title>
+          <Dialog.Description render={<TextBody className="mt-1 mb-3" />}>
             {description}
           </Dialog.Description>
           {requirePhrase && (
             <div className="flex flex-col gap-1.5 mb-3">
-              <span className="text-xs text-zinc-600">
+              <TextCaption as="span" className="text-zinc-600">
                 Type <CopyablePhrase phrase={requirePhrase} /> to confirm
-              </span>
+              </TextCaption>
               <input
                 type="text"
                 value={inputValue}
@@ -103,4 +108,4 @@ export function ConfirmDialog({
       </Dialog.Portal>
     </Dialog.Root>
   );
-}
+};

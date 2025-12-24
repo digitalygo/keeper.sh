@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import useSWRInfinite from "swr/infinite";
 
 const DAYS_PER_PAGE = 7;
@@ -43,13 +42,10 @@ interface UseEventsOptions {
 }
 
 export function useEvents({ startDate }: UseEventsOptions = {}) {
-  const baseDate = useMemo(() => {
-    const date = startDate ?? new Date();
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, [startDate]);
-
   const getKey = (pageIndex: number) => {
+    const baseDate = startDate ?? new Date();
+    baseDate.setHours(0, 0, 0, 0);
+
     const from = new Date(baseDate);
     from.setDate(from.getDate() + pageIndex * DAYS_PER_PAGE);
     from.setHours(0, 0, 0, 0);

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/header";
@@ -14,33 +13,27 @@ import {
   AuthFormSubmit,
   AuthFormFooter,
 } from "@/components/auth-form";
+import { useFormSubmit } from "@/hooks/use-form-submit";
 import { signUp } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { refresh } = useAuth();
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { isSubmitting, error, submit } = useFormSubmit();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setIsLoading(true);
 
     const formData = new FormData(event.currentTarget);
     const username = String(formData.get("username") ?? "");
     const password = String(formData.get("password") ?? "");
     const name = String(formData.get("name") ?? "") || undefined;
 
-    try {
+    await submit(async () => {
       await signUp(username, password, name);
       await refresh();
       router.push("/dashboard");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Sign up failed");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   }
 
   return (
@@ -73,7 +66,7 @@ export default function RegisterPage() {
             autoComplete="new-password"
           />
           <AuthFormSubmit
-            isLoading={isLoading}
+            isLoading={isSubmitting}
             loadingText="Creating account..."
           >
             Create account
