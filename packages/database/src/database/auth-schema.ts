@@ -55,14 +55,14 @@ export const passkey = pgTable("passkey", {
   id: text().notNull().primaryKey(),
   name: text(),
   publicKey: text().notNull(),
-  credentialID: text().notNull(),
   userId: text()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  webauthnUserID: text().notNull(),
+  credentialID: text().notNull(),
   counter: integer().notNull(),
   deviceType: text().notNull(),
   backedUp: boolean().notNull(),
   transports: text(),
-  createdAt: timestamp().notNull().defaultNow(),
+  createdAt: timestamp(),
+  aaguid: text(),
 });
