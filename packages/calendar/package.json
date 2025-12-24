@@ -1,5 +1,8 @@
 {
   "name": "@keeper.sh/calendar",
+  "scripts": {
+    "types": "tsc --noEmit"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -14,6 +17,7 @@
   },
   "devDependencies": {
     "@keeper.sh/typescript-config": "workspace:*",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "5.9.3"
   }
 }

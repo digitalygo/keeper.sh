@@ -1,5 +1,8 @@
 {
   "name": "@keeper.sh/env",
+  "scripts": {
+    "types": "tsc --noEmit"
+  },
   "exports": {
     "./auth": "./src/auth.ts",
     "./database": "./src/database.ts",
@@ -11,7 +14,8 @@
   "private": true,
   "devDependencies": {
     "@keeper.sh/typescript-config": "workspace:*",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "arkenv": "^0.8.0"

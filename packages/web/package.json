@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "bun --bun next dev --turbopack -p 3001",
     "build": "bun --bun next build",
-    "start": "bun --bun next start -p 3001"
+    "start": "bun --bun next start -p 3001",
+    "types": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "1.0.0",
