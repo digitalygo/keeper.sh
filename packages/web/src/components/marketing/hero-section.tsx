@@ -5,7 +5,7 @@ import { button } from "@/styles";
 
 export const HeroSection: FC = () => (
   <section className="flex flex-col items-center gap-6 py-16">
-    <h1 className="text-center text-4xl font-bold tracking-tighter leading-tight max-w-[20ch]">
+    <h1 className="text-center text-4xl font-semibold tracking-tighter leading-tight max-w-[20ch]">
       Simple, open-source <span className="text-nowrap">calendar syncing</span>
     </h1>
     <p className="text-center text-foreground-secondary leading-relaxed max-w-[42ch]">

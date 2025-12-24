@@ -1,5 +1,6 @@
 import type { FC, PropsWithChildren } from "react";
 import { Header } from "@/components/header";
+import { Footer } from "./footer";
 
 interface MarketingPageProps {
   title?: string;
@@ -26,5 +27,6 @@ export const MarketingPage: FC<PropsWithChildren<MarketingPageProps>> = ({
       )}
       {children}
     </main>
+    <Footer />
   </>
 );
