@@ -1,6 +1,6 @@
 "use client";
 
-import type { FC } from "react";
+import { useEffect, type FC } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/header";
@@ -19,8 +19,14 @@ import { signUpWithEmail } from "@/lib/auth";
 const CompleteRegistrationForm: FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") ?? "";
+  const email = searchParams.get("email");
   const { isSubmitting, error, submit } = useFormSubmit();
+
+  useEffect(() => {
+    if (email === null) {
+      router.replace("/register");
+    }
+  }, [email, router]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -29,13 +35,12 @@ const CompleteRegistrationForm: FC = () => {
     const password = String(formData.get("password") ?? "");
 
     await submit(async () => {
-      await signUpWithEmail(email, password, name);
+      await signUpWithEmail(email!, password, name);
       router.push("/verify-email");
     });
   };
 
   if (!email) {
-    router.push("/register");
     return null;
   }
 
