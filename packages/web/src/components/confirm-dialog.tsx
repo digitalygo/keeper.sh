@@ -3,8 +3,8 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
-import { Button } from "@base-ui/react/button";
 import { Dialog } from "@base-ui/react/dialog";
+import { Button } from "@/components/button";
 import { button, input, dialogPopup } from "@/styles";
 import { CardTitle, TextBody, TextCaption } from "@/components/typography";
 
@@ -39,7 +39,6 @@ interface ConfirmDialogProps {
   title: string;
   description: string;
   confirmLabel: string;
-  confirmingLabel: string;
   confirmVariant?: "primary" | "danger";
   isConfirming: boolean;
   onConfirm: () => void;
@@ -52,7 +51,6 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
   title,
   description,
   confirmLabel,
-  confirmingLabel,
   confirmVariant = "danger",
   isConfirming,
   onConfirm,
@@ -97,11 +95,12 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
               Cancel
             </Dialog.Close>
             <Button
-              disabled={isConfirming || !phraseMatches}
+              disabled={!phraseMatches}
+              isLoading={isConfirming}
               onClick={onConfirm}
               className={button({ variant: confirmVariant, size: "sm" })}
             >
-              {isConfirming ? confirmingLabel : confirmLabel}
+              {confirmLabel}
             </Button>
           </div>
         </Dialog.Popup>

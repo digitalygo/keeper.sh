@@ -52,7 +52,6 @@ export const EditNameDialog = ({
       error={error}
       isSubmitting={isSubmitting}
       submitLabel="Save"
-      submittingLabel="Saving..."
       submitVariant="primary"
       onSubmit={handleSubmit}
     >
@@ -116,7 +115,6 @@ export const ChangePasswordDialog = ({
       error={error}
       isSubmitting={isSubmitting}
       submitLabel="Change Password"
-      submittingLabel="Changing..."
       submitVariant="primary"
       onSubmit={handleSubmit}
     >
@@ -182,7 +180,6 @@ export const DeleteAccountDialog = ({
       error={error}
       isSubmitting={isSubmitting}
       submitLabel="Delete Account"
-      submittingLabel="Deleting..."
       submitVariant="danger"
       onSubmit={handleSubmit}
     >

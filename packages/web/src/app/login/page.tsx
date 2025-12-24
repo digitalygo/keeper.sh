@@ -55,7 +55,7 @@ export default function LoginPage() {
             required
             autoComplete="current-password"
           />
-          <AuthFormSubmit isLoading={isSubmitting} loadingText="Signing in...">
+          <AuthFormSubmit isLoading={isSubmitting}>
             Sign in
           </AuthFormSubmit>
           <AuthFormFooter>

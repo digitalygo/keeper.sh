@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Button } from "@base-ui/react/button";
 import { Menu } from "@base-ui/react/menu";
 import { Card } from "@/components/card";
+import { EmptyState } from "@/components/empty-state";
 import { GhostButton } from "@/components/ghost-button";
+import { ListSkeleton } from "@/components/list-skeleton";
 import { MenuItem } from "@/components/menu-item";
 import { MenuPopup } from "@/components/menu-popup";
 import { Toast } from "@/components/toast-provider";
@@ -17,13 +20,8 @@ import { useLinkedAccounts } from "@/hooks/use-linked-accounts";
 import { useSyncStatus } from "@/hooks/use-sync-status";
 import { authClient } from "@/lib/auth-client";
 import { TextLabel, TextMeta, TextMuted } from "@/components/typography";
+import { button } from "@/styles";
 import { Server, Plus } from "lucide-react";
-
-function getCountLabel(isLoading: boolean, count: number, noun: string): string {
-  if (isLoading) return "Loading...";
-  if (count === 1) return `1 ${noun}`;
-  return `${count} ${noun}s`;
-}
 
 type SupportedProvider = "google";
 
@@ -140,29 +138,42 @@ const STAGE_LABELS: Record<string, string> = {
   processing: "Processing",
 };
 
-function getSyncLabel(syncStatus: SyncStatusDisplayProps): string {
+interface SyncStatusTextProps {
+  syncStatus: SyncStatusDisplayProps;
+}
+
+const SyncStatusText = ({ syncStatus }: SyncStatusTextProps) => {
   const isSyncing = syncStatus.status === "syncing" && syncStatus.stage;
 
   if (!isSyncing) {
-    if (syncStatus.inSync) return `${syncStatus.remoteCount} events synced`;
-    return `${syncStatus.remoteCount}/${syncStatus.localCount} events`;
+    if (syncStatus.inSync) {
+      return <TextMeta>{syncStatus.remoteCount} events synced</TextMeta>;
+    }
+    return (
+      <TextMeta>
+        {syncStatus.remoteCount}/{syncStatus.localCount} events
+      </TextMeta>
+    );
   }
 
   const stageLabel = STAGE_LABELS[syncStatus.stage!] ?? "Syncing";
   const { progress } = syncStatus;
   const hasProgress = progress && progress.total > 0;
 
-  if (hasProgress) return `${stageLabel} (${progress.current}/${progress.total})`;
-  return `${stageLabel}...`;
-}
+  if (hasProgress) {
+    return (
+      <TextMeta>
+        {stageLabel} (
+        <span className="tabular-nums">
+          {progress.current}/{progress.total}
+        </span>
+        )
+      </TextMeta>
+    );
+  }
 
-interface SyncStatusTextProps {
-  syncStatus: SyncStatusDisplayProps;
-}
-
-const SyncStatusText = ({ syncStatus }: SyncStatusTextProps) => (
-  <TextMeta>{getSyncLabel(syncStatus)}</TextMeta>
-);
+  return <TextMeta>{stageLabel}...</TextMeta>;
+};
 
 interface DestinationItemProps {
   destination: Destination;
@@ -226,7 +237,6 @@ const DestinationItem = ({
             : `Events will no longer sync to ${destination.name}.`
         }
         confirmLabel="Disconnect"
-        confirmingLabel="Disconnecting..."
         isConfirming={isConfirming}
         onConfirm={() => confirm(onDisconnect)}
         requirePhrase={destination.pushesEvents ? "I understand" : undefined}
@@ -302,21 +312,75 @@ export const DestinationsSection = () => {
     }
   };
 
-  const countLabel = getCountLabel(
-    isAccountsLoading,
-    connectedDestinations.length,
-    "destination",
-  );
+  const destinationCount = connectedDestinations.length;
+  const isEmpty = !isAccountsLoading && destinationCount === 0;
 
-  return (
-    <Section>
-      <SectionHeader
-        title="Destinations"
-        description="Push your aggregated events to other calendar apps"
-      />
+  const destinationsMenuItems = DESTINATIONS.map((destination) => {
+    const connectable = isConnectable(destination);
+    return (
+      <MenuItem
+        key={destination.id}
+        onClick={() => connectable && handleConnect(destination.providerId)}
+        disabled={destination.comingSoon}
+        variant={destination.comingSoon ? "disabled" : "default"}
+        className="py-1.5"
+      >
+        {destination.icon ? (
+          <Image
+            src={destination.icon}
+            alt={destination.name}
+            width={14}
+            height={14}
+            className={destination.comingSoon ? "opacity-50" : ""}
+          />
+        ) : (
+          <Server size={14} className="text-zinc-400" />
+        )}
+        <span>{destination.name}</span>
+        {destination.comingSoon && (
+          <span className="ml-4 text-xs">Unavailable</span>
+        )}
+      </MenuItem>
+    );
+  });
+
+  const renderContent = () => {
+    if (isAccountsLoading) {
+      return <ListSkeleton rows={1} />;
+    }
+
+    if (isEmpty) {
+      return (
+        <EmptyState
+          icon={<Server size={16} className="text-zinc-400" />}
+          message="No destinations connected yet. Connect a calendar to push your aggregated events."
+          action={
+            <Menu.Root>
+              <Button
+                render={<Menu.Trigger />}
+                className={button({ variant: "primary", size: "xs" })}
+              >
+                Add Destination
+              </Button>
+              <Menu.Portal>
+                <Menu.Positioner sideOffset={4}>
+                  <MenuPopup>{destinationsMenuItems}</MenuPopup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          }
+        />
+      );
+    }
+
+    return (
       <Card>
         <div className="flex items-center justify-between px-3 py-2">
-          <TextLabel>{countLabel}</TextLabel>
+          <TextLabel>
+            {destinationCount === 1
+              ? "1 destination"
+              : `${destinationCount} destinations`}
+          </TextLabel>
           <Menu.Root>
             <GhostButton
               render={<Menu.Trigger />}
@@ -327,62 +391,37 @@ export const DestinationsSection = () => {
             </GhostButton>
             <Menu.Portal>
               <Menu.Positioner sideOffset={4} align="end">
-                <MenuPopup>
-                  {DESTINATIONS.map((destination) => {
-                    const connectable = isConnectable(destination);
-                    return (
-                      <MenuItem
-                        key={destination.id}
-                        onClick={() =>
-                          connectable && handleConnect(destination.providerId)
-                        }
-                        disabled={destination.comingSoon}
-                        variant={destination.comingSoon ? "disabled" : "default"}
-                        className="py-1.5"
-                      >
-                        {destination.icon ? (
-                          <Image
-                            src={destination.icon}
-                            alt={destination.name}
-                            width={14}
-                            height={14}
-                            className={
-                              destination.comingSoon ? "opacity-50" : ""
-                            }
-                          />
-                        ) : (
-                          <Server size={14} className="text-zinc-400" />
-                        )}
-                        <span>{destination.name}</span>
-                        {destination.comingSoon && (
-                          <span className="ml-4 text-xs">Unavailable</span>
-                        )}
-                      </MenuItem>
-                    );
-                  })}
-                </MenuPopup>
+                <MenuPopup>{destinationsMenuItems}</MenuPopup>
               </Menu.Positioner>
             </Menu.Portal>
           </Menu.Root>
         </div>
-        {connectedDestinations.length > 0 && (
-          <div className="border-t border-zinc-200 divide-y divide-zinc-200">
-            {connectedDestinations.map((destination) => (
-              <DestinationItem
-                key={destination.id}
-                destination={destination}
-                isConnected={true}
-                isLoading={loadingProvider === destination.providerId}
-                onConnect={() => handleConnect(destination.providerId)}
-                onDisconnect={async () =>
-                  handleDisconnect(destination.providerId)
-                }
-                syncStatus={getSyncStatus(destination.providerId)}
-              />
-            ))}
-          </div>
-        )}
+        <div className="border-t border-zinc-200 divide-y divide-zinc-200">
+          {connectedDestinations.map((destination) => (
+            <DestinationItem
+              key={destination.id}
+              destination={destination}
+              isConnected={true}
+              isLoading={loadingProvider === destination.providerId}
+              onConnect={() => handleConnect(destination.providerId)}
+              onDisconnect={async () =>
+                handleDisconnect(destination.providerId)
+              }
+              syncStatus={getSyncStatus(destination.providerId)}
+            />
+          ))}
+        </div>
       </Card>
+    );
+  };
+
+  return (
+    <Section>
+      <SectionHeader
+        title="Destinations"
+        description="Push your aggregated events to other calendar apps"
+      />
+      {renderContent()}
     </Section>
   );
 };

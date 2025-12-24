@@ -21,7 +21,7 @@ export const EmptyState: FC<EmptyStateProps> = ({
 }) => (
   <div className={emptyState({ className })}>
     {icon}
-    <TextBody>{message}</TextBody>
+    <TextBody className="text-center max-w-[36ch]">{message}</TextBody>
     {action}
   </div>
 );

@@ -65,10 +65,7 @@ export default function RegisterPage() {
             maxLength={128}
             autoComplete="new-password"
           />
-          <AuthFormSubmit
-            isLoading={isSubmitting}
-            loadingText="Creating account..."
-          >
+          <AuthFormSubmit isLoading={isSubmitting}>
             Create account
           </AuthFormSubmit>
           <AuthFormFooter>

@@ -1,5 +1,6 @@
 "use client";
 
+import type { FC } from "react";
 import { useState } from "react";
 import { Button } from "@base-ui/react/button";
 import { Toast } from "@/components/toast-provider";
@@ -11,7 +12,22 @@ import { Check } from "lucide-react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
 
-export const ICalLinkSection = () => {
+const ICalLinkSkeleton: FC = () => (
+  <div className="flex gap-1.5">
+    <div
+      className={input({
+        readonly: true,
+        size: "sm",
+        className: "flex flex-1 items-center animate-pulse",
+      })}
+    >
+      <div className="h-lh bg-zinc-200 rounded max-w-1/2 w-full" />
+    </div>
+    <div className="h-9 min-w-[6ch] px-1.5 bg-zinc-100 rounded-md animate-pulse" />
+  </div>
+);
+
+export const ICalLinkSection: FC = () => {
   const toastManager = Toast.useToastManager();
   const { token, isLoading } = useIcalToken();
   const [copied, setCopied] = useState(false);
@@ -34,26 +50,34 @@ export const ICalLinkSection = () => {
         title="Your iCal Link"
         description="Subscribe to this link to view your aggregated events"
       />
-      <div className="flex gap-1.5">
-        <input
-          type="text"
-          value={isLoading ? "Loading..." : icalUrl}
-          readOnly
-          className={input({ readonly: true, size: "sm", className: "flex-1" })}
-        />
-        <Button
-          onClick={copyToClipboard}
-          disabled={isLoading || !token}
-          className={button({
-            variant: "secondary",
-            size: "sm",
-            className: "relative",
-          })}
-        >
-          <span className={copied ? "invisible" : ""}>Copy</span>
-          {copied && <Check size={16} className="absolute inset-0 m-auto" />}
-        </Button>
-      </div>
+      {isLoading ? (
+        <ICalLinkSkeleton />
+      ) : (
+        <div className="flex gap-1.5">
+          <input
+            type="text"
+            value={icalUrl}
+            readOnly
+            className={input({
+              readonly: true,
+              size: "sm",
+              className: "flex-1",
+            })}
+          />
+          <Button
+            onClick={copyToClipboard}
+            disabled={!token}
+            className={button({
+              variant: "secondary",
+              size: "sm",
+              className: "relative",
+            })}
+          >
+            <span className={copied ? "invisible" : ""}>Copy</span>
+            {copied && <Check size={16} className="absolute inset-0 m-auto" />}
+          </Button>
+        </div>
+      )}
     </Section>
   );
 };

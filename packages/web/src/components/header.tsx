@@ -20,7 +20,7 @@ export const Header: FC = () => {
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="text-base font-semibold text-zinc-900 no-underline tracking-tight"
+            className="px-1.5 text-base font-semibold text-zinc-900 no-underline tracking-tight hover:bg-zinc-50 rounded-md"
           >
             Keeper
           </Link>

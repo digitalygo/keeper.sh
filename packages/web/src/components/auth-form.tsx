@@ -2,8 +2,8 @@ import type { FC, PropsWithChildren } from "react";
 import { Form } from "@base-ui/react/form";
 import { Field } from "@base-ui/react/field";
 import { Input } from "@base-ui/react/input";
-import { Button } from "@base-ui/react/button";
 import { tv } from "tailwind-variants";
+import { Button } from "@/components/button";
 import { CardTitle, FieldLabel, TextBody, DangerText } from "@/components/typography";
 
 const authFormSubmit = tv({
@@ -92,16 +92,14 @@ export const AuthFormField: FC<AuthFormFieldProps> = ({
 
 interface AuthFormSubmitProps {
   isLoading: boolean;
-  loadingText: string;
 }
 
 export const AuthFormSubmit: FC<PropsWithChildren<AuthFormSubmitProps>> = ({
   isLoading,
   children,
-  loadingText,
 }) => (
-  <Button type="submit" disabled={isLoading} className={authFormSubmit()}>
-    {isLoading ? loadingText : children}
+  <Button type="submit" isLoading={isLoading} className={authFormSubmit()}>
+    {children}
   </Button>
 );
 
