@@ -64,7 +64,7 @@ export function useEvents({ startDate }: UseEventsOptions = {}) {
   const { data, size, setSize, isLoading, isValidating } = useSWRInfinite(
     getKey,
     fetchEvents,
-    { suspense: true },
+    { suspense: true, revalidateFirstPage: false },
   );
 
   const allEvents = data?.flat() ?? [];
