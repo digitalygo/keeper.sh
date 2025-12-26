@@ -73,7 +73,7 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({ token }) => {
 
       <AuthFormField
         name="password"
-        label="New password"
+        placeholder="New password"
         type="password"
         required
         minLength={8}
@@ -83,7 +83,7 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({ token }) => {
 
       <AuthFormField
         name="confirmPassword"
-        label="Confirm password"
+        placeholder="Confirm password"
         type="password"
         required
         minLength={8}

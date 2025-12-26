@@ -1,7 +1,6 @@
 "use client";
 
 import { stringSchema } from "@keeper.sh/data-schemas";
-import { useState } from "react";
 import { FormDialog } from "@/components/form-dialog";
 import { FormField } from "@/components/form-field";
 import { useFormSubmit } from "@/hooks/use-form-submit";
@@ -14,59 +13,6 @@ interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-interface EditNameDialogProps extends DialogProps {
-  initialName: string;
-  onSave: (name: string) => Promise<void>;
-}
-
-export const EditNameDialog = ({
-  open,
-  onOpenChange,
-  initialName,
-  onSave,
-}: EditNameDialogProps) => {
-  const [nameValue, setNameValue] = useState(initialName);
-  const { isSubmitting, error, submit } = useFormSubmit<boolean>();
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const result = await submit(async () => {
-      await onSave(nameValue);
-      return true;
-    });
-
-    if (result) {
-      onOpenChange(false);
-    }
-  };
-
-  return (
-    <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Edit Display Name"
-      description="This is how your name appears across the app."
-      size="sm"
-      error={error}
-      isSubmitting={isSubmitting}
-      submitLabel="Save"
-      submitVariant="primary"
-      onSubmit={handleSubmit}
-    >
-      <FormField
-        id="name"
-        name="name"
-        label="Name"
-        type="text"
-        value={nameValue}
-        onChange={(event) => setNameValue(event.target.value)}
-        autoComplete="name"
-      />
-    </FormDialog>
-  );
-};
 
 interface ChangePasswordDialogProps extends DialogProps {
   onSave: (currentPassword: string, newPassword: string) => Promise<void>;

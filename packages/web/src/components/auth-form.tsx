@@ -4,12 +4,7 @@ import { Field } from "@base-ui/react/field";
 import { Input } from "@base-ui/react/input";
 import { tv } from "tailwind-variants";
 import { Button } from "@/components/button";
-import {
-  CardTitle,
-  FieldLabel,
-  TextBody,
-  DangerText,
-} from "@/components/typography";
+import { CardTitle, TextBody, DangerText } from "@/components/typography";
 
 const authFormSubmit = tv({
   base: "w-full py-1.5 px-3 border-none rounded-md text-sm font-medium bg-primary text-primary-foreground cursor-pointer transition-colors duration-150 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed",
@@ -67,8 +62,8 @@ export const AuthFormError: FC<AuthFormErrorProps> = ({ message }) => {
 
 interface AuthFormFieldProps {
   name: string;
-  label: string;
-  labelAction?: React.ReactNode;
+  placeholder: string;
+  fieldAction?: React.ReactNode;
   type?: string;
   required?: boolean;
   autoComplete?: string;
@@ -80,8 +75,8 @@ interface AuthFormFieldProps {
 
 export const AuthFormField: FC<AuthFormFieldProps> = ({
   name,
-  label: labelText,
-  labelAction,
+  placeholder,
+  fieldAction,
   type = "text",
   required = false,
   autoComplete,
@@ -91,13 +86,10 @@ export const AuthFormField: FC<AuthFormFieldProps> = ({
   defaultValue,
 }) => (
   <Field.Root name={name} className="flex flex-col gap-1">
-    <div className="flex items-center justify-between">
-      <FieldLabel as="span">{labelText}</FieldLabel>
-      {labelAction}
-    </div>
     <Input
       name={name}
       type={type}
+      placeholder={placeholder}
       required={required}
       autoComplete={autoComplete}
       minLength={minLength}
@@ -106,6 +98,7 @@ export const AuthFormField: FC<AuthFormFieldProps> = ({
       defaultValue={defaultValue}
       className={authFormInput({ disabled })}
     />
+    {fieldAction}
   </Field.Root>
 );
 
@@ -159,8 +152,4 @@ export const AuthSocialButton: FC<PropsWithChildren<AuthSocialButtonProps>> = ({
     {icon}
     {children}
   </button>
-);
-
-export const AuthSocialButtons: FC<PropsWithChildren> = ({ children }) => (
-  <div className="flex flex-col gap-2">{children}</div>
 );

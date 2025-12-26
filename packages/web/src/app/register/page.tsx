@@ -31,10 +31,9 @@ const UsernameRegisterForm: FC = () => {
     const formData = new FormData(event.currentTarget);
     const username = String(formData.get("username") ?? "");
     const password = String(formData.get("password") ?? "");
-    const name = String(formData.get("name") ?? "") || undefined;
 
     await submit(async () => {
-      await signUp(username, password, name);
+      await signUp(username, password);
       await refresh();
       router.push("/dashboard");
     });
@@ -46,16 +45,15 @@ const UsernameRegisterForm: FC = () => {
       <AuthFormError message={error} />
       <AuthFormField
         name="username"
-        label="Username"
+        placeholder="Username"
         required
         minLength={3}
         maxLength={32}
         autoComplete="username"
       />
-      <AuthFormField name="name" label="Name (optional)" autoComplete="name" />
       <AuthFormField
         name="password"
-        label="Password"
+        placeholder="Password"
         type="password"
         required
         minLength={8}
@@ -108,7 +106,7 @@ const EmailRegisterForm: FC = () => {
 
       <AuthFormField
         name="email"
-        label="Email"
+        placeholder="Email"
         type="email"
         required
         autoComplete="email"

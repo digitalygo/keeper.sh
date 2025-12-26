@@ -18,15 +18,11 @@ export async function signIn(username: string, password: string) {
   return response.json();
 }
 
-export async function signUp(
-  username: string,
-  password: string,
-  name?: string,
-) {
+export async function signUp(username: string, password: string) {
   const response = await fetch("/api/auth/username-only/sign-up", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password, name }),
+    body: JSON.stringify({ username, password }),
   });
 
   if (!response.ok) {
@@ -48,15 +44,11 @@ export async function signInWithEmail(email: string, password: string) {
   }
 }
 
-export async function signUpWithEmail(
-  email: string,
-  password: string,
-  name: string,
-) {
+export async function signUpWithEmail(email: string, password: string) {
   const { error } = await authClient.signUp.email({
     email,
     password,
-    name,
+    name: "",
     callbackURL: "/dashboard",
   });
 
@@ -70,14 +62,6 @@ export async function signInWithGoogle() {
     provider: "google",
     callbackURL: "/dashboard",
   });
-}
-
-export async function signInWithPasskey() {
-  const { error } = await authClient.signIn.passkey();
-
-  if (error) {
-    throw new Error(error.message ?? "Something went wrong with the passkey");
-  }
 }
 
 export async function forgotPassword(email: string) {
@@ -111,21 +95,6 @@ export async function signOut() {
 
   if (!response.ok) {
     throw new Error("Sign out failed");
-  }
-
-  return response.json();
-}
-
-export async function updateUser(data: { name?: string; image?: string }) {
-  const response = await fetch("/api/auth/update-user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message ?? "Failed to update profile");
   }
 
   return response.json();

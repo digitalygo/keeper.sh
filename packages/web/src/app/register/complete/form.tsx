@@ -27,11 +27,10 @@ export const CompleteRegistrationForm: FC<CompleteRegistrationFormProps> = ({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const name = String(formData.get("name") ?? "");
     const password = String(formData.get("password") ?? "");
 
     await submit(async () => {
-      await signUpWithEmail(email, password, name);
+      await signUpWithEmail(email, password);
       router.push("/verify-email");
     });
   };
@@ -42,21 +41,15 @@ export const CompleteRegistrationForm: FC<CompleteRegistrationFormProps> = ({
       <AuthFormError message={error} />
       <AuthFormField
         name="email"
-        label="Email"
+        placeholder="Email"
         type="email"
         disabled
         defaultValue={email}
         autoComplete="email"
       />
       <AuthFormField
-        name="name"
-        label="Name"
-        required
-        autoComplete="name"
-      />
-      <AuthFormField
         name="password"
-        label="Password"
+        placeholder="Password"
         type="password"
         required
         minLength={8}

@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
 
           <AuthFormField
             name="email"
-            label="Email"
+            placeholder="Email"
             type="email"
             required
             autoComplete="email"

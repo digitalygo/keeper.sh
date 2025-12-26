@@ -5,16 +5,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { Button } from "@base-ui/react/button";
-import { Separator } from "@base-ui/react/separator";
 import { Fingerprint, Trash2 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Card } from "@/components/card";
 import { Toast } from "@/components/toast-provider";
-import {
-  EditNameDialog,
-  ChangePasswordDialog,
-  DeleteAccountDialog,
-} from "@/components/settings-dialogs";
+import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/settings-dialogs";
 import { PageContent } from "@/components/page-content";
 import { Section } from "@/components/section";
 import { SectionHeader } from "@/components/section-header";
@@ -29,7 +24,6 @@ import {
   TextCaption,
 } from "@/components/typography";
 import {
-  updateUser,
   changePassword,
   deleteAccount,
   signOut,
@@ -108,7 +102,6 @@ export default function SettingsPage() {
   const router = useRouter();
   const toastManager = Toast.useToastManager();
 
-  const [isEditingName, setIsEditingName] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isAddingPasskey, setIsAddingPasskey] = useState(false);
@@ -118,12 +111,6 @@ export default function SettingsPage() {
     isLoading: isLoadingPasskeys,
     mutate: mutatePasskeys,
   } = useSWR(!isUsernameOnlyMode ? "passkeys" : null, fetchPasskeys);
-
-  const handleUpdateName = async (name: string) => {
-    await updateUser({ name });
-    await refresh();
-    toastManager.add({ title: "Name updated" });
-  };
 
   const handleChangePassword = async (
     currentPassword: string,
@@ -172,20 +159,7 @@ export default function SettingsPage() {
           description="Manage your personal information"
         />
 
-        <Card padding="sm" className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <FieldLabel as="div">Display Name</FieldLabel>
-              <FieldValue as="div">{user?.name || "Not set"}</FieldValue>
-            </div>
-            <Button
-              onClick={() => setIsEditingName(true)}
-              className={button({ variant: "secondary", size: "xs" })}
-            >
-              Edit
-            </Button>
-          </div>
-          <Separator className="bg-border h-px" />
+        <Card padding="sm">
           <div>
             <FieldLabel as="div">
               {isUsernameOnlyMode ? "Username" : "Email"}
@@ -266,13 +240,6 @@ export default function SettingsPage() {
           </div>
         </Card>
       </Section>
-
-      <EditNameDialog
-        open={isEditingName}
-        onOpenChange={setIsEditingName}
-        initialName={user?.name ?? ""}
-        onSave={handleUpdateName}
-      />
 
       <ChangePasswordDialog
         open={isChangingPassword}

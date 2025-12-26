@@ -15,6 +15,7 @@
   "dependencies": {
     "@better-auth/passkey": "^1.4.9",
     "@keeper.sh/auth-plugin-username-only": "workspace:*",
+    "@keeper.sh/data-schemas": "workspace:*",
     "@keeper.sh/database": "workspace:*",
     "@keeper.sh/env": "workspace:*",
     "@polar-sh/better-auth": "^1.6.3",

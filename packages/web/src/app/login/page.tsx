@@ -51,13 +51,13 @@ const UsernameLoginForm: FC = () => {
       <AuthFormError message={error} />
       <AuthFormField
         name="username"
-        label="Username"
+        placeholder="Username"
         required
         autoComplete="username"
       />
       <AuthFormField
         name="password"
-        label="Password"
+        placeholder="Password"
         type="password"
         required
         autoComplete="current-password"
@@ -137,18 +137,18 @@ const EmailLoginForm: FC = () => {
 
       <AuthFormField
         name="email"
-        label="Email"
+        placeholder="Email"
         type="email"
         required
         autoComplete="email webauthn"
       />
       <AuthFormField
         name="password"
-        label="Password"
+        placeholder="Password"
         type="password"
         required
         autoComplete="current-password webauthn"
-        labelAction={
+        fieldAction={
           <Link
             href="/forgot-password"
             className="text-xs text-foreground-muted hover:text-foreground"
