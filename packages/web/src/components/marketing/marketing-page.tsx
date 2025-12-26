@@ -14,7 +14,7 @@ export const MarketingPage: FC<PropsWithChildren<MarketingPageProps>> = ({
 }) => (
   <>
     <Header />
-    <main className="flex flex-col gap-8 max-w-3xl mx-auto p-4 w-full">
+    <main className="flex flex-col gap-8 max-w-3xl mx-auto p-4 px-5 w-full">
       {title && (
         <div>
           <h1 className="text-3xl font-medium tracking-tight text-foreground mb-2">
