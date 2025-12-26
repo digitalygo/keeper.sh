@@ -62,11 +62,14 @@ const SourceItem = ({ source, onRemove }: SourceItemProps) => {
 };
 
 const UpgradeBanner = () => (
-  <div className="flex items-center justify-between p-3 bg-warning-surface border border-warning-border rounded-lg">
-    <BannerText variant="warning">
+  <div className="flex items-center justify-between p-1 pl-3.5 bg-warning-surface border border-warning-border rounded-lg">
+    <BannerText variant="warning" className="text-xs">
       You've reached the free plan limit of {FREE_SOURCE_LIMIT} sources.
     </BannerText>
-    <Link href="/dashboard/billing" className={button({ variant: "primary" })}>
+    <Link
+      href="/dashboard/billing"
+      className={button({ variant: "primary", size: "xs" })}
+    >
       Upgrade to Pro
     </Link>
   </div>
@@ -223,13 +226,15 @@ export const CalendarSourcesSection = () => {
           <TextLabel>
             {sourceCount === 1 ? "1 source" : `${sourceCount} sources`}
           </TextLabel>
-          <GhostButton
-            onClick={() => setIsDialogOpen(true)}
-            className="flex items-center gap-1"
-          >
-            <Plus size={12} />
-            New Source
-          </GhostButton>
+          {!isAtLimit && (
+            <GhostButton
+              onClick={() => setIsDialogOpen(true)}
+              className="flex items-center gap-1"
+            >
+              <Plus size={12} />
+              New Source
+            </GhostButton>
+          )}
         </div>
         {sources && sources.length > 0 && (
           <div className="border-t border-border divide-y divide-border">

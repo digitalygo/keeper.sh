@@ -1,20 +1,34 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 import { Header } from "@/components/header";
 import { AuthFormContainer } from "@/components/auth-form";
 import { Button } from "@/components/button";
+import { useAuth } from "@/components/auth-provider";
 import { authClient } from "@/lib/auth-client";
 import { useFormSubmit } from "@/hooks/use-form-submit";
 import { CardTitle, TextBody } from "@/components/typography";
 
 export default function VerifyEmailPage() {
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
   const { isSubmitting, error, submit } = useFormSubmit();
 
+  useEffect(() => {
+    if (!isLoading && user?.emailVerified) {
+      router.replace("/dashboard");
+    }
+  }, [user, isLoading, router]);
+
   async function handleResend() {
+    const email = user?.email;
+    if (!email) return;
+
     await submit(async () => {
       const { error } = await authClient.sendVerificationEmail({
-        email: "", // Will use the current session's email
+        email,
         callbackURL: "/dashboard",
       });
 
@@ -22,6 +36,10 @@ export default function VerifyEmailPage() {
         throw new Error(error.message ?? "Failed to resend verification email");
       }
     });
+  }
+
+  if (isLoading || user?.emailVerified) {
+    return null;
   }
 
   return (
@@ -53,6 +71,7 @@ export default function VerifyEmailPage() {
           <Button
             onClick={handleResend}
             isLoading={isSubmitting}
+            disabled={!user?.email}
             className="w-full py-1.5 px-3 border border-border rounded-md text-sm font-medium bg-surface cursor-pointer transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-50"
           >
             Resend verification email

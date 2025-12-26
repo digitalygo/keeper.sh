@@ -99,6 +99,7 @@ export const userSchema = type({
   "username?": "string",
   "name?": "string",
   "email?": "string",
+  "emailVerified?": "boolean",
 });
 export type User = typeof userSchema.infer;
 

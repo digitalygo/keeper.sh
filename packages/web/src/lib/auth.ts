@@ -48,7 +48,7 @@ export async function signUpWithEmail(email: string, password: string) {
   const { error } = await authClient.signUp.email({
     email,
     password,
-    name: "",
+    name: email.split("@")[0] ?? email,
     callbackURL: "/dashboard",
   });
 
