@@ -39,9 +39,9 @@ export const saveCalendarDestination = async (
       target: [
         calendarDestinationsTable.userId,
         calendarDestinationsTable.provider,
+        calendarDestinationsTable.accountId,
       ],
       set: {
-        accountId,
         email,
         accessToken,
         refreshToken,
@@ -68,14 +68,14 @@ export const listCalendarDestinations = async (
 
 export const deleteCalendarDestination = async (
   userId: string,
-  provider: string,
+  destinationId: string,
 ): Promise<boolean> => {
   const result = await database
     .delete(calendarDestinationsTable)
     .where(
       and(
         eq(calendarDestinationsTable.userId, userId),
-        eq(calendarDestinationsTable.provider, provider),
+        eq(calendarDestinationsTable.id, destinationId),
       ),
     )
     .returning({ id: calendarDestinationsTable.id });

@@ -248,8 +248,7 @@ const isConnectable = (
 
 export const DestinationsSection = () => {
   const toastManager = Toast.useToastManager();
-  const [loadingProvider, setLoadingProvider] =
-    useState<SupportedProvider | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const {
     data: accounts,
     isLoading: isAccountsLoading,
@@ -257,12 +256,14 @@ export const DestinationsSection = () => {
   } = useLinkedAccounts();
   const { data: syncStatus } = useSyncStatus();
 
-  const isProviderConnected = (providerId: SupportedProvider) =>
-    accounts?.some((account) => account.providerId === providerId) ?? false;
-
-  const connectedDestinations = DESTINATIONS.filter(isConnectable).filter(
-    (destination) => isProviderConnected(destination.providerId),
-  );
+  const getDestinationConfig = (
+    providerId: string,
+  ): ConnectableDestination | undefined => {
+    const destination = DESTINATIONS.find(
+      (dest) => isConnectable(dest) && dest.providerId === providerId,
+    );
+    return destination && isConnectable(destination) ? destination : undefined;
+  };
 
   const getSyncStatus = (
     providerId: SupportedProvider,
@@ -281,16 +282,19 @@ export const DestinationsSection = () => {
   };
 
   const handleConnect = (providerId: SupportedProvider) => {
-    setLoadingProvider(providerId);
+    setLoadingId(providerId);
     const url = new URL("/api/destinations/authorize", window.location.origin);
     url.searchParams.set("provider", providerId);
     window.location.href = url.toString();
   };
 
-  const handleDisconnect = async (providerId: SupportedProvider) => {
-    setLoadingProvider(providerId);
+  const handleDisconnect = async (
+    destinationId: string,
+    providerName: string,
+  ) => {
+    setLoadingId(destinationId);
     try {
-      const response = await fetch(`/api/destinations/${providerId}`, {
+      const response = await fetch(`/api/destinations/${destinationId}`, {
         method: "DELETE",
       });
 
@@ -299,15 +303,15 @@ export const DestinationsSection = () => {
       }
 
       await mutateAccounts();
-      toastManager.add({ title: `Disconnected from ${providerId}` });
+      toastManager.add({ title: `Disconnected from ${providerName}` });
     } catch {
       toastManager.add({ title: `Failed to disconnect` });
     } finally {
-      setLoadingProvider(null);
+      setLoadingId(null);
     }
   };
 
-  const destinationCount = connectedDestinations.length;
+  const destinationCount = accounts?.length ?? 0;
   const isEmpty = !isAccountsLoading && destinationCount === 0;
 
   const destinationsMenuItems = DESTINATIONS.map((destination) => {
@@ -392,19 +396,24 @@ export const DestinationsSection = () => {
           </Menu.Root>
         </div>
         <div className="border-t border-border divide-y divide-border">
-          {connectedDestinations.map((destination) => (
-            <DestinationItem
-              key={destination.id}
-              destination={destination}
-              isConnected={true}
-              isLoading={loadingProvider === destination.providerId}
-              onConnect={() => handleConnect(destination.providerId)}
-              onDisconnect={async () =>
-                handleDisconnect(destination.providerId)
-              }
-              syncStatus={getSyncStatus(destination.providerId)}
-            />
-          ))}
+          {accounts?.map((account) => {
+            const config = getDestinationConfig(account.providerId);
+            if (!config) return null;
+            return (
+              <DestinationItem
+                key={account.id}
+                destination={{
+                  ...config,
+                  name: account.email ?? config.name,
+                }}
+                isConnected={true}
+                isLoading={loadingId === account.id}
+                onConnect={() => handleConnect(config.providerId)}
+                onDisconnect={() => handleDisconnect(account.id, config.name)}
+                syncStatus={getSyncStatus(config.providerId)}
+              />
+            );
+          })}
         </div>
       </Card>
     );

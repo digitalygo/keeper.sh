@@ -470,19 +470,19 @@ const server = Bun.serve<BroadcastData>({
         }
       }),
     },
-    "/api/destinations/:provider": {
+    "/api/destinations/:id": {
       DELETE: withTracing(
         withAuth(async (request, userId) => {
-          const { provider } = request.params;
+          const { id } = request.params;
 
-          if (!provider) {
+          if (!id) {
             return Response.json(
-              { error: "Provider is required" },
+              { error: "Destination ID is required" },
               { status: 400 },
             );
           }
 
-          const deleted = await deleteCalendarDestination(userId, provider);
+          const deleted = await deleteCalendarDestination(userId, id);
 
           if (!deleted) {
             return Response.json({ error: "Not found" }, { status: 404 });
