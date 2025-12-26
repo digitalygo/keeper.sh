@@ -75,7 +75,7 @@ export const syncOperationSchema = type({
 export type SyncOperation = typeof syncOperationSchema.infer;
 
 export const syncStatusSchema = type({
-  provider: "string",
+  destinationId: "string",
   status: "'idle' | 'syncing'",
   "stage?": "'fetching' | 'comparing' | 'processing'",
   localEventCount: "number",

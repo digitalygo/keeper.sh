@@ -53,6 +53,7 @@ export class GoogleCalendarProvider extends CalendarProvider<GoogleCalendarConfi
     const results = await Promise.all(
       googleAccounts.map((account) => {
         const provider = new GoogleCalendarProvider({
+          destinationId: account.destinationId,
           userId: account.userId,
           accountId: account.accountId,
           accessToken: account.accessToken,

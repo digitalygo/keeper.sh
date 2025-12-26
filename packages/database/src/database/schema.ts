@@ -54,24 +54,6 @@ export const userSubscriptionsTable = pgTable("user_subscriptions", {
   updatedAt: timestamp().notNull().defaultNow(),
 });
 
-export const syncStatusTable = pgTable(
-  "sync_status",
-  {
-    id: uuid().notNull().primaryKey().defaultRandom(),
-    userId: text()
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    provider: text().notNull(),
-    localEventCount: integer().notNull().default(0),
-    remoteEventCount: integer().notNull().default(0),
-    lastSyncedAt: timestamp(),
-    updatedAt: timestamp().notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("sync_status_user_provider_idx").on(table.userId, table.provider),
-  ],
-);
-
 export const calendarDestinationsTable = pgTable(
   "calendar_destinations",
   {
@@ -94,6 +76,23 @@ export const calendarDestinationsTable = pgTable(
       table.provider,
       table.accountId
     ),
+  ],
+);
+
+export const syncStatusTable = pgTable(
+  "sync_status",
+  {
+    id: uuid().notNull().primaryKey().defaultRandom(),
+    destinationId: uuid()
+      .notNull()
+      .references(() => calendarDestinationsTable.id, { onDelete: "cascade" }),
+    localEventCount: integer().notNull().default(0),
+    remoteEventCount: integer().notNull().default(0),
+    lastSyncedAt: timestamp(),
+    updatedAt: timestamp().notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("sync_status_destination_idx").on(table.destinationId),
   ],
 );
 

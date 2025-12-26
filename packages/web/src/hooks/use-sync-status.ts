@@ -54,7 +54,7 @@ export function useSyncStatus() {
             return;
           }
 
-          statuses = { ...statuses, [message.data.provider]: message.data };
+          statuses = { ...statuses, [message.data.destinationId]: message.data };
           next(null, statuses);
         };
 

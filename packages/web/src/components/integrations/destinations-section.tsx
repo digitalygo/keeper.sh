@@ -266,18 +266,18 @@ export const DestinationsSection = () => {
   };
 
   const getSyncStatus = (
-    providerId: SupportedProvider,
+    destinationId: string,
   ): SyncStatusDisplayProps | undefined => {
-    const providerStatus = syncStatus?.[providerId];
-    if (!providerStatus) return undefined;
+    const destinationStatus = syncStatus?.[destinationId];
+    if (!destinationStatus) return undefined;
     return {
-      status: providerStatus.status,
-      stage: providerStatus.stage,
-      localCount: providerStatus.localEventCount,
-      remoteCount: providerStatus.remoteEventCount,
-      progress: providerStatus.progress,
-      lastOperation: providerStatus.lastOperation,
-      inSync: providerStatus.inSync,
+      status: destinationStatus.status,
+      stage: destinationStatus.stage,
+      localCount: destinationStatus.localEventCount,
+      remoteCount: destinationStatus.remoteEventCount,
+      progress: destinationStatus.progress,
+      lastOperation: destinationStatus.lastOperation,
+      inSync: destinationStatus.inSync,
     };
   };
 
@@ -410,7 +410,7 @@ export const DestinationsSection = () => {
                 isLoading={loadingId === account.id}
                 onConnect={() => handleConnect(config.providerId)}
                 onDisconnect={() => handleDisconnect(account.id, config.name)}
-                syncStatus={getSyncStatus(config.providerId)}
+                syncStatus={getSyncStatus(account.id)}
               />
             );
           })}

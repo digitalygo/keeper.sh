@@ -10,6 +10,7 @@ import type { Plan } from "@keeper.sh/premium";
 import type { SyncableEvent } from "@keeper.sh/integrations";
 
 export interface GoogleAccount {
+  destinationId: string;
   userId: string;
   accountId: string;
   accessToken: string;
@@ -22,6 +23,7 @@ export const getGoogleAccountsByPlan = async (
 ): Promise<GoogleAccount[]> => {
   const results = await database
     .select({
+      destinationId: calendarDestinationsTable.id,
       userId: calendarDestinationsTable.userId,
       accountId: calendarDestinationsTable.accountId,
       accessToken: calendarDestinationsTable.accessToken,
@@ -47,6 +49,7 @@ export const getGoogleAccountsByPlan = async (
     }
 
     accounts.push({
+      destinationId: result.destinationId,
       userId: result.userId,
       accountId: result.accountId,
       accessToken,
@@ -63,6 +66,7 @@ export const getGoogleAccountsForUser = async (
 ): Promise<GoogleAccount[]> => {
   const results = await database
     .select({
+      destinationId: calendarDestinationsTable.id,
       userId: calendarDestinationsTable.userId,
       accountId: calendarDestinationsTable.accountId,
       accessToken: calendarDestinationsTable.accessToken,
@@ -78,6 +82,7 @@ export const getGoogleAccountsForUser = async (
     );
 
   return results.map((result) => ({
+    destinationId: result.destinationId,
     userId: result.userId,
     accountId: result.accountId,
     accessToken: result.accessToken,

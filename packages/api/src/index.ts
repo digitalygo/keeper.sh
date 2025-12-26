@@ -7,6 +7,7 @@ import {
   remoteICalSourcesTable,
   eventStatesTable,
   syncStatusTable,
+  calendarDestinationsTable,
 } from "@keeper.sh/database/schema";
 import { user as userTable } from "@keeper.sh/database";
 import { pullRemoteCalendar, fetchAndSyncSource } from "@keeper.sh/calendar";
@@ -52,16 +53,25 @@ const validateSocketToken = (token: string): string | null => {
 
 const sendInitialSyncStatus = async (userId: string, socket: Socket) => {
   const statuses = await database
-    .select()
+    .select({
+      destinationId: syncStatusTable.destinationId,
+      localEventCount: syncStatusTable.localEventCount,
+      remoteEventCount: syncStatusTable.remoteEventCount,
+      lastSyncedAt: syncStatusTable.lastSyncedAt,
+    })
     .from(syncStatusTable)
-    .where(eq(syncStatusTable.userId, userId));
+    .innerJoin(
+      calendarDestinationsTable,
+      eq(syncStatusTable.destinationId, calendarDestinationsTable.id),
+    )
+    .where(eq(calendarDestinationsTable.userId, userId));
 
   for (const status of statuses) {
     socket.send(
       JSON.stringify({
         event: "sync:status",
         data: {
-          provider: status.provider,
+          destinationId: status.destinationId,
           status: "idle",
           localEventCount: status.localEventCount,
           remoteEventCount: status.remoteEventCount,
@@ -326,19 +336,28 @@ const server = Bun.serve<BroadcastData>({
       GET: withTracing(
         withAuth(async (_request, userId) => {
           const statuses = await database
-            .select()
+            .select({
+              destinationId: syncStatusTable.destinationId,
+              localEventCount: syncStatusTable.localEventCount,
+              remoteEventCount: syncStatusTable.remoteEventCount,
+              lastSyncedAt: syncStatusTable.lastSyncedAt,
+            })
             .from(syncStatusTable)
-            .where(eq(syncStatusTable.userId, userId));
+            .innerJoin(
+              calendarDestinationsTable,
+              eq(syncStatusTable.destinationId, calendarDestinationsTable.id),
+            )
+            .where(eq(calendarDestinationsTable.userId, userId));
 
-          const providers = statuses.map((status) => ({
-            provider: status.provider,
+          const destinations = statuses.map((status) => ({
+            destinationId: status.destinationId,
             localEventCount: status.localEventCount,
             remoteEventCount: status.remoteEventCount,
             lastSyncedAt: status.lastSyncedAt,
             inSync: status.localEventCount === status.remoteEventCount,
           }));
 
-          return Response.json({ providers });
+          return Response.json({ destinations });
         }),
       ),
     },

@@ -42,6 +42,7 @@ export interface SlotOperations {
 
 export interface ProviderConfig {
   userId: string;
+  destinationId: string;
 }
 
 export interface GoogleCalendarConfig extends ProviderConfig {

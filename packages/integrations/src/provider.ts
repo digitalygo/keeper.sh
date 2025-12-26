@@ -171,9 +171,9 @@ export abstract class CalendarProvider<
     return operation.startTime;
   }
 
-  private emitStatus(status: Omit<SyncStatus, "provider">): void {
+  private emitStatus(status: Omit<SyncStatus, "destinationId">): void {
     emit(this.config.userId, "sync:status", {
-      provider: this.id,
+      destinationId: this.config.destinationId,
       ...status,
     });
   }
@@ -182,21 +182,20 @@ export abstract class CalendarProvider<
     localEventCount: number,
     remoteEventCount: number,
   ): Promise<void> {
-    const { userId } = this.config;
+    const { destinationId } = this.config;
     const now = new Date();
 
     await database
       .insert(syncStatusTable)
       .values({
-        userId,
-        provider: this.id,
+        destinationId,
         localEventCount,
         remoteEventCount,
         lastSyncedAt: now,
         updatedAt: now,
       })
       .onConflictDoUpdate({
-        target: [syncStatusTable.userId, syncStatusTable.provider],
+        target: [syncStatusTable.destinationId],
         set: {
           localEventCount,
           remoteEventCount,
