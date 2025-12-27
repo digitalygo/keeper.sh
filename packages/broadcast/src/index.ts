@@ -10,7 +10,7 @@ import type { Socket } from "./types";
 
 export type { BroadcastData, Socket } from "./types";
 
-export type OnConnectCallback = (userId: string, socket: Socket) => void;
+export type OnConnectCallback = (userId: string, socket: Socket) => void | Promise<void>;
 
 export interface WebsocketHandlerOptions {
   onConnect?: OnConnectCallback;
@@ -104,10 +104,15 @@ const startPing = (socket: Socket) => {
 
 export const createWebsocketHandler = (options?: WebsocketHandlerOptions) => ({
   idleTimeout: 60,
-  open(socket: Socket) {
+  async open(socket: Socket) {
+    log.debug({ userId: socket.data.userId }, "socket opened");
     addConnection(socket.data.userId, socket);
     pingIntervals.set(socket, startPing(socket));
-    options?.onConnect?.(socket.data.userId, socket);
+    try {
+      await options?.onConnect?.(socket.data.userId, socket);
+    } catch (error) {
+      log.error({ error, userId: socket.data.userId }, "onConnect callback failed");
+    }
   },
   close(socket: Socket) {
     const interval = pingIntervals.get(socket);
