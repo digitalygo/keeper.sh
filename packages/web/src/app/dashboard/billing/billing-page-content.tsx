@@ -10,6 +10,7 @@ import { SectionHeader } from "@/components/section-header";
 import { TextMeta, FieldValue } from "@/components/typography";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useOrders } from "@/hooks/use-orders";
+import { CustomerOrder } from "@polar-sh/sdk/models/components/customerorder.js";
 
 function formatCurrency(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-US", {
@@ -68,7 +69,7 @@ interface Order {
   paid: boolean;
 }
 
-function BillingHistoryTable({ orders }: { orders: Order[] }) {
+function BillingHistoryTable({ orders }: { orders: CustomerOrder[] }) {
   return (
     <Section>
       <SectionHeader
