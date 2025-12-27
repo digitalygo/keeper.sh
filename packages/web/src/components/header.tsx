@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthNav } from "@/components/auth-nav";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
+import Image from "next/image";
 
 const authRoutes = ["/login", "/register"];
 
@@ -19,8 +20,15 @@ export const Header: FC = () => {
       <div className="flex items-center gap-4">
         <Link
           href="/"
-          className="px-1.5 text-base font-semibold text-foreground no-underline tracking-tight hover:bg-surface-subtle rounded-md"
+          className="px-1.5 text-base font-semibold text-foreground no-underline tracking-tight hover:bg-surface-subtle rounded-md flex items-center gap-1.5"
         >
+          <Image
+            src="/keeper.svg"
+            alt="The Keeper logo"
+            width={12}
+            height={12}
+            className="text-foreground"
+          />
           Keeper
         </Link>
         {showMarketingNav && <MarketingNav />}

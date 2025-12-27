@@ -11,13 +11,15 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { tv } from "tailwind-variants";
+import { isCommercialMode } from "@/config/mode";
 
 const sidebarLink = tv({
   base: "flex items-center text-sm gap-1 py-1 px-1.5 pr-8 rounded-sm tracking-tight",
   variants: {
     active: {
       true: "bg-surface-muted text-foreground",
-      false: "text-foreground-secondary hover:text-foreground hover:bg-surface-subtle",
+      false:
+        "text-foreground-secondary hover:text-foreground hover:bg-surface-subtle",
     },
   },
   defaultVariants: {
@@ -32,28 +34,23 @@ interface SidebarItem {
   commercialOnly?: boolean;
 }
 
-function isCommercialMode(): boolean {
-  return process.env.NEXT_PUBLIC_COMMERCIAL_MODE === "true";
-}
-
-function getVisibleSidebarItems(): SidebarItem[] {
-  const allItems: SidebarItem[] = [
-    { href: "/dashboard", label: "Agenda", icon: CalendarDays },
-    { href: "/dashboard/integrations", label: "Integrations", icon: Puzzle },
-    { href: "/dashboard/billing", label: "Billing", icon: CreditCard, commercialOnly: true },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  ];
-
-  if (isCommercialMode()) {
-    return allItems;
-  }
-
-  return allItems.filter((item) => !item.commercialOnly);
-}
+const sidebarItems: SidebarItem[] = [
+  { href: "/dashboard", label: "Agenda", icon: CalendarDays },
+  { href: "/dashboard/integrations", label: "Integrations", icon: Puzzle },
+  {
+    href: "/dashboard/billing",
+    label: "Billing",
+    icon: CreditCard,
+    commercialOnly: true,
+  },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+];
 
 export const DashboardSidebar: FC = () => {
   const pathname = usePathname();
-  const visibleItems = getVisibleSidebarItems();
+  const visibleItems = isCommercialMode
+    ? sidebarItems
+    : sidebarItems.filter((item) => !item.commercialOnly);
 
   return (
     <nav className="flex flex-col gap-0.5 shrink-0 sticky top-2 self-start">

@@ -23,12 +23,8 @@ import {
   TextLabel,
   TextCaption,
 } from "@/components/typography";
-import {
-  changePassword,
-  deleteAccount,
-  signOut,
-  isUsernameOnlyMode,
-} from "@/lib/auth";
+import { changePassword, deleteAccount, signOut } from "@/lib/auth";
+import { isCommercialMode } from "@/config/mode";
 import { authClient } from "@/lib/auth-client";
 import { button } from "@/styles";
 
@@ -110,7 +106,7 @@ export default function SettingsPage() {
     data: passkeys,
     isLoading: isLoadingPasskeys,
     mutate: mutatePasskeys,
-  } = useSWR(!isUsernameOnlyMode ? "passkeys" : null, fetchPasskeys);
+  } = useSWR(isCommercialMode ? "passkeys" : null, fetchPasskeys);
 
   const handleChangePassword = async (
     currentPassword: string,
@@ -162,10 +158,10 @@ export default function SettingsPage() {
         <Card padding="sm">
           <div>
             <FieldLabel as="div">
-              {isUsernameOnlyMode ? "Username" : "Email"}
+              {isCommercialMode ? "Email" : "Username"}
             </FieldLabel>
             <FieldValue as="div">
-              {isUsernameOnlyMode ? user?.username : user?.email}
+              {isCommercialMode ? user?.email : user?.username}
             </FieldValue>
           </div>
         </Card>
@@ -193,7 +189,7 @@ export default function SettingsPage() {
         </Card>
       </Section>
 
-      {!isUsernameOnlyMode && (
+      {isCommercialMode && (
         <Section>
           <SectionHeader
             title="Passkeys"

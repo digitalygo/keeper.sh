@@ -1,8 +1,5 @@
 import { authClient } from "@/lib/auth-client";
 
-export const isUsernameOnlyMode =
-  process.env.NEXT_PUBLIC_USERNAME_ONLY_MODE === "true";
-
 export async function signIn(username: string, password: string) {
   const response = await fetch("/api/auth/username-only/sign-in", {
     method: "POST",

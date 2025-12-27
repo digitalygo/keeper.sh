@@ -1,13 +1,10 @@
 import { redirect } from "next/navigation";
 import { MarketingPage } from "@/components/marketing/marketing-page";
 import { PricingSection } from "@/components/marketing/pricing-section";
-
-function isCommercialMode(): boolean {
-  return process.env.NEXT_PUBLIC_COMMERCIAL_MODE === "true";
-}
+import { isCommercialMode } from "@/config/mode";
 
 export default function PricingPage() {
-  if (!isCommercialMode()) {
+  if (!isCommercialMode) {
     redirect("/dashboard");
   }
 

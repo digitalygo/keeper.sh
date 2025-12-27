@@ -26,7 +26,7 @@ const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 const plugins: BetterAuthPlugin[] = [];
 
-if (env.USERNAME_ONLY_MODE) {
+if (!env.COMMERCIAL_MODE) {
   plugins.push(usernameOnly());
 }
 
@@ -53,7 +53,7 @@ if (polarClient) {
   );
 }
 
-if (!env.USERNAME_ONLY_MODE && env.PASSKEY_RP_ID && env.PASSKEY_ORIGIN) {
+if (env.COMMERCIAL_MODE && env.PASSKEY_RP_ID && env.PASSKEY_ORIGIN) {
   plugins.push(
     passkey({
       rpID: env.PASSKEY_RP_ID,
@@ -96,8 +96,8 @@ export const auth = betterAuth({
     },
   },
   emailAndPassword: {
-    enabled: !env.USERNAME_ONLY_MODE,
-    requireEmailVerification: !env.USERNAME_ONLY_MODE,
+    enabled: env.COMMERCIAL_MODE ?? false,
+    requireEmailVerification: env.COMMERCIAL_MODE ?? false,
     sendResetPassword: async ({ user, url }: SendEmailParams) => {
       if (!resend) return;
       await resend.emails.send({

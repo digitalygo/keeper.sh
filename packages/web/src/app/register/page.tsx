@@ -19,7 +19,8 @@ import {
 } from "@/components/auth-form";
 import { GoogleIcon } from "@/components/icons/google";
 import { useFormSubmit } from "@/hooks/use-form-submit";
-import { signUp, signInWithGoogle, isUsernameOnlyMode } from "@/lib/auth";
+import { signUp, signInWithGoogle } from "@/lib/auth";
+import { isCommercialMode } from "@/config/mode";
 
 const UsernameRegisterForm: FC = () => {
   const router = useRouter();
@@ -132,7 +133,7 @@ const RegisterPage: FC = () => (
   <div className="flex flex-col flex-1">
     <Header />
     <AuthFormContainer>
-      {isUsernameOnlyMode ? <UsernameRegisterForm /> : <EmailRegisterForm />}
+      {isCommercialMode ? <EmailRegisterForm /> : <UsernameRegisterForm />}
     </AuthFormContainer>
   </div>
 );
