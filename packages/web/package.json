@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "bun --bun next dev --turbopack",
     "build": "bun --bun next build",
-    "postbuild": "rm ./.next/standalone/packages/web/package.json",
     "start": "bun --bun next start",
     "types": "tsc --noEmit"
   },
