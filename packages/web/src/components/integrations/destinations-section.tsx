@@ -28,7 +28,12 @@ import { useConfirmAction } from "@/hooks/use-confirm-action";
 import { useLinkedAccounts } from "@/hooks/use-linked-accounts";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useSyncStatus } from "@/hooks/use-sync-status";
-import { TextLabel, TextMeta, TextMuted, BannerText } from "@/components/typography";
+import {
+  TextLabel,
+  TextMeta,
+  TextMuted,
+  BannerText,
+} from "@/components/typography";
 import { button } from "@/styles";
 import { Server, Plus } from "lucide-react";
 
@@ -103,47 +108,27 @@ interface SyncStatusDisplayProps {
   inSync: boolean;
 }
 
-const STAGE_LABELS: Record<string, string> = {
-  fetching: "Fetching",
-  comparing: "Comparing",
-  processing: "Processing",
-};
-
 interface SyncStatusTextProps {
   syncStatus: SyncStatusDisplayProps;
 }
 
 const SyncStatusText = ({ syncStatus }: SyncStatusTextProps) => {
-  const isSyncing = syncStatus.status === "syncing" && syncStatus.stage;
+  const isProcessing =
+    syncStatus.status === "syncing" && syncStatus.stage === "processing";
 
-  if (!isSyncing) {
-    if (syncStatus.inSync) {
-      return <TextMeta>{syncStatus.remoteCount} events synced</TextMeta>;
-    }
+  if (isProcessing && syncStatus.progress && syncStatus.progress.total > 0) {
     return (
       <TextMeta>
-        {syncStatus.remoteCount}/{syncStatus.localCount} events
-      </TextMeta>
-    );
-  }
-
-  const stageLabel = STAGE_LABELS[syncStatus.stage!] ?? "Syncing";
-  const { progress } = syncStatus;
-  const hasProgress = progress && progress.total > 0;
-
-  if (hasProgress) {
-    return (
-      <TextMeta>
-        {stageLabel} (
+        Syncing (
         <span className="tabular-nums">
-          {progress.current}/{progress.total}
+          {syncStatus.progress.current}/{syncStatus.progress.total}
         </span>
         )
       </TextMeta>
     );
   }
 
-  return <TextMeta>{stageLabel}...</TextMeta>;
+  return <TextMeta>{syncStatus.remoteCount} events synced</TextMeta>;
 };
 
 interface DestinationItemProps {
@@ -215,7 +200,8 @@ const DestinationItem = ({
 const UpgradeBanner = () => (
   <div className="flex items-center justify-between p-1 pl-3.5 bg-warning-surface border border-warning-border rounded-lg">
     <BannerText variant="warning" className="text-xs">
-      You've reached the free plan limit of {FREE_DESTINATION_LIMIT} destination.
+      You've reached the free plan limit of {FREE_DESTINATION_LIMIT}{" "}
+      destination.
     </BannerText>
     <Link
       href="/dashboard/billing"
@@ -232,7 +218,9 @@ export const DestinationsSection = () => {
   const toastManager = Toast.useToastManager();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [caldavDialogOpen, setCaldavDialogOpen] = useState(false);
-  const [caldavProvider, setCaldavProvider] = useState<CalDAVProvider | null>(null);
+  const [caldavProvider, setCaldavProvider] = useState<CalDAVProvider | null>(
+    null,
+  );
   const {
     data: accounts,
     isLoading: isAccountsLoading,
@@ -261,7 +249,8 @@ export const DestinationsSection = () => {
     providerId: string,
   ): DestinationConfig | undefined => {
     return DESTINATIONS.find(
-      (destination) => isConnectable(destination) && destination.id === providerId,
+      (destination) =>
+        isConnectable(destination) && destination.id === providerId,
     );
   };
 
