@@ -11,7 +11,7 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".next/"]
     },
     "start": {
       "passThroughEnv": ["LOG_LEVEL"],

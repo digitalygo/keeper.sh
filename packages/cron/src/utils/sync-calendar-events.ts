@@ -14,6 +14,7 @@ const syncUserSources = async (userId: string, sources: Source[]) => {
 export const createSyncJob = (plan: Plan, cron: string): CronOptions => ({
   name: `sync-calendar-events-${plan}`,
   cron,
+  immediate: process.env.NODE_ENV !== "production",
   async callback() {
     const sources = await getSourcesByPlan(plan);
     log.debug("syncing %s %s sources", sources.length, plan);

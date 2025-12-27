@@ -34,7 +34,10 @@ export class CalDAVProvider extends CalendarProvider<CalDAVConfig> {
   constructor(
     config: CalDAVConfig,
     password: string,
-    options: CalDAVProviderOptions = { providerId: "caldav", providerName: "CalDAV" },
+    options: CalDAVProviderOptions = {
+      providerId: "caldav",
+      providerName: "CalDAV",
+    },
   ) {
     super(config);
     this.id = options.providerId;
@@ -77,7 +80,10 @@ export class CalDAVProvider extends CalendarProvider<CalDAVConfig> {
     account: CalDAVAccount,
     localEvents: SyncableEvent[],
     context: SyncContext,
-    options: CalDAVProviderOptions = { providerId: "caldav", providerName: "CalDAV" },
+    options: CalDAVProviderOptions = {
+      providerId: "caldav",
+      providerName: "CalDAV",
+    },
   ): Promise<SyncResult> {
     const password = getDecryptedPassword(account.encryptedPassword);
     const provider = new CalDAVProvider(
@@ -131,10 +137,13 @@ export class CalDAVProvider extends CalendarProvider<CalDAVConfig> {
             });
             return { success: true };
           } catch (error) {
-            const is404 = error instanceof Error && error.message.includes("404");
-            if (is404) {
+            const notFound =
+              error instanceof Error && error.message.includes("404");
+
+            if (notFound) {
               return { success: true };
             }
+
             this.childLog.error({ error, uid }, "failed to delete event");
             return { success: false, error: "Failed to delete event" };
           }
@@ -145,39 +154,46 @@ export class CalDAVProvider extends CalendarProvider<CalDAVConfig> {
     return results;
   }
 
-  async listRemoteEvents(options: ListRemoteEventsOptions): Promise<RemoteEvent[]> {
+  async listRemoteEvents(
+    options: ListRemoteEventsOptions,
+  ): Promise<RemoteEvent[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const objects = await this.client.fetchCalendarObjects({
       calendarUrl: this.config.calendarUrl,
-      timeRange: {
-        start: today.toISOString(),
-        end: options.until.toISOString(),
-      },
     });
 
-    this.childLog.debug({ objectCount: objects.length }, "fetched calendar objects");
+    this.childLog.debug(
+      { objectCount: objects.length },
+      "fetched calendar objects",
+    );
 
     const remoteEvents: RemoteEvent[] = [];
 
-    for (const obj of objects) {
-      if (!obj.data) {
-        this.childLog.trace({ url: obj.url }, "object has no data");
+    for (const { data, url } of objects) {
+      if (!data) {
+        this.childLog.trace({ url }, "object has no data");
         continue;
       }
 
-      const parsed = parseICalToRemoteEvent(obj.data);
+      const parsed = parseICalToRemoteEvent(data);
+
       if (!parsed) {
-        this.childLog.trace({ url: obj.url }, "failed to parse object");
+        this.childLog.trace({ url }, "failed to parse object");
         continue;
       }
 
-      if (this.isKeeperEvent(parsed.uid)) {
-        remoteEvents.push(parsed);
-      } else {
+      if (!this.isKeeperEvent(parsed.uid)) {
         this.childLog.trace({ uid: parsed.uid }, "not a keeper event");
+        continue;
       }
+
+      if (parsed.endTime < today || parsed.startTime > options.until) {
+        continue;
+      }
+
+      remoteEvents.push(parsed);
     }
 
     this.childLog.debug({ count: remoteEvents.length }, "listed remote events");
