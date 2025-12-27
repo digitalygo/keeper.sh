@@ -7,8 +7,8 @@ export async function GET(
 ) {
   const { identifier } = await params;
 
-  if (env.API_URL) {
-    throw Error("API_URL must be set");
+  if (!env.API_URL) {
+    throw new Error("API_URL must be set");
   }
 
   const url = new URL(`/cal/${identifier}`, env.API_URL);
