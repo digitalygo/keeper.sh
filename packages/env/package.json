@@ -7,7 +7,6 @@
     "./api": "./src/api.ts",
     "./cron": "./src/cron.ts",
     "./database/seed": "./src/database/seed.ts",
-    "./database/drizzle-config": "./src/database/drizzle-config.ts",
     "./next/backend": "./src/next/backend.ts"
   },
   "type": "module",

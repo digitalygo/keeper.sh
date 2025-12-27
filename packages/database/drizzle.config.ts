@@ -1,8 +1,7 @@
-import env from "@keeper.sh/env/database/drizzle-config";
 import { defineConfig } from "drizzle-kit";
 import { join } from "node:path";
 
-export default env.DATABASE_URL
+export default process.env.DATABASE_URL
   ? defineConfig({
       out: "./drizzle",
       schema: [
@@ -11,7 +10,7 @@ export default env.DATABASE_URL
       ],
       dialect: "postgresql",
       dbCredentials: {
-        url: env.DATABASE_URL,
+        url: process.env.DATABASE_URL,
       },
     })
   : undefined;
