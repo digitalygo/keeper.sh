@@ -1,5 +1,6 @@
 import useSWR from "swr";
 import { authClient } from "@/lib/auth-client";
+import { isCommercialMode } from "@/config/mode";
 
 interface SubscriptionState {
   plan: "free" | "pro";
@@ -7,6 +8,10 @@ interface SubscriptionState {
 }
 
 async function fetchCustomerState(): Promise<SubscriptionState> {
+  if (!isCommercialMode) {
+    return { plan: "pro", interval: null };
+  }
+
   const { data } = await authClient.customer.state();
 
   const [activeSubscription] = data?.activeSubscriptions ?? [];
