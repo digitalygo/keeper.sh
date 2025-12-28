@@ -10,7 +10,7 @@ import type {
   ListRemoteEventsOptions,
 } from "./types";
 import { generateEventUid, isKeeperEvent } from "./event-identity";
-import type { SyncContext } from "./sync-coordinator";
+import type { SyncContext, SyncStage } from "./sync-coordinator";
 import { log } from "@keeper.sh/log";
 
 export abstract class CalendarProvider<
@@ -29,9 +29,9 @@ export abstract class CalendarProvider<
 
   async sync(
     localEvents: SyncableEvent[],
-    _context: SyncContext,
+    context: SyncContext,
   ): Promise<SyncResult> {
-    const { userId } = this.config;
+    const { userId, destinationId } = this.config;
 
     this.childLog.debug(
       {
@@ -40,6 +40,12 @@ export abstract class CalendarProvider<
       },
       "starting sync",
     );
+
+    this.emitProgress(context, {
+      stage: "fetching",
+      localEventCount: localEvents.length,
+      remoteEventCount: 0,
+    });
 
     const maxEndTime = localEvents.reduce<Date | undefined>(
       (max, event) => (!max || event.endTime > max ? event.endTime : max),
@@ -53,9 +59,15 @@ export abstract class CalendarProvider<
 
     const remoteEvents = await this.listRemoteEvents({ until: maxEndTime });
 
-    await _context.onDestinationSync?.({
-      userId: this.config.userId,
-      destinationId: this.config.destinationId,
+    this.emitProgress(context, {
+      stage: "comparing",
+      localEventCount: localEvents.length,
+      remoteEventCount: remoteEvents.length,
+    });
+
+    await context.onDestinationSync?.({
+      userId,
+      destinationId,
       localEventCount: localEvents.length,
       remoteEventCount: remoteEvents.length,
     });
@@ -74,7 +86,11 @@ export abstract class CalendarProvider<
       return { added: 0, removed: 0 };
     }
 
-    const processed = await this.processOperations(operations);
+    const processed = await this.processOperations(operations, {
+      context,
+      localEventCount: localEvents.length,
+      remoteEventCount: remoteEvents.length,
+    });
 
     this.childLog.info(
       { userId, added: processed.added, removed: processed.removed },
@@ -86,11 +102,31 @@ export abstract class CalendarProvider<
 
   private async processOperations(
     operations: SyncOperation[],
+    params: {
+      context: SyncContext;
+      localEventCount: number;
+      remoteEventCount: number;
+    },
   ): Promise<SyncResult> {
+    const total = operations.length;
+    let current = 0;
     let added = 0;
     let removed = 0;
 
     for (const operation of operations) {
+      const eventTime = this.getOperationEventTime(operation);
+
+      this.emitProgress(params.context, {
+        stage: "processing",
+        localEventCount: params.localEventCount,
+        remoteEventCount: params.remoteEventCount,
+        progress: { current, total },
+        lastOperation: {
+          type: operation.type,
+          eventTime: eventTime.toISOString(),
+        },
+      });
+
       if (operation.type === "add") {
         await this.pushEvents([operation.event]);
         added++;
@@ -98,9 +134,41 @@ export abstract class CalendarProvider<
         await this.deleteEvents([operation.uid]);
         removed++;
       }
+
+      current++;
     }
 
     return { added, removed };
+  }
+
+  private getOperationEventTime(operation: SyncOperation): Date {
+    if (operation.type === "add") {
+      return operation.event.startTime;
+    }
+    return operation.startTime;
+  }
+
+  private emitProgress(
+    context: SyncContext,
+    params: {
+      stage: SyncStage;
+      localEventCount: number;
+      remoteEventCount: number;
+      progress?: { current: number; total: number };
+      lastOperation?: { type: "add" | "remove"; eventTime: string };
+    },
+  ): void {
+    context.onSyncProgress?.({
+      userId: this.config.userId,
+      destinationId: this.config.destinationId,
+      status: "syncing",
+      stage: params.stage,
+      localEventCount: params.localEventCount,
+      remoteEventCount: params.remoteEventCount,
+      progress: params.progress,
+      lastOperation: params.lastOperation,
+      inSync: false,
+    });
   }
 
   private diffEvents(

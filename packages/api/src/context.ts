@@ -12,6 +12,7 @@ import {
 import {
   createSyncCoordinator,
   type DestinationSyncResult,
+  type SyncProgressUpdate,
 } from "@keeper.sh/integrations";
 import { eq } from "drizzle-orm";
 
@@ -84,7 +85,20 @@ const onDestinationSync = async (result: DestinationSyncResult) => {
   });
 };
 
-export const syncCoordinator = createSyncCoordinator({ redis, onDestinationSync });
+const onSyncProgress = (update: SyncProgressUpdate) => {
+  broadcastService.emit(update.userId, "sync:status", {
+    destinationId: update.destinationId,
+    status: update.status,
+    stage: update.stage,
+    localEventCount: update.localEventCount,
+    remoteEventCount: update.remoteEventCount,
+    progress: update.progress,
+    lastOperation: update.lastOperation,
+    inSync: update.inSync,
+  });
+};
+
+export const syncCoordinator = createSyncCoordinator({ redis, onDestinationSync, onSyncProgress });
 
 export const baseUrl = env.BETTER_AUTH_URL;
 export const encryptionKey = env.ENCRYPTION_KEY;

@@ -11,6 +11,7 @@ import {
 import {
   createSyncCoordinator,
   type DestinationSyncResult,
+  type SyncProgressUpdate,
 } from "@keeper.sh/integrations";
 import { Polar } from "@polar-sh/sdk";
 import { eq } from "drizzle-orm";
@@ -67,7 +68,20 @@ const onDestinationSync = async (result: DestinationSyncResult) => {
   });
 };
 
-export const syncCoordinator = createSyncCoordinator({ redis, onDestinationSync });
+const onSyncProgress = (update: SyncProgressUpdate) => {
+  broadcastService.emit(update.userId, "sync:status", {
+    destinationId: update.destinationId,
+    status: update.status,
+    stage: update.stage,
+    localEventCount: update.localEventCount,
+    remoteEventCount: update.remoteEventCount,
+    progress: update.progress,
+    lastOperation: update.lastOperation,
+    inSync: update.inSync,
+  });
+};
+
+export const syncCoordinator = createSyncCoordinator({ redis, onDestinationSync, onSyncProgress });
 
 export const polarClient =
   env.POLAR_ACCESS_TOKEN && env.POLAR_MODE

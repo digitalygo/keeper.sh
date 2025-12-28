@@ -7,6 +7,7 @@ import {
 import { eq, and } from "drizzle-orm";
 import type { AuthorizationUrlOptions } from "@keeper.sh/destination-providers";
 import { database, oauthProviders } from "../context";
+import { triggerDestinationSync } from "./sync";
 
 export const isOAuthProvider = (provider: string): boolean => {
   return oauthProviders.isOAuthProvider(provider);

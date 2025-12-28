@@ -11,6 +11,8 @@ export {
   type SyncCoordinator,
   type SyncCoordinatorConfig,
   type DestinationSyncResult,
+  type SyncProgressUpdate,
+  type SyncStage,
 } from "./sync-coordinator";
 export type {
   SyncableEvent,

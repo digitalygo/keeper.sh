@@ -13,15 +13,31 @@ export interface DestinationSyncResult {
   remoteEventCount: number;
 }
 
+export type SyncStage = "fetching" | "comparing" | "processing";
+
+export interface SyncProgressUpdate {
+  userId: string;
+  destinationId: string;
+  status: "syncing";
+  stage: SyncStage;
+  localEventCount: number;
+  remoteEventCount: number;
+  progress?: { current: number; total: number };
+  lastOperation?: { type: "add" | "remove"; eventTime: string };
+  inSync: false;
+}
+
 export interface SyncContext {
   userId: string;
   generation: number;
   onDestinationSync?: (result: DestinationSyncResult) => Promise<void>;
+  onSyncProgress?: (update: SyncProgressUpdate) => void;
 }
 
 export interface SyncCoordinatorConfig {
   redis: RedisClient;
   onDestinationSync?: (result: DestinationSyncResult) => Promise<void>;
+  onSyncProgress?: (update: SyncProgressUpdate) => void;
 }
 
 export interface SyncCoordinator {
@@ -31,7 +47,7 @@ export interface SyncCoordinator {
 }
 
 export const createSyncCoordinator = (config: SyncCoordinatorConfig): SyncCoordinator => {
-  const { redis, onDestinationSync } = config;
+  const { redis, onDestinationSync, onSyncProgress } = config;
 
   const startSync = async (userId: string): Promise<SyncContext> => {
     const key = getSyncKey(userId);
@@ -40,7 +56,7 @@ export const createSyncCoordinator = (config: SyncCoordinatorConfig): SyncCoordi
 
     log.debug({ userId, generation }, "starting sync generation");
 
-    return { userId, generation, onDestinationSync };
+    return { userId, generation, onDestinationSync, onSyncProgress };
   };
 
   const isSyncCurrent = async (context: SyncContext): Promise<boolean> => {
