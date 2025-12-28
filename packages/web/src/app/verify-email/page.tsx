@@ -10,6 +10,7 @@ import { useAuth } from "@/components/auth-provider";
 import { authClient } from "@/lib/auth-client";
 import { useFormSubmit } from "@/hooks/use-form-submit";
 import { CardTitle, TextBody } from "@/components/typography";
+import { button } from "@/styles";
 
 const getPendingEmail = () => {
   if (typeof window === "undefined") return null;
@@ -79,7 +80,11 @@ export default function VerifyEmailPage() {
             onClick={handleResend}
             isLoading={isSubmitting}
             disabled={!email}
-            className="w-full py-1.5 px-3 border border-border rounded-md text-sm font-medium bg-surface cursor-pointer transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-50"
+            className={button({
+              variant: "secondary",
+              size: "sm",
+              className: "w-full",
+            })}
           >
             Resend verification email
           </Button>
