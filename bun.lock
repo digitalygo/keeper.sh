@@ -141,7 +141,6 @@
     "packages/database": {
       "name": "@keeper.sh/database",
       "dependencies": {
-        "@keeper.sh/env": "workspace:*",
         "drizzle-orm": "0.45.1",
         "pg": "8.16.3",
       },

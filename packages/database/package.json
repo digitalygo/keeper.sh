@@ -21,7 +21,6 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@keeper.sh/env": "workspace:*",
     "drizzle-orm": "0.45.1",
     "pg": "8.16.3"
   }
