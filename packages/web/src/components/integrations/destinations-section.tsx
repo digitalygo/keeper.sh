@@ -127,16 +127,16 @@ interface SyncStatusTextProps {
 }
 
 const SyncStatusText = ({ syncStatus }: SyncStatusTextProps) => {
-  const [lastKnownCount, setLastKnownCount] = useState<number | null>(null);
+  const [hasReceivedStatus, setHasReceivedStatus] = useState(false);
 
   useEffect(() => {
-    if (syncStatus && syncStatus.remoteCount > 0) {
-      setLastKnownCount(syncStatus.remoteCount);
+    if (syncStatus) {
+      setHasReceivedStatus(true);
     }
-  }, [syncStatus?.remoteCount]);
+  }, [syncStatus]);
 
-  const displayCount = syncStatus?.remoteCount || lastKnownCount || 0;
-  const loading = lastKnownCount === null && !(syncStatus && syncStatus.remoteCount > 0);
+  const displayCount = syncStatus?.remoteCount ?? 0;
+  const loading = !hasReceivedStatus;
   const isProcessing =
     syncStatus?.status === "syncing" && syncStatus.stage === "processing";
   const { text, skeleton } = syncStatusText({ loading });
