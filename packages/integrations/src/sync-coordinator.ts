@@ -6,13 +6,22 @@ const SYNC_TTL_SECONDS = 86400;
 
 const getSyncKey = (userId: string): string => `${SYNC_KEY_PREFIX}${userId}`;
 
+export interface DestinationSyncResult {
+  userId: string;
+  destinationId: string;
+  localEventCount: number;
+  remoteEventCount: number;
+}
+
 export interface SyncContext {
   userId: string;
   generation: number;
+  onDestinationSync?: (result: DestinationSyncResult) => Promise<void>;
 }
 
 export interface SyncCoordinatorConfig {
   redis: RedisClient;
+  onDestinationSync?: (result: DestinationSyncResult) => Promise<void>;
 }
 
 export interface SyncCoordinator {
@@ -22,7 +31,7 @@ export interface SyncCoordinator {
 }
 
 export const createSyncCoordinator = (config: SyncCoordinatorConfig): SyncCoordinator => {
-  const { redis } = config;
+  const { redis, onDestinationSync } = config;
 
   const startSync = async (userId: string): Promise<SyncContext> => {
     const key = getSyncKey(userId);
@@ -31,7 +40,7 @@ export const createSyncCoordinator = (config: SyncCoordinatorConfig): SyncCoordi
 
     log.debug({ userId, generation }, "starting sync generation");
 
-    return { userId, generation };
+    return { userId, generation, onDestinationSync };
   };
 
   const isSyncCurrent = async (context: SyncContext): Promise<boolean> => {

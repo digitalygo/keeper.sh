@@ -53,6 +53,13 @@ export abstract class CalendarProvider<
 
     const remoteEvents = await this.listRemoteEvents({ until: maxEndTime });
 
+    await _context.onDestinationSync?.({
+      userId: this.config.userId,
+      destinationId: this.config.destinationId,
+      localEventCount: localEvents.length,
+      remoteEventCount: remoteEvents.length,
+    });
+
     const operations = this.diffEvents(localEvents, remoteEvents);
     const addCount = operations.filter((op) => op.type === "add").length;
     const removeCount = operations.filter((op) => op.type === "remove").length;

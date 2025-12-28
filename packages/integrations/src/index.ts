@@ -10,6 +10,7 @@ export {
   type SyncContext,
   type SyncCoordinator,
   type SyncCoordinatorConfig,
+  type DestinationSyncResult,
 } from "./sync-coordinator";
 export type {
   SyncableEvent,

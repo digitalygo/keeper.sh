@@ -1,16 +1,23 @@
 import env from "@keeper.sh/env/cron";
 import { createDatabase } from "@keeper.sh/database";
+import { syncStatusTable } from "@keeper.sh/database/schema";
 import { createRedis } from "@keeper.sh/redis";
 import { createPremiumService } from "@keeper.sh/premium";
+import { createBroadcastService } from "@keeper.sh/broadcast";
 import {
   createOAuthProviders,
   createDestinationProviders,
 } from "@keeper.sh/destination-providers";
-import { createSyncCoordinator } from "@keeper.sh/integrations";
+import {
+  createSyncCoordinator,
+  type DestinationSyncResult,
+} from "@keeper.sh/integrations";
 import { Polar } from "@polar-sh/sdk";
+import { eq } from "drizzle-orm";
 
 export const database = createDatabase(env.DATABASE_URL);
 const redis = createRedis(env.REDIS_URL);
+const broadcastService = createBroadcastService({ redis });
 
 export const premiumService = createPremiumService({
   database,
@@ -40,7 +47,27 @@ export const destinationProviders = createDestinationProviders({
   encryptionKey: env.ENCRYPTION_KEY ?? "",
 });
 
-export const syncCoordinator = createSyncCoordinator({ redis });
+const onDestinationSync = async (result: DestinationSyncResult) => {
+  await database
+    .update(syncStatusTable)
+    .set({
+      localEventCount: result.localEventCount,
+      remoteEventCount: result.remoteEventCount,
+      lastSyncedAt: new Date(),
+    })
+    .where(eq(syncStatusTable.destinationId, result.destinationId));
+
+  broadcastService.emit(result.userId, "sync:status", {
+    destinationId: result.destinationId,
+    status: "idle",
+    localEventCount: result.localEventCount,
+    remoteEventCount: result.remoteEventCount,
+    inSync: result.localEventCount === result.remoteEventCount,
+    lastSyncedAt: new Date().toISOString(),
+  });
+};
+
+export const syncCoordinator = createSyncCoordinator({ redis, onDestinationSync });
 
 export const polarClient =
   env.POLAR_ACCESS_TOKEN && env.POLAR_MODE
