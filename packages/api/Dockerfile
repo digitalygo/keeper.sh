@@ -26,6 +26,7 @@ COPY --from=build /app/packages/api/package.json ./packages/api/package.json
 COPY --from=build /app/packages/database ./packages/database
 
 ENV NODE_ENV=production
+ENV TURBO_TELEMETRY_DISABLED=1
 EXPOSE 3001
 
 CMD ["turbo", "migrate", "start"]

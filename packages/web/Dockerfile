@@ -15,6 +15,7 @@ RUN bun install --frozen-lockfile
 COPY --from=prepare /app/out/full/ .
 
 ENV NODE_ENV=production
+ENV TURBO_TELEMETRY_DISABLED=1
 EXPOSE 3000
 
 CMD ["turbo", "build", "start"]

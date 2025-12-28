@@ -25,5 +25,6 @@ COPY --from=build /app/packages/cron/dist ./packages/cron/dist
 COPY --from=build /app/packages/cron/package.json ./packages/cron/package.json
 
 ENV NODE_ENV=production
+ENV TURBO_TELEMETRY_DISABLED=1
 
 CMD ["turbo", "start"]
