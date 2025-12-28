@@ -85,14 +85,16 @@ const onDestinationSync = async (result: DestinationSyncResult) => {
       },
     });
 
-  broadcastService.emit(result.userId, "sync:status", {
-    destinationId: result.destinationId,
-    status: "idle",
-    localEventCount: result.localEventCount,
-    remoteEventCount: result.remoteEventCount,
-    inSync: result.localEventCount === result.remoteEventCount,
-    lastSyncedAt: now.toISOString(),
-  });
+  if (result.broadcast !== false) {
+    broadcastService.emit(result.userId, "sync:status", {
+      destinationId: result.destinationId,
+      status: "idle",
+      localEventCount: result.localEventCount,
+      remoteEventCount: result.remoteEventCount,
+      inSync: result.localEventCount === result.remoteEventCount,
+      lastSyncedAt: now.toISOString(),
+    });
+  }
 };
 
 const onSyncProgress = (update: SyncProgressUpdate) => {

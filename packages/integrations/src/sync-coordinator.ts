@@ -11,6 +11,7 @@ export interface DestinationSyncResult {
   destinationId: string;
   localEventCount: number;
   remoteEventCount: number;
+  broadcast?: boolean;
 }
 
 export type SyncStage = "fetching" | "comparing" | "processing";

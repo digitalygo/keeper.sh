@@ -88,6 +88,15 @@ export abstract class CalendarProvider<
       remoteEventCount: remoteEvents.length,
     });
 
+    const finalRemoteCount = remoteEvents.length + processed.added - processed.removed;
+    await context.onDestinationSync?.({
+      userId,
+      destinationId,
+      localEventCount: localEvents.length,
+      remoteEventCount: finalRemoteCount,
+      broadcast: true,
+    });
+
     this.childLog.info(
       { userId, added: processed.added, removed: processed.removed },
       "sync complete",
@@ -113,6 +122,18 @@ export abstract class CalendarProvider<
     for (const operation of operations) {
       const eventTime = this.getOperationEventTime(operation);
 
+      if (operation.type === "add") {
+        await this.pushEvents([operation.event]);
+        added++;
+        currentRemoteCount++;
+      } else {
+        await this.deleteEvents([operation.uid]);
+        removed++;
+        currentRemoteCount--;
+      }
+
+      current++;
+
       this.emitProgress(params.context, {
         stage: "processing",
         localEventCount: params.localEventCount,
@@ -124,24 +145,13 @@ export abstract class CalendarProvider<
         },
       });
 
-      if (operation.type === "add") {
-        await this.pushEvents([operation.event]);
-        added++;
-        currentRemoteCount++;
-      } else {
-        await this.deleteEvents([operation.uid]);
-        removed++;
-        currentRemoteCount--;
-      }
-
       await params.context.onDestinationSync?.({
         userId: this.config.userId,
         destinationId: this.config.destinationId,
         localEventCount: params.localEventCount,
         remoteEventCount: currentRemoteCount,
+        broadcast: false,
       });
-
-      current++;
     }
 
     return { added, removed };
