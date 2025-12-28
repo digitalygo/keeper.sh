@@ -1,17 +1,28 @@
-FROM oven/bun:1 AS build
-
+FROM oven/bun:1 AS foundation
 WORKDIR /app
 
-COPY package.json bun.lock turbo.json ./
-COPY packages ./packages
+FROM foundation AS prepare
+RUN bun install --global turbo
+COPY . .
+RUN turbo prune @keeper.sh/cron --docker
 
+FROM foundation AS build
+COPY --from=prepare /app/out/json/ .
 RUN bun install --frozen-lockfile
-RUN bun run --filter=@keeper.sh/cron build
 
-FROM oven/bun:1-slim AS runtime
-WORKDIR /app
+COPY --from=prepare /app/out/full/ .
+RUN bun run build --filter=@keeper.sh/cron
 
-COPY --from=build /app/packages/cron/dist ./dist
+FROM foundation AS runtime
+RUN bun install --global turbo
+
+COPY --from=prepare /app/out/json/ .
+RUN bun install --frozen-lockfile --production
+
+COPY --from=build /app/turbo.json ./turbo.json
+COPY --from=build /app/packages/cron/dist ./packages/cron/dist
+COPY --from=build /app/packages/cron/package.json ./packages/cron/package.json
 
 ENV NODE_ENV=production
-CMD ["bun", "run", "dist/index.js"]
+
+CMD ["turbo", "start"]
