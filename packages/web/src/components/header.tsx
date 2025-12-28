@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthNav } from "@/components/auth-nav";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
-import Image from "next/image";
+import KeeperLogo from "@/assets/keeper.svg";
 
 const authRoutes = ["/login", "/register"];
 
@@ -22,12 +22,9 @@ export const Header: FC = () => {
           href="/"
           className="px-1.5 text-base font-semibold text-foreground no-underline tracking-tight hover:bg-surface-subtle rounded-md flex items-center gap-1.5"
         >
-          <Image
-            src="/keeper.svg"
-            alt="The Keeper logo"
-            width={12}
-            height={12}
-            className="text-foreground"
+          <KeeperLogo
+            aria-label="The Keeper logo"
+            className="size-3 text-foreground"
           />
           Keeper
         </Link>
