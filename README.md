@@ -190,7 +190,7 @@ services:
       COMMERCIAL_MODE: false
       NEXT_PUBLIC_COMMERCIAL_MODE: false
       NEXT_PUBLIC_BASE_URL: http://${DOMAIN:-localhost}:3000
-      NEXT_PUBLIC_SOCKET_URL: ws://${DOMAIN:-localhost}:3001
+      NEXT_PUBLIC_SOCKET_URL: ws://${DOMAIN:-localhost}:3001/socket
       PASSKEY_RP_ID: ${DOMAIN:-localhost}
       PASSKEY_RP_NAME: Keeper
       PASSKEY_ORIGIN: http://${DOMAIN:-localhost}:3000
