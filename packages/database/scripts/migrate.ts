@@ -16,10 +16,17 @@ const connection = new Client({
 const database = drizzle(connection);
 await connection.connect();
 
-await connection.query(`
-  DELETE FROM drizzle.__drizzle_migrations
-  WHERE created_at = 1767760000000
-`);
+try {
+  await connection.query(`
+    DELETE FROM drizzle.__drizzle_migrations
+    WHERE created_at = 1767760000000
+  `);
+} catch {
+  /**
+   * This is meant to remove a bad migration, if this fails - it just
+   * means that the migrations have not yet been run. We can safely ignore.
+   */
+}
 
 await migrate(database, {
   migrationsFolder: join(import.meta.dirname, "..", "drizzle"),
