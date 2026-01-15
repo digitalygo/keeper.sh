@@ -33,7 +33,7 @@ const Heading2: FC<PropsWithChildren<HeadingProps>> = ({ children, className }) 
 );
 
 const Heading3: FC<PropsWithChildren<HeadingProps>> = ({ children, className }) => (
-  <h2
+  <h3
     className={cn(
       lora.className,
       "text-xl font-medium leading-tight -tracking-[0.075em]",
@@ -41,7 +41,11 @@ const Heading3: FC<PropsWithChildren<HeadingProps>> = ({ children, className }) 
     )}
   >
     {children}
-  </h2>
+  </h3>
 );
+
+Heading1.displayName = "Heading1";
+Heading2.displayName = "Heading2";
+Heading3.displayName = "Heading3";
 
 export { Heading1, Heading2, Heading3 };

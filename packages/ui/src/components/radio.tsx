@@ -5,7 +5,7 @@ type RadioSize = "default" | "small";
 
 interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
   className?: string;
-  radioSize?: RadioSize;
+  size?: RadioSize;
   label?: string;
   ref?: Ref<HTMLInputElement>;
 }
@@ -15,8 +15,8 @@ const sizeStyles: Record<RadioSize, { outer: string; inner: string; label: strin
   small: { outer: "size-3.5", inner: "size-1.5", label: "text-xs" },
 };
 
-const Radio = ({ className, disabled, radioSize = "default", label, id, ref, ...props }: RadioProps) => {
-  const styles = sizeStyles[radioSize];
+const Radio = ({ className, disabled, size = "default", label, id, ref, ...props }: RadioProps) => {
+  const styles = sizeStyles[size];
 
   return (
     <label
@@ -57,6 +57,8 @@ const Radio = ({ className, disabled, radioSize = "default", label, id, ref, ...
     </label>
   );
 };
+
+Radio.displayName = "Radio";
 
 export { Radio };
 export type { RadioSize };

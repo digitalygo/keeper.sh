@@ -19,6 +19,7 @@ import {
   ItemIndicator,
 } from "@radix-ui/react-dropdown-menu";
 import { cn } from "../utils/cn";
+import { BUTTON_SIZES } from "../utils/sizes";
 import { Check, ChevronDown, ChevronRight } from "lucide-react";
 
 type DropdownMenuSize = "default" | "small";
@@ -26,12 +27,12 @@ type DropdownMenuSize = "default" | "small";
 const DropdownMenu = Root;
 
 interface DropdownMenuTriggerProps extends ComponentPropsWithoutRef<typeof Trigger> {
-  dropdownSize?: DropdownMenuSize;
+  size?: DropdownMenuSize;
 }
 
 const triggerSizeStyles: Record<DropdownMenuSize, string> = {
-  default: "py-1.5 px-4 text-sm",
-  small: "py-1.25 px-3.5 text-sm",
+  default: BUTTON_SIZES.default,
+  small: BUTTON_SIZES.small,
 };
 
 const getChevronSize = (size: DropdownMenuSize): number => {
@@ -44,7 +45,7 @@ const getChevronSize = (size: DropdownMenuSize): number => {
 const DropdownMenuTrigger: FC<PropsWithChildren<DropdownMenuTriggerProps>> = ({
   children,
   className,
-  dropdownSize = "default",
+  size = "default",
   ...props
 }) => (
   <Trigger
@@ -52,13 +53,13 @@ const DropdownMenuTrigger: FC<PropsWithChildren<DropdownMenuTriggerProps>> = ({
       "bg-gradient-to-b from-white to-neutral-50 border-y border-t-neutral-100 border-b-neutral-200 text-neutral-800 shadow-xs",
       "tracking-tighter font-medium rounded-xl w-fit cursor-pointer",
       "flex items-center gap-1 hover:brightness-95 transition-all",
-      triggerSizeStyles[dropdownSize],
+      triggerSizeStyles[size],
       className,
     )}
     {...props}
   >
     {children}
-    <ChevronDown size={getChevronSize(dropdownSize)} />
+    <ChevronDown size={getChevronSize(size)} />
   </Trigger>
 );
 
@@ -209,6 +210,16 @@ const DropdownMenuSubContent: FC<ComponentPropsWithoutRef<typeof SubContent>> = 
     {...props}
   />
 );
+
+DropdownMenuTrigger.displayName = "DropdownMenuTrigger";
+DropdownMenuContent.displayName = "DropdownMenuContent";
+DropdownMenuItem.displayName = "DropdownMenuItem";
+DropdownMenuCheckboxItem.displayName = "DropdownMenuCheckboxItem";
+DropdownMenuRadioItem.displayName = "DropdownMenuRadioItem";
+DropdownMenuLabel.displayName = "DropdownMenuLabel";
+DropdownMenuSeparator.displayName = "DropdownMenuSeparator";
+DropdownMenuSubTrigger.displayName = "DropdownMenuSubTrigger";
+DropdownMenuSubContent.displayName = "DropdownMenuSubContent";
 
 export {
   DropdownMenu,

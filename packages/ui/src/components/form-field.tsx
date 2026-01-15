@@ -2,12 +2,13 @@ import type { ReactNode, InputHTMLAttributes } from "react";
 import { forwardRef, useId } from "react";
 import { Input } from "./input";
 import type { InputSize } from "./input";
+import { Copy } from "./copy";
 
-interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+interface FormFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
   label?: string;
   error?: string;
   action?: ReactNode;
-  inputSize?: InputSize;
+  size?: InputSize;
 }
 
 const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
@@ -36,9 +37,9 @@ const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
           {...inputProps}
         />
         {error && (
-          <span id={errorId} className="text-xs text-red-600" role="alert">
+          <Copy as="span" id={errorId} size="xs" color="error" role="alert">
             {error}
-          </span>
+          </Copy>
         )}
       </div>
     );

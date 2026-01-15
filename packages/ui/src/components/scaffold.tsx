@@ -15,3 +15,5 @@ export const Scaffold: FC<PropsWithChildren<ScaffoldProps>> = ({ children, class
     {children}
   </div>
 );
+
+Scaffold.displayName = "Scaffold";

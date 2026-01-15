@@ -4,9 +4,9 @@ import { ChevronDown } from "lucide-react";
 
 type SelectSize = "default" | "small";
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
   className?: string;
-  selectSize?: SelectSize;
+  size?: SelectSize;
   ref?: Ref<HTMLSelectElement>;
 }
 
@@ -25,7 +25,7 @@ const iconSizes: Record<SelectSize, number> = {
   small: 14,
 };
 
-const Select = ({ className, disabled, selectSize = "default", children, ref, ...props }: SelectProps) => (
+const Select = ({ className, disabled, size = "default", children, ref, ...props }: SelectProps) => (
   <div className="relative w-full">
     <select
       ref={ref}
@@ -33,7 +33,7 @@ const Select = ({ className, disabled, selectSize = "default", children, ref, ..
       className={cn(
         "w-full appearance-none border border-neutral-300 rounded-xl transition-colors tracking-tight bg-white",
         "focus:outline-none focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200",
-        sizeStyles[selectSize],
+        sizeStyles[size],
         disabled && "bg-neutral-100 text-neutral-400 cursor-not-allowed",
         className,
       )}
@@ -42,14 +42,16 @@ const Select = ({ className, disabled, selectSize = "default", children, ref, ..
       {children}
     </select>
     <ChevronDown
-      size={iconSizes[selectSize]}
+      size={iconSizes[size]}
       className={cn(
         "absolute top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400",
-        iconSizeStyles[selectSize],
+        iconSizeStyles[size],
       )}
     />
   </div>
 );
+
+Select.displayName = "Select";
 
 export { Select };
 export type { SelectSize };

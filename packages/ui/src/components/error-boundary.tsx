@@ -1,6 +1,8 @@
 "use client";
 
 import { Component, type ErrorInfo, type PropsWithChildren, type ReactNode } from "react";
+import { Heading2 } from "./heading";
+import { Copy } from "./copy";
 
 interface ErrorBoundaryProps {
   fallback?: (error: Error, reset: () => void) => ReactNode;
@@ -13,6 +15,8 @@ interface ErrorBoundaryState {
 }
 
 class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProps>, ErrorBoundaryState> {
+  static displayName = "ErrorBoundary";
+
   constructor(props: PropsWithChildren<ErrorBoundaryProps>) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -58,10 +62,10 @@ function DefaultErrorFallback({ error, reset }: DefaultErrorFallbackProps) {
     <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
       <div className="flex flex-col gap-4 max-w-md text-center">
         <div className="text-6xl">⚠️</div>
-        <h2 className="text-2xl font-bold text-neutral-900">Something went wrong</h2>
-        <p className="text-sm text-neutral-600">
+        <Heading2>Something went wrong</Heading2>
+        <Copy size="sm" color="secondary">
           {error.message || "An unexpected error occurred"}
-        </p>
+        </Copy>
         {process.env.NODE_ENV === "development" && (
           <pre className="text-left text-xs bg-neutral-100 p-4 rounded-lg overflow-auto max-h-40">
             {error.stack}

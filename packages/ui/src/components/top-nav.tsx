@@ -42,4 +42,7 @@ const TopNav: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
+TopNav.displayName = "TopNav";
+TopNavItem.displayName = "TopNavItem";
+
 export { TopNav, TopNavItem };

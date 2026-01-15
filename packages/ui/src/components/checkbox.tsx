@@ -6,7 +6,7 @@ type CheckboxSize = "default" | "small";
 
 interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
   className?: string;
-  checkboxSize?: CheckboxSize;
+  size?: CheckboxSize;
   label?: string;
   ref?: Ref<HTMLInputElement>;
 }
@@ -16,8 +16,8 @@ const sizeStyles: Record<CheckboxSize, { box: string; icon: number; label: strin
   small: { box: "size-3.5", icon: 8, label: "text-xs" },
 };
 
-const Checkbox = ({ className, disabled, checkboxSize = "default", label, id, ref, ...props }: CheckboxProps) => {
-  const styles = sizeStyles[checkboxSize];
+const Checkbox = ({ className, disabled, size = "default", label, id, ref, ...props }: CheckboxProps) => {
+  const styles = sizeStyles[size];
 
   return (
     <label
@@ -56,6 +56,8 @@ const Checkbox = ({ className, disabled, checkboxSize = "default", label, id, re
     </label>
   );
 };
+
+Checkbox.displayName = "Checkbox";
 
 export { Checkbox };
 export type { CheckboxSize };

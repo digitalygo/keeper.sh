@@ -28,4 +28,6 @@ const DockIndicator: FC<DockIndicatorProps> = ({ segment }) => {
   );
 };
 
+DockIndicator.displayName = "DockIndicator";
+
 export { DockIndicator };

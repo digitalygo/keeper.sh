@@ -45,6 +45,15 @@ const InlineTableListItem: FC<PropsWithChildren> = ({ children }) => (
   <Copy as="li">{children}</Copy>
 );
 
+InlineTable.displayName = "InlineTable";
+InlineTableHeader.displayName = "InlineTableHeader";
+InlineTableBody.displayName = "InlineTableBody";
+InlineTableRow.displayName = "InlineTableRow";
+InlineTableHead.displayName = "InlineTableHead";
+InlineTableCell.displayName = "InlineTableCell";
+InlineTableList.displayName = "InlineTableList";
+InlineTableListItem.displayName = "InlineTableListItem";
+
 export {
   InlineTable,
   InlineTableHeader,

@@ -40,4 +40,6 @@ const PopoverContent: FC<
   </Portal>
 );
 
+PopoverContent.displayName = "PopoverContent";
+
 export { Popover, PopoverTrigger, PopoverContent, PopoverClose, PopoverArrow };

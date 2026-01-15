@@ -96,5 +96,7 @@ const Notice: FC<NoticeProps> = ({
   );
 };
 
+Notice.displayName = "Notice";
+
 export { Notice };
 export type { NoticeVariant, NoticeProps };

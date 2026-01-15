@@ -28,4 +28,6 @@ const Spinner: FC<SpinnerProps> = ({ className }) => (
   </svg>
 );
 
+Spinner.displayName = "Spinner";
+
 export { Spinner };

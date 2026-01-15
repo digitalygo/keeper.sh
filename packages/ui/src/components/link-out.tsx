@@ -85,4 +85,7 @@ const LinkOut: FC<PropsWithChildren<LinkOutProps>> = ({
   );
 };
 
+LinkOut.displayName = "LinkOut";
+LinkOutContent.displayName = "LinkOutContent";
+
 export { LinkOut };

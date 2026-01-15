@@ -214,8 +214,8 @@ const ProviderDetails: FC<ProviderDetailsProps> = ({ provider, onConnect, classN
               {index + 1}
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium text-neutral-900">{step.title}</span>
-              <span className="text-xs text-neutral-500">{step.description}</span>
+              <Copy as="span" size="sm" weight="medium" color="primary">{step.title}</Copy>
+              <Copy as="span" size="xs" color="tertiary">{step.description}</Copy>
             </div>
           </div>
         ))}

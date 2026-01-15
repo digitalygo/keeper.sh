@@ -3,6 +3,7 @@ import type { VariantProps } from "tailwind-variants";
 import type { LucideIcon } from "lucide-react";
 import { tv } from "tailwind-variants";
 import { cn } from "../utils/cn";
+import { BUTTON_SIZES } from "../utils/sizes";
 import Link from "next/link";
 import { Spinner } from "./spinner";
 
@@ -28,11 +29,7 @@ const buttonVariants = tv({
   base: "tracking-tighter font-medium rounded-xl w-fit flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2",
   variants: {
     variant: variantStyles,
-    size: {
-      large: "py-2 px-4",
-      default: "py-1.5 px-4 text-sm",
-      small: "py-1.25 px-3.5 text-sm",
-    },
+    size: BUTTON_SIZES,
     asLink: {
       true: "hover:cursor-pointer",
       false: "enabled:hover:cursor-pointer disabled:cursor-not-allowed",
@@ -187,6 +184,11 @@ interface ButtonIconProps {
 }
 
 const ButtonIcon: FC<ButtonIconProps> = ({ icon: Icon }) => <Icon size={14} className="-mr-1" />;
+
+Button.displayName = "Button";
+IconButton.displayName = "IconButton";
+ButtonText.displayName = "ButtonText";
+ButtonIcon.displayName = "ButtonIcon";
 
 export { Button, IconButton, ButtonText, ButtonIcon };
 export type { ButtonProps, IconButtonProps };

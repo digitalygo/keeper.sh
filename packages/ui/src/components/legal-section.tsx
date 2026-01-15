@@ -4,4 +4,6 @@ const LegalSection: FC<PropsWithChildren> = ({ children }) => (
   <section className="flex flex-col gap-4">{children}</section>
 );
 
+LegalSection.displayName = "LegalSection";
+
 export { LegalSection };

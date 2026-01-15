@@ -2,6 +2,7 @@
 
 import type { FC } from "react";
 import { cn } from "../../../utils/cn";
+import { Copy } from "../../../components/copy";
 
 interface AccountListItemProps {
   icon: string;
@@ -28,7 +29,7 @@ const AccountListItem: FC<AccountListItemProps> = ({
     <div className="size-5 shrink-0 flex items-center justify-center">
       <img src={icon} alt={name} width={20} height={20} />
     </div>
-    <span className="text-sm font-medium text-neutral-900">{name}</span>
+    <Copy as="span" size="sm" weight="medium" color="primary">{name}</Copy>
   </button>
 );
 

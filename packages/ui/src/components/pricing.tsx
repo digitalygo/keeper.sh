@@ -34,4 +34,9 @@ const PricingFeature: FC<PricingFeatureProps> = ({ children }) => (
   </li>
 );
 
+PricingGrid.displayName = "PricingGrid";
+PricingTier.displayName = "PricingTier";
+PricingFeatureList.displayName = "PricingFeatureList";
+PricingFeature.displayName = "PricingFeature";
+
 export { PricingGrid, PricingTier, PricingFeatureList, PricingFeature };

@@ -16,4 +16,8 @@ const Divider: FC = () => (
   <div className="border-t border-neutral-200" />
 );
 
+FormDivider.displayName = "FormDivider";
+Divider.displayName = "Divider";
+LateralDivider.displayName = "LateralDivider";
+
 export { FormDivider, Divider, LateralDivider };

@@ -313,4 +313,14 @@ const ListItemCheckboxLink: FC<ListItemCheckboxLinkProps> = ({
   );
 };
 
+List.displayName = "List";
+ListItem.displayName = "ListItem";
+ListItemLink.displayName = "ListItemLink";
+ListItemCheckbox.displayName = "ListItemCheckbox";
+ListItemCheckboxLink.displayName = "ListItemCheckboxLink";
+ListItemButton.displayName = "ListItemButton";
+ListItemLabel.displayName = "ListItemLabel";
+ListItemValue.displayName = "ListItemValue";
+ListItemAdd.displayName = "ListItemAdd";
+
 export { List, ListItem, ListItemLink, ListItemCheckbox, ListItemCheckboxLink, ListItemButton, ListItemLabel, ListItemValue, ListItemAdd };

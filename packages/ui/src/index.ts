@@ -50,6 +50,7 @@ export {
 // Typography
 export { Heading1, Heading2, Heading3 } from "./components/heading";
 export { Copy } from "./components/copy";
+export type { CopyProps } from "./components/copy";
 export { LinkOut } from "./components/link-out";
 
 // Utility Components

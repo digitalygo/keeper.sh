@@ -69,4 +69,7 @@ const Dock: FC<PropsWithChildren<DockProps>> = ({ position = "bottom", className
   </nav>
 );
 
+Dock.displayName = "Dock";
+DockItem.displayName = "DockItem";
+
 export { Dock, DockItem, DockIndicator };
