@@ -8,10 +8,7 @@ import {
   SyncCalendarsButton,
   SyncHoverProvider,
 } from "../compositions/calendar-illustration/calendar-illustration";
-import { Heading1, Heading2 } from "../components/heading";
-import { Copy } from "../components/copy";
-import { Button, ButtonText, ButtonIcon } from "../components/button";
-import { LinkOut } from "../components/link-out";
+import { Heading1, Heading2, Copy, Button, ButtonText, ButtonIcon, LinkOut } from "@keeper.sh/ui";
 import { PricingGrid, PricingTier, PricingFeatureList, PricingFeature } from "../components/pricing";
 
 export default function Playground() {

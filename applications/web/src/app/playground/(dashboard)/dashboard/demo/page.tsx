@@ -1,16 +1,17 @@
-import { Heading1, Heading3 } from "../../../components/heading";
-import { Input } from "../../../components/input";
-import { Select } from "../../../components/select";
-import { Checkbox } from "../../../components/checkbox";
-import { Radio } from "../../../components/radio";
 import {
+  Heading1,
+  Heading3,
+  Input,
+  Select,
+  Checkbox,
+  Radio,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "../../../components/dropdown-menu";
+  DropdownMenuLabel
+} from "@keeper.sh/ui";
 import { User, Settings, LogOut, Pencil, Copy, Trash2 } from "lucide-react";
 import { ModalDemo } from "./modal-demo";
 import { ConnectionPreambleDemo } from "./connection-preamble-demo";

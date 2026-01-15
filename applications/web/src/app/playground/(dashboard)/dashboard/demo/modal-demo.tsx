@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, ButtonText } from "../../../components/button";
-import { Modal } from "../../../compositions/modal/modal";
-import { Copy } from "../../../components/copy";
-import { Heading3 } from "../../../components/heading";
+import { Button, ButtonText, Modal, Copy, Heading3 } from "@keeper.sh/ui";
 
 const ModalDemo = () => {
   const [open, setOpen] = useState(false);

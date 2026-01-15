@@ -2,11 +2,9 @@
 
 import type { FC } from "react";
 import { useEffect } from "react";
-import { Modal } from "../../modal/modal";
+import { Modal, Copy, Heading3 } from "@keeper.sh/ui";
 import { AccountList } from "./account-list";
 import { ConnectButton } from "./connect-button";
-import { Copy } from "../../../components/copy";
-import { Heading3 } from "../../../components/heading";
 import {
   useSetAccounts,
   useSetSelectedAccountId,

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Button, ButtonText } from "../../../components/button";
+import { Button, ButtonText } from "@keeper.sh/ui";
 import { useIsLoading } from "../contexts/auth-form-context";
 
 interface SubmitButtonProps {

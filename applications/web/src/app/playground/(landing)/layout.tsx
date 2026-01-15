@@ -1,11 +1,8 @@
 import type { FC, PropsWithChildren } from "react";
 import KeeperSvg from "@/assets/keeper.svg";
-import { Button } from "../components/button";
+import { Button, LinkOut, Copy, Scaffold } from "@keeper.sh/ui";
 import Link from "next/link";
 import { HeartIcon } from "lucide-react";
-import { LinkOut } from "../components/link-out";
-import { Copy } from "../components/copy";
-import { Scaffold } from "../components/scaffold";
 
 const LandingLayout: FC<PropsWithChildren> = ({ children }) => (
   <Scaffold>

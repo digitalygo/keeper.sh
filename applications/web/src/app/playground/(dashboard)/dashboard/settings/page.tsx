@@ -2,12 +2,22 @@
 
 import { useState } from "react";
 import { Fingerprint } from "lucide-react";
-import { Copy } from "../../../components/copy";
-import { Input } from "../../../components/input";
-import { Heading2 } from "../../../components/heading";
-import { Divider } from "../../../components/form-divider";
-import { Modal, ModalHeader, ModalContent, ModalFooter } from "../../../compositions/modal/modal";
-import { List, ListItem, ListItemButton, ListItemLabel, ListItemValue, ListItemAdd } from "../../../components/list";
+import {
+  Copy,
+  Input,
+  Heading2,
+  Divider,
+  Modal,
+  ModalHeader,
+  ModalContent,
+  ModalFooter,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemLabel,
+  ListItemValue,
+  ListItemAdd
+} from "@keeper.sh/ui";
 
 interface Passkey {
   id: string;

@@ -2,7 +2,7 @@
 
 import type { FC, PropsWithChildren } from "react";
 import { motion } from "motion/react";
-import { cn } from "../../utils/cn";
+import { cn } from "@keeper.sh/ui";
 
 const EASING = [0.16, 0.85, 0.2, 1] as const;
 

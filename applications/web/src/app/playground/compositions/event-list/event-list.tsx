@@ -3,7 +3,7 @@
 import type { FC } from "react";
 import { EventItem } from "./components/event-item";
 import type { PlaygroundEvent } from "./utils/mock-events";
-import { List } from "../../components/list";
+import { List } from "@keeper.sh/ui";
 
 interface EventListProps {
   events: PlaygroundEvent[];

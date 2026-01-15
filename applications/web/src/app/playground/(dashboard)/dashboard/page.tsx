@@ -1,7 +1,4 @@
-import { Heading1 } from "../../components/heading";
-import { Copy } from "../../components/copy";
-import { CalendarGrid } from "../../compositions/calendar-grid/calendar-grid";
-import { EventList } from "../../compositions/event-list/event-list";
+import { Heading1, Copy, CalendarGrid, EventList } from "@keeper.sh/ui";
 import { TODAY_EVENTS, TOMORROW_EVENTS } from "../../compositions/event-list/utils/mock-events";
 
 const ALL_EVENTS = [...TODAY_EVENTS, ...TOMORROW_EVENTS];

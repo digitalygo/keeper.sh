@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC, HTMLProps } from "react";
-import { FormField } from "../../../components/form-field";
+import { FormField } from "@keeper.sh/ui";
 import { useShowPasswordField, useIsLoading } from "../contexts/auth-form-context";
 import { AnimatePresence, motion } from "motion/react";
 

@@ -1,4 +1,4 @@
-import { EventList } from "../../../compositions/event-list/event-list";
+import { EventList } from "@keeper.sh/ui";
 import { WEEK_EVENTS } from "./utils/mock-events";
 
 const AgendaPage = () => (

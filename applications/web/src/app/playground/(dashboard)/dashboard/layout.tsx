@@ -1,7 +1,6 @@
 import type { FC, PropsWithChildren } from "react";
-import { Dock, DockItem } from "../../components/dock";
-import { Scaffold } from "../../components/scaffold";
-import { TopNav } from "../../components/top-nav";
+import { Dock, Scaffold, TopNav } from "@keeper.sh/ui";
+import { DockItem } from "../../components/dock";
 
 const DashboardLayout: FC<PropsWithChildren> = ({ children }) => (
   <>

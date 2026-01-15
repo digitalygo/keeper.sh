@@ -4,7 +4,7 @@ import type { FC, FormEvent, HTMLInputAutoCompleteAttribute} from "react";
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Provider, useStore } from "jotai";
-import { FormDivider } from "../../../components/form-divider";
+import { FormDivider, IconButton } from "@keeper.sh/ui";
 import { GoogleIcon } from "@/components/icons/google";
 import {
   showPasswordFieldAtom,
@@ -17,7 +17,6 @@ import { PasswordField } from "./password-field";
 import { UsernameField } from "./username-field";
 import { SubmitButton } from "./submit-button";
 import { OAuthButton } from "./oauth-button";
-import { IconButton } from "@/app/playground/components/button";
 import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 

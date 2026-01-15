@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC, ReactNode } from "react";
-import { Button, ButtonText } from "../../../components/button";
+import { Button, ButtonText } from "@keeper.sh/ui";
 import { useIsLoading, useSetIsLoading } from "../contexts/auth-form-context";
 
 interface OAuthButtonProps {

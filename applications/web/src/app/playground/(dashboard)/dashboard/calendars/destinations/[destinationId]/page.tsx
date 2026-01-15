@@ -5,12 +5,18 @@ import { use, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Trash2 } from "lucide-react";
-import { Copy } from "../../../../../components/copy";
-import { Heading1, Heading2 } from "../../../../../components/heading";
-import { Button, ButtonText } from "../../../../../components/button";
-import { Modal, ModalHeader, ModalFooter } from "../../../../../compositions/modal/modal";
-import { List } from "../../../../../components/list";
-import { Notice } from "../../../../../components/notice";
+import {
+  Copy,
+  Heading1,
+  Heading2,
+  Button,
+  ButtonText,
+  Modal,
+  ModalHeader,
+  ModalFooter,
+  List,
+  Notice
+} from "@keeper.sh/ui";
 import { CalendarCheckboxItem } from "../../components/calendar-checkbox-item";
 
 interface Source {

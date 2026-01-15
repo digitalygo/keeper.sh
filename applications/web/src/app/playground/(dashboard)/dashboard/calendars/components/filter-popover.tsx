@@ -2,10 +2,7 @@
 
 import type { FC } from "react";
 import { useEffect, useRef } from "react";
-import { Select } from "../../../../components/select";
-import { Input } from "../../../../components/input";
-import { Button, ButtonText } from "../../../../components/button";
-import { FormField } from "../../../../components/form-field";
+import { Select, Input, Button, ButtonText, FormField } from "@keeper.sh/ui";
 
 type FilterType =
   | "contains"

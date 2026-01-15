@@ -4,14 +4,20 @@ import type { FC } from "react";
 import { useState } from "react";
 import Image from "next/image";
 import { tv } from "tailwind-variants";
-import { cn } from "../../utils/cn";
+import {
+  cn,
+  Heading3,
+  Copy,
+  Button,
+  ButtonText,
+  List,
+  ListItemButton,
+  ListItemLabel,
+  Modal,
+  ModalHeader,
+  useIsMobile
+} from "@keeper.sh/ui";
 import { Calendar, ExternalLink, Link2 } from "lucide-react";
-import { Heading3 } from "../../components/heading";
-import { Copy } from "../../components/copy";
-import { Button, ButtonText } from "../../components/button";
-import { List, ListItemButton, ListItemLabel } from "../../components/list";
-import { Modal, ModalHeader } from "../modal/modal";
-import { useIsMobile } from "../../hooks/use-is-mobile";
 
 interface ProviderStep {
   title: string;
@@ -287,12 +293,11 @@ const AddSourceModal: FC<AddSourceModalProps> = ({ open, onClose }) => {
         </div>
 
         <div className={layoutStyles.details()}>
-          {PROVIDERS.map((provider) => (
+          {PROVIDERS.filter(p => p.id === selectedProviderId).map((provider) => (
             <ProviderDetails
               key={provider.id}
               provider={provider}
               onConnect={handleConnect}
-              className={providerDetailsVariants({ selected: selectedProviderId === provider.id })}
             />
           ))}
         </div>

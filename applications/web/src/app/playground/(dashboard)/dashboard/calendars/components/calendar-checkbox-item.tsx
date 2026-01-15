@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import Image from "next/image";
-import { ListItemCheckbox, ListItemLabel, ListItemValue } from "../../../../components/list";
+import { ListItemCheckbox, ListItemLabel, ListItemValue } from "@keeper.sh/ui";
 
 interface CalendarCheckboxItemProps {
   id: string;

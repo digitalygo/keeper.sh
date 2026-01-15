@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 
-import { Heading1, Heading2, Heading3 } from "../../components/heading";
-import { Copy } from "../../components/copy";
-import { LinkOut } from "../../components/link-out";
+import { Heading1, Heading2, Heading3, Copy, LinkOut, LegalSection } from "@keeper.sh/ui";
 import {
   InlineTable,
   InlineTableHeader,
@@ -13,7 +11,6 @@ import {
   InlineTableList,
   InlineTableListItem,
 } from "../../components/inline-table";
-import { LegalSection } from "../../components/legal-section";
 
 export const metadata: Metadata = {
   description:

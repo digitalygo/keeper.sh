@@ -3,7 +3,7 @@
 import type { FC, PropsWithChildren } from "react";
 
 import { useSyncHoverSetter } from "../contexts/sync-hover-context";
-import { Button } from "../../../components/button";
+import { Button } from "@keeper.sh/ui";
 
 const SyncCalendarsButton: FC<PropsWithChildren> = ({ children }) => {
   const setIsSyncHovered = useSyncHoverSetter();

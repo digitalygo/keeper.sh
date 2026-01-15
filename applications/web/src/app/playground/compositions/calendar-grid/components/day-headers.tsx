@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { Copy } from "../../../components/copy";
+import { Copy } from "@keeper.sh/ui";
 
 const DAY_LABELS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 

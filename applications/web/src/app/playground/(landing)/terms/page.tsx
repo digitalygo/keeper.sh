@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 
-import { Heading1, Heading2 } from "../../components/heading";
-import { Copy } from "../../components/copy";
-import { LinkOut } from "../../components/link-out";
-import { LegalSection } from "../../components/legal-section";
+import { Heading1, Heading2, Copy, LinkOut, LegalSection } from "@keeper.sh/ui";
 
 export const metadata: Metadata = {
   description:

@@ -3,7 +3,7 @@
 import type { FC } from "react";
 import Image from "next/image";
 import { AlertTriangle, Check, RefreshCw } from "lucide-react";
-import { cn } from "../../../../utils/cn";
+import { cn } from "@keeper.sh/ui";
 
 interface CalendarEvent {
   id: string;

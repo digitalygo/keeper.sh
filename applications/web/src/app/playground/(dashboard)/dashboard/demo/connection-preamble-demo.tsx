@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, ButtonText } from "../../../components/button";
+import { Button, ButtonText } from "@keeper.sh/ui";
 import {
   ConnectionPreambleModalProvider,
   type Account,

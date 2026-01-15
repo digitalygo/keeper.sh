@@ -1,14 +1,12 @@
 "use client";
 
 import type { FC, PropsWithChildren } from "react";
+import { useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
-import { useIsMobile } from "../../hooks/use-is-mobile";
+import { useIsMobile, Heading3, Copy, Button, ButtonText } from "@keeper.sh/ui";
 import { DesktopModal } from "./desktop-modal";
 import { MobileSheet } from "./mobile-sheet";
-import { Heading3 } from "../../components/heading";
-import { Copy } from "../../components/copy";
-import { Button, ButtonText } from "../../components/button";
 
 interface ModalProps {
   open: boolean;
@@ -25,7 +23,7 @@ const getModalComponent = (isMobile: boolean) => {
 
 const Modal: FC<PropsWithChildren<ModalProps>> = ({ open, onClose, className, children }) => {
   const isMobile = useIsMobile();
-  const ModalComponent = getModalComponent(isMobile);
+  const ModalComponent = useMemo(() => getModalComponent(isMobile), [isMobile]);
 
   return (
     <AnimatePresence>

@@ -4,7 +4,7 @@ import type { FC } from "react";
 import { tv } from "tailwind-variants";
 import type { PlaygroundEvent } from "../utils/mock-events";
 import { formatTimeUntil, isEventPast } from "../utils/time-utils";
-import { ListItem } from "../../../components/list";
+import { ListItem } from "@keeper.sh/ui";
 
 interface EventItemProps {
   event: PlaygroundEvent;

@@ -2,7 +2,7 @@
 
 import type { FC } from "react";
 import Image from "next/image";
-import { cn } from "../../../utils/cn";
+import { cn } from "@keeper.sh/ui";
 
 interface AccountListItemProps {
   icon: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormField } from "../../../components/form-field";
+import { FormField } from "@keeper.sh/ui";
 import { useShowPasswordField, useIsLoading } from "../contexts/auth-form-context";
 
 export const EmailField = () => {

@@ -1,7 +1,4 @@
-import { Heading1 } from "../../components/heading";
-import { Copy } from "../../components/copy";
-import { LinkOut } from "../../components/link-out";
-import { AuthForm } from "../../compositions/auth-form/auth-form";
+import { Heading1, Copy, LinkOut, AuthForm } from "@keeper.sh/ui";
 
 const RegisterPage = () => (
     <div className="flex flex-col gap-8 max-w-xs mx-auto w-full">

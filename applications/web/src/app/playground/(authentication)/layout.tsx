@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from "react";
-import { Scaffold } from "../components/scaffold";
+import { Scaffold } from "@keeper.sh/ui";
 
 const AuthenticationLayout: FC<PropsWithChildren> = ({ children }) => (
   <Scaffold>
