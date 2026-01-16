@@ -1,111 +1,19 @@
 "use client"
 
 import { LayoutGroup, motion } from "motion/react";
-import { useState, type ButtonHTMLAttributes, type ComponentProps, type DetailedHTMLProps, type FC, type FormEvent, type HTMLAttributes, type HTMLProps, type InputHTMLAttributes, type PropsWithChildren } from "react"
-import { cn } from "@/utils/cn"
-import Link from "next/link"
-import { tv } from "tailwind-variants"
+import { useState, type FormEvent } from "react"
 import { ArrowLeft, LoaderCircle } from "lucide-react"
 import Image from "next/image"
-import { Lora } from "next/font/google"
 import { AnimatePresence } from "motion/react"
-
-const button = tv({
-  base: `
-    flex gap-1.5 items-center justify-center rounded-xl w-fit text-sm font-medium text-nowrap select-none
-    tracking-tighter border border-transparent shadow-xs
-    enabled:hover:cursor-pointer
-    focus-visible:outline-2 outline-offset-1 outline-border-emphasis
-    disabled:opacity-75 disabled:brightness-100 disabled:backdrop-brightness-unset disabled:cursor-not-allowed
-  `,
-  variants: {
-    variant: {
-      primary: "bg-primary text-primary-foreground hover:brightness-90 active:brightness-80 dark:hover:brightness-80 dark:active:brightness-70",
-      secondary: "text-foreground backdrop-brightness-95 hover:backdrop-brightness-90 active:backdrop-brightness-85 dark:backdrop-brightness-105 dark:hover:backdrop-brightness-150 dark:active:backdrop-brightness-175 shadow-none",
-      border: "border-border text-foreground hover:backdrop-brightness-95 active:backdrop-brightness-90 dark:hover:backdrop-brightness-150 dark:active:backdrop-brightness-175",
-      ghost: "text-foreground hover:backdrop-brightness-95 active:backdrop-brightness-90 dark:hover:backdrop-brightness-150 dark:active:backdrop-brightness-175 shadow-none"
-    },
-    size: {
-      normal: "text-md px-4 py-2.5",
-      compact: "px-3 py-1.5"
-    },
-  },
-  defaultVariants: {
-    size: "normal",
-    variant: "primary",
-  }
-})
-
-type WithButtonProps<ComponentProperties> = ComponentProperties & {
-  variant?: keyof typeof button["variants"]["variant"];
-  size?: keyof typeof button["variants"]["size"];
-}
-
-export const Button: FC<WithButtonProps<DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>>> = ({ className, variant, size, ...props }) => {
-  return (
-    <button {...props} className={cn(button({ variant, size }), className)}></button>
-  )
-}
-
-export const LinkButton: FC<WithButtonProps<ComponentProps<typeof Link>>> = ({ className, variant, size, ...props }) => {
-  return (
-    <Link {...props} className={cn(button({ variant, size }), className)}></Link>
-  )
-}
-
-export const Input: FC<WithButtonProps<DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>>> = ({ className, variant, size, ...props }) => {
-  return (
-    <input {...props} className={cn("px-4 py-2.5 border-border rounded-xl border tracking-tight shadow-xs bg-surface-elevated text-foreground focus-visible:outline-2 outline-offset-1 outline-border-emphasis disabled:opacity-50 disabled:cursor-not-allowed", className)}></input>
-  )
-}
-
-export const FlexRowGroup: FC<PropsWithChildren<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>>> = ({ children, className, ...props }) => {
-  return (
-    <div {...props} className={cn("flex items-center", className)}>
-      {children}
-    </div>
-  )
-}
-
-export const FlexColumnGroup: FC<PropsWithChildren<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>>> = ({ children, className, ...props }) => {
-  return (
-    <div {...props} className={cn("flex flex-col", className)}>
-      {children}
-    </div>
-  )
-}
-
-export const Divider = () => {
-  return (
-    <div className="w-full h-px my-2 bg-[repeating-linear-gradient(to_right,transparent,transparent_4px,var(--color-border)_4px,var(--color-border)_calc(4px*2),transparent_calc(4px*2))]" />
-  )
-}
-
-const headingFont = Lora()
-
-export const Heading1: FC<HTMLProps<HTMLHeadingElement>> = ({ className, children, ...props }) => {
-  return (
-    <h1 {...props} className={cn(headingFont.className, "text-3xl tracking-tighter font-medium text-foreground", className)}>{children}</h1>
-  )
-}
-
-export const Copy: FC<HTMLProps<HTMLParagraphElement>> = ({ className, children, ...props }) => {
-  return (
-    <p {...props} className={cn("tracking-tight leading-relaxed text-sm text-foreground-secondary", className)}>{children}</p>
-  )
-}
-
-export const MicroCopy: FC<HTMLProps<HTMLParagraphElement>> = ({ className, children, ...props }) => {
-  return (
-    <p {...props} className={cn("text-xs tracking-tight leading-relaxed text-foreground-secondary", className)}>{children}</p>
-  )
-}
-
-export const InlineLink: FC<WithButtonProps<ComponentProps<typeof Link>>> = ({ className, children, ...props }) => {
-  return (
-    <Link {...props} className={cn("inline underline text-link", className)}>{children}</Link>
-  )
-}
+import { Button, LinkButton } from "@/components/button"
+import { Input } from "@/components/input"
+import { FlexRowGroup } from "@/components/flex-row-group"
+import { FlexColumnGroup } from "@/components/flex-column-group"
+import { Divider } from "@/components/divider"
+import { Heading1 } from "@/components/heading"
+import { Copy } from "@/components/copy"
+import { MicroCopy } from "@/components/micro-copy"
+import { InlineLink } from "@/components/inline-link"
 
 export default function Blayground() {
   const [loading, setLoading] = useState<boolean>(false);
