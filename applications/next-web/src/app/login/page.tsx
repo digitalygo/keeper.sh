@@ -13,7 +13,12 @@ const LoginPage: FC = () => {
             <Heading1>Welcome back</Heading1>
             <Copy>Sign in to your Keeper account to continue</Copy>
           </FlexColumnGroup>
-          <AuthForm />
+          <AuthForm
+            submitButtonText="Sign in"
+            footerText="No account yet?"
+            footerLinkText="Register"
+            footerLinkHref="/blayground/register"
+          />
         </FlexColumnGroup>
       </div>
     </main>

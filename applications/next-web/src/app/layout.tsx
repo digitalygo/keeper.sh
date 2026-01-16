@@ -25,13 +25,6 @@ const viewport: Viewport = {
   width: "device-width",
 };
 
-const { NEXT_PUBLIC_VISITORS_NOW_TOKEN } = process.env;
-
-const getCountry = cache(
-  (): Promise<string> =>
-    headers().then((headers): string => headers.get("x-vercel-ip-country") ?? ""),
-);
-
 const RootLayout = ({ children }: Readonly<PropsWithChildren>): ReactNode => (
   <html lang="en">
     <head>
@@ -40,7 +33,6 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>): ReactNode => (
       <Suspense>
         {children}
       </Suspense>
-      <Analytics />
     </body>
   </html>
 );

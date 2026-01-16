@@ -7,7 +7,19 @@ import { OrDivider } from "./components/or-divider"
 import { EmailForm } from "./components/email-form"
 import { FormFooter } from "./components/form-footer"
 
-export const AuthForm: FC = () => {
+type AuthFormProps = {
+  submitButtonText: string
+  footerText: string
+  footerLinkText: string
+  footerLinkHref: string
+}
+
+export const AuthForm: FC<AuthFormProps> = ({
+  submitButtonText,
+  footerText,
+  footerLinkText,
+  footerLinkHref
+}) => {
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleSubmit = (event: FormEvent) => {
@@ -20,8 +32,8 @@ export const AuthForm: FC = () => {
       <OAuthLinkButton provider="Google" icon="/integrations/icon-google.svg" href="/auth/google" />
       <OAuthLinkButton provider="Outlook" icon="/integrations/icon-outlook.svg" href="/auth/outlook" />
       <OrDivider />
-      <EmailForm loading={loading} onSubmit={handleSubmit} />
-      <FormFooter />
+      <EmailForm loading={loading} onSubmit={handleSubmit} submitButtonText={submitButtonText} />
+      <FormFooter text={footerText} linkText={footerLinkText} linkHref={footerLinkHref} />
     </>
   )
 }
