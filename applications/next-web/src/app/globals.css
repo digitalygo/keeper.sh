@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
 @source "../../../../packages/ui/src";
+@source "../**/*.tsx";
 
 @theme {
   --color-background: var(--color-neutral-50);
   --color-surface-elevated: var(--color-white);
+  --color-surface-subtle: var(--color-neutral-50);
+  --color-surface-skeleton: var(--color-neutral-200);
 
   --color-foreground: var(--color-neutral-900);
   --color-foreground-secondary: var(--color-neutral-600);
+  --color-foreground-muted: var(--color-neutral-500);
   --color-foreground-subtle: var(--color-neutral-400);
 
   --color-border: var(--color-neutral-200);
@@ -24,9 +28,12 @@
   :root {
     --color-background: var(--color-neutral-950);
     --color-surface-elevated: var(--color-neutral-900);
+    --color-surface-subtle: var(--color-neutral-900);
+    --color-surface-skeleton: var(--color-neutral-700);
 
     --color-foreground: var(--color-neutral-50);
     --color-foreground-secondary: var(--color-neutral-300);
+    --color-foreground-muted: var(--color-neutral-400);
     --color-foreground-subtle: var(--color-neutral-500);
 
     --color-border: var(--color-neutral-800);

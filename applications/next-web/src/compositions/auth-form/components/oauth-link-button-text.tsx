@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from "react"
 
-export const AuthForm: FC<PropsWithChildren> = ({ children }) => {
+export const OAuthLinkButtonText: FC<PropsWithChildren> = ({ children }) => {
   return <>{children}</>
 }

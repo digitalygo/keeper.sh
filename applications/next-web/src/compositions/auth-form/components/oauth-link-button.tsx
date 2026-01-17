@@ -1,18 +1,14 @@
-import type { FC } from "react"
-import Image from "next/image"
+import type { FC, PropsWithChildren } from "react"
 import { LinkButton } from "@/components/button"
 
-type OAuthLinkButtonProps = {
-  provider: string
-  icon: string
+type OAuthLinkButtonProps = PropsWithChildren<{
   href: string
-}
+}>
 
-export const OAuthLinkButton: FC<OAuthLinkButtonProps> = ({ provider, icon, href }) => {
+export const OAuthLinkButton: FC<OAuthLinkButtonProps> = ({ href, children }) => {
   return (
     <LinkButton href={href} className="w-full" variant="border">
-      <Image alt={`${provider} icon`} width={17} height={17} src={icon} />
-      Sign in with {provider}
+      {children}
     </LinkButton>
   )
 }

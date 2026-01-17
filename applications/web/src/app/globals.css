@@ -24,6 +24,7 @@
 
   --color-primary: var(--color-zinc-900);
   --color-primary-hover: var(--color-zinc-700);
+  --color-primary-active: var(--color-zinc-800);
   --color-primary-foreground: var(--color-white);
   --color-focus-ring: oklch(0 0 0 / 0.1);
 
@@ -42,6 +43,9 @@
 
   --color-info: var(--color-blue-800);
   --color-info-surface: var(--color-blue-100);
+
+  --color-link: var(--color-blue-600);
+  --color-link-hover: var(--color-blue-700);
 }
 
 input:-webkit-autofill,

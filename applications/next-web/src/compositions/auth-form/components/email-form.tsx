@@ -1,6 +1,7 @@
 "use client"
 
 import type { FC, FormEvent } from "react"
+import { useState } from "react"
 import { LayoutGroup, motion } from "motion/react";
 import { ArrowLeft, LoaderCircle } from "lucide-react"
 import { AnimatePresence } from "motion/react"
@@ -47,20 +48,25 @@ const loaderVariants = {
 }
 
 type EmailFormProps = {
-  loading: boolean
-  onSubmit: (event: FormEvent) => void
   submitButtonText: string
 }
 
-export const EmailForm: FC<EmailFormProps> = ({ loading, onSubmit, submitButtonText }) => {
+export const EmailForm: FC<EmailFormProps> = ({ submitButtonText }) => {
+  const [loading, setLoading] = useState<boolean>(false)
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    setLoading(true)
+  }
   return (
-    <form onSubmit={onSubmit} className="contents">
+    <form onSubmit={handleSubmit} className="contents">
       <Input type="email" placeholder="johndoe+keeper@example.com" />
       <FlexRowGroup className="items-stretch">
         <LayoutGroup>
           <AnimatePresence>
             {!loading && (
               <motion.div
+                className="flex flex-col items-end"
                 variants={backButtonVariants}
                 exit="exit"
                 transition={{ width: { duration: 0.24 }, opacity: { duration: 0.12 } }}
