@@ -9,9 +9,9 @@ export const Pricing: FC = () => {
   return (
     <section className="py-12 px-4 md:px-8 w-full">
       <div className="max-w-3xl mx-auto flex flex-col gap-12">
-        <div className="flex flex-col gap-2 text-center">
-          <Heading2>Simple, Transparent Pricing</Heading2>
-          <Copy>Choose the plan that works best for you</Copy>
+        <div className="flex flex-col items-center text-center gap-2">
+          <Heading2>Simple Pricing</Heading2>
+          <Copy className="max-w-[48ch]">If you&apos;d like to use the managed version of Keeper, you can get premium features for a small fee - or use it free!</Copy>
         </div>
 
         <div className="flex flex-col gap-2">
