@@ -9,7 +9,7 @@ export const features: Feature[] = [
   {
     id: 1,
     title: "Universal Calendar Sync",
-    description: "Connect Google, Outlook, Apple Calendar and more. Keep all your calendars perfectly in sync.",
+    description: "Google, Outlook, Apple Calendar and more. Keep all your calendars perfectly in sync.",
     gridClasses: "lg:col-start-1 lg:col-span-4 lg:row-start-1 border-border border-b sm:border-r"
   },
   {

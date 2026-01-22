@@ -38,7 +38,7 @@ const LandingPage: FC = () => {
       <main className="pb-12">
         <FlexColumnGroup>
           <HeroSection>
-            <FlexColumnGroup className="pt-32 pb-4 gap-2">
+            <FlexColumnGroup className="pt-12 pb-4 gap-2">
               <HeroTitle className="text-center">All of your calendars in-sync.</HeroTitle>
               <HeroCopy className="text-center">Synchronize events between your personal, work, business and school calendars. Open-source under AGPL-3.0.</HeroCopy>
               <FlexRowGroup className="gap-1 mt-1 mb-2 justify-center">
