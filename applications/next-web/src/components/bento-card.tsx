@@ -14,7 +14,7 @@ export const BentoCard: FC<BentoCardProps> = ({ title, description, gridClasses 
   return (
     <div className={cn("flex flex-col h-full", gridClasses)}>
       <BentoCardPlaceholder />
-      <div className="flex flex-col gap-2 p-4">
+      <div className="flex flex-col gap-1 p-4">
         <Heading3>{title}</Heading3>
         <Copy>{description}</Copy>
       </div>
