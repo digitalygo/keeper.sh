@@ -24,6 +24,6 @@ export const Heading3: FC<HTMLProps<HTMLHeadingElement>> = ({ className, childre
 
 export const Heading4: FC<HTMLProps<HTMLHeadingElement>> = ({ className, children, ...props }) => {
   return (
-    <h4 {...props} className={cn(headingFont.className, "text-lg tracking-tighter font-medium text-foreground", className)}>{children}</h4>
+    <h4 {...props} className={cn(headingFont.className, "text-md tracking-tighter font-medium text-foreground", className)}>{children}</h4>
   )
 }

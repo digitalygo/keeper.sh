@@ -16,7 +16,7 @@ export const features: Feature[] = [
     id: 2,
     title: "Privacy-First & Open Source",
     description: "Open-source, released under an AGPL-3.0 license. Secure and community driven.",
-    gridClasses: "lg:col-start-1 lg:col-span-4 lg:row-start-1 border-border border-b sm:border-r"
+    gridClasses: "lg:col-start-1 lg:col-span-4 lg:row-start-1 border-border border-b lg:border-r"
   },
   {
     id: 3,

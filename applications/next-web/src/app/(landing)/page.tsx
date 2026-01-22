@@ -12,6 +12,7 @@ import { CalendarIllustrationButton } from "@/compositions/calendar-illustration
 import { createBackLeftSkew, createBackRightSkew, createFrontSkew } from "@/compositions/calendar-illustration/utils/stack"
 import type { EventRecord } from "@/compositions/calendar-illustration/utils/events"
 import { MarketingFeatures } from "@/compositions/marketing-features/marketing-features"
+import { Pricing } from "@/compositions/pricing/pricing"
 
 const BACK_LEFT_EVENTS: EventRecord = {
   0: [2, 9, 16, 23],
@@ -64,6 +65,7 @@ const LandingPage: FC = () => {
             </div>
           </HeroSection>
           <MarketingFeatures />
+          <Pricing />
         </FlexColumnGroup>
       </main>
     </>
