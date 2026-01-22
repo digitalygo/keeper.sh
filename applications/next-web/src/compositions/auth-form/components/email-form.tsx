@@ -7,8 +7,7 @@ import { formStateAtom, formErrorAtom } from "../atoms/form-state"
 import { useSetAtom } from "jotai"
 import { EmailFormBackButton } from "./email-form-back-button"
 import { EmailFormSubmitButton } from "./email-form-submit-button"
-import { EmailFormInput } from "./email-form-input"
-import { EmailFormError } from "./email-form-error"
+import { EmailFormInputGroup } from "./email-form-input-group"
 
 type EmailFormProps = {
   submitButtonText: string
@@ -22,17 +21,15 @@ export const EmailForm: FC<EmailFormProps> = ({ submitButtonText }) => {
     event.preventDefault()
     setFormState("loading")
 
-    // Simulate authentication error for testing
     setTimeout(() => {
       setFormState("idle")
-      setFormError("Invalid email or password. Please try again.")
+      setFormError({ message: "Invalid email or password. Please try again.", isActive: true })
     }, 1500)
   }
 
   return (
     <form onSubmit={handleSubmit} className="contents">
-      <EmailFormError />
-      <EmailFormInput />
+      <EmailFormInputGroup />
       <FlexRowGroup className="items-stretch">
         <LayoutGroup>
           <EmailFormBackButton />

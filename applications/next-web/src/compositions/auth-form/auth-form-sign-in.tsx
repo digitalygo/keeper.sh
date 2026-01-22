@@ -21,9 +21,7 @@ export const AuthFormSignIn: FC = () => {
         <OAuthLinkButtonText>Sign in with Outlook</OAuthLinkButtonText>
       </OAuthLinkButton>
       <AuthFormDivider>or</AuthFormDivider>
-      <Provider>
-        <EmailForm submitButtonText="Sign in" />
-      </Provider>
+      <EmailForm submitButtonText="Sign in" />
       <AuthFormFooter>
         <AuthFormFooterText>No account yet?</AuthFormFooterText>
         <AuthFormFooterLink href="/register">Register</AuthFormFooterLink>

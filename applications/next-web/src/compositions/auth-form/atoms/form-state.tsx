@@ -4,4 +4,9 @@ export type FormStateAtomValue = "idle" | "loading";
 
 export const formStateAtom = atom<FormStateAtomValue>("idle")
 
-export const formErrorAtom = atom<string | null>(null)
+type FormError = {
+  message: string
+  isActive: boolean
+} | null
+
+export const formErrorAtom = atom<FormError>(null)

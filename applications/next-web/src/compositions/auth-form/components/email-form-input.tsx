@@ -11,8 +11,8 @@ export const EmailFormInput = () => {
   const setError = useSetAtom(formErrorAtom)
 
   const handleChange = () => {
-    if (error) {
-      setError(null)
+    if (error?.isActive) {
+      setError({ ...error, isActive: false })
     }
   }
 
@@ -21,7 +21,7 @@ export const EmailFormInput = () => {
       disabled={formState === 'loading'}
       type="email"
       placeholder="johndoe+keeper@example.com"
-      className={cn(error && "border-red-500 dark:border-red-400")}
+      className={cn(error?.isActive && "border-red-500 dark:border-red-400")}
       onChange={handleChange}
     />
   )

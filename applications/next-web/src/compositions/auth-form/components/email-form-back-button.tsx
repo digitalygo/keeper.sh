@@ -21,7 +21,7 @@ export const EmailFormBackButton = () => {
 
   return (
     <AnimatePresence>
-      {(formState === 'idle' || error) && (
+      {(formState === 'idle' || error?.isActive) && (
         <motion.div
           className="flex flex-col items-end"
           variants={backButtonVariants}
