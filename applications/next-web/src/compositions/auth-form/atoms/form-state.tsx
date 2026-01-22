@@ -9,4 +9,17 @@ type FormError = {
   isActive: boolean
 } | null
 
-export const formErrorAtom = atom<FormError>(null)
+const formErrorBaseAtom = atom<FormError>(null)
+
+export const formErrorAtom = atom(
+  (get) => get(formErrorBaseAtom),
+  (get, set, update: FormError) => {
+    set(formErrorBaseAtom, update)
+  }
+)
+
+formErrorAtom.onMount = (setAtom) => {
+  return () => {
+    setAtom(null)
+  }
+}

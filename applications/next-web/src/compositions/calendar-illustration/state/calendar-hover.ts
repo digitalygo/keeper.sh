@@ -1,3 +1,16 @@
 import { atom } from "jotai"
 
-export const calendarHoverAtom = atom(false)
+const calendarHoverBaseAtom = atom(false)
+
+export const calendarHoverAtom = atom(
+  (get) => get(calendarHoverBaseAtom),
+  (get, set, update: boolean) => {
+    set(calendarHoverBaseAtom, update)
+  }
+)
+
+calendarHoverAtom.onMount = (setAtom) => {
+  return () => {
+    setAtom(false)
+  }
+}

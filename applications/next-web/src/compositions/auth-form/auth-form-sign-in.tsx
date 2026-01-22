@@ -11,7 +11,7 @@ import { Provider } from "jotai/react"
 
 export const AuthFormSignIn: FC = () => {
   return (
-    <>
+    <Provider>
       <OAuthLinkButton href="/auth/google">
         <OAuthLinkButtonIcon src="/integrations/icon-google.svg" />
         <OAuthLinkButtonText>Sign in with Google</OAuthLinkButtonText>
@@ -26,6 +26,6 @@ export const AuthFormSignIn: FC = () => {
         <AuthFormFooterText>No account yet?</AuthFormFooterText>
         <AuthFormFooterLink href="/register">Register</AuthFormFooterLink>
       </AuthFormFooter>
-    </>
+    </Provider>
   )
 }
