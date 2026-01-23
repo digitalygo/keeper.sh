@@ -6,7 +6,7 @@ const FASTMAIL_SERVER_URL = "https://caldav.fastmail.com/";
 
 const PROVIDER_OPTIONS = {
   providerId: "fastmail",
-  providerName: "FastMail",
+  providerName: "Fastmail",
 };
 
 const createFastMailProvider = (config: CalDAVProviderConfig): DestinationProvider =>

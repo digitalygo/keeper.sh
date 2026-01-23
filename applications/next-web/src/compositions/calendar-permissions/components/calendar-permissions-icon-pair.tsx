@@ -3,8 +3,16 @@ import Image from "next/image"
 import { ArrowLeftRight } from "lucide-react"
 
 type CalendarPermissionsIconPairProps = {
-  provider: "google" | "outlook"
+  provider: "google" | "outlook" | "microsoft-365" | "fastmail" | "icloud"
 }
+
+const providerNames: Record<CalendarPermissionsIconPairProps["provider"], string> = {
+  google: "Google",
+  outlook: "Outlook",
+  "microsoft-365": "Microsoft 365",
+  fastmail: "Fastmail",
+  icloud: "iCloud"
+};
 
 export const CalendarPermissionsIconPair: FC<CalendarPermissionsIconPairProps> = ({ provider }) => {
   return (
@@ -22,7 +30,7 @@ export const CalendarPermissionsIconPair: FC<CalendarPermissionsIconPairProps> =
       <div className="size-14 rounded-xl border border-border shadow-xs bg-surface p-1 flex items-center justify-center">
         <Image
           src={`/integrations/icon-${provider}.svg`}
-          alt={provider === "google" ? "Google" : "Outlook"}
+          alt={providerNames[provider]}
           width={40}
           height={40}
           className="w-full h-full rounded-lg p-3"

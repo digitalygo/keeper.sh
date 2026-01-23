@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
 
 const getOutputType = () => {
   if (process.env.NODE_ENV === "production") {
@@ -13,6 +14,7 @@ const output = getOutputType();
 const config: NextConfig = {
   cacheComponents: true,
   ...(output && { output }),
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   experimental: {
     optimizePackageImports: ['lucide-react', '@keeper.sh/ui'],
   },
@@ -43,4 +45,6 @@ const config: NextConfig = {
   },
 };
 
-export default config;
+const withMDX = createMDX({});
+
+export default withMDX(config);

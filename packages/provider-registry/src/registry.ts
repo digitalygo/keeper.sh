@@ -61,12 +61,12 @@ const fastmailDefinition = {
     passwordHelp: "Generate one at Settings → Password & Security → Third-party apps",
     passwordLabel: "App Password",
     serverUrl: "https://caldav.fastmail.com/",
-    usernameHelp: "Your FastMail email address",
+    usernameHelp: "Your Fastmail email address",
     usernameLabel: "Email",
   },
   icon: "/integrations/icon-fastmail.svg",
   id: "fastmail",
-  name: "FastMail",
+  name: "Fastmail",
 } as const satisfies ProviderDefinition;
 
 const icloudDefinition = {

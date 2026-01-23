@@ -6,7 +6,7 @@ import { Button } from "@/components/button"
 import { LinkButton } from "@/components/button"
 import { ArrowLeft } from "lucide-react"
 
-type CalendarProvider = "google" | "outlook"
+type CalendarProvider = "google" | "outlook" | "microsoft-365"
 
 type CalendarPermissionsActionsProps = {
   provider: CalendarProvider

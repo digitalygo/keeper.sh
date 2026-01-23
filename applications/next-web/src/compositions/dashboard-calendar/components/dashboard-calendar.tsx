@@ -38,7 +38,7 @@ const DashboardCalendar: FC = () => {
     estimateSize: () => {
       if (!containerRef.current) return 100;
       const containerHeight = containerRef.current.clientHeight;
-      return (containerHeight / 3) + 1;
+      return (containerHeight / 4) + 1;
     },
     overscan: 3,
   });
@@ -64,7 +64,7 @@ const DashboardCalendar: FC = () => {
         weekColumn.style.transform = `translateY(${-currentScrollTop}px)`;
       }
 
-      const rowHeight = (container.clientHeight / 3) + 1;
+      const rowHeight = (container.clientHeight / 4) + 1;
       const actualFirstVisibleIndex = Math.floor(currentScrollTop / rowHeight);
       setFirstVisibleRowIndex(actualFirstVisibleIndex);
 
@@ -95,7 +95,7 @@ const DashboardCalendar: FC = () => {
 
       <div className="relative overflow-visible">
         <WeekColumn virtualRows={rowVirtualizer.getVirtualItems()} weekColumnRef={weekColumnRef} />
-        <div ref={calendarRef} className="rounded-2xl overflow-hidden aspect-3/2 shadow-xs">
+        <div ref={calendarRef} className="rounded-2xl overflow-hidden aspect-square shadow-xs">
           <CalendarFrame>
             <div
               ref={containerRef}

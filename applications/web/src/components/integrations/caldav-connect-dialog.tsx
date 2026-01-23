@@ -33,11 +33,11 @@ const PROVIDER_CONFIGS: Record<CalDAVProviderId, ProviderConfig> = {
     usernameLabel: "Username",
   },
   fastmail: {
-    name: "FastMail",
+    name: "Fastmail",
     passwordHelp: "Generate one at Settings → Password & Security → Third-party apps",
     passwordLabel: "App Password",
     serverUrl: "https://caldav.fastmail.com/",
-    usernameHelp: "Your FastMail email address",
+    usernameHelp: "Your Fastmail email address",
     usernameLabel: "Email",
   },
   icloud: {

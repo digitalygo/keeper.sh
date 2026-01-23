@@ -7,11 +7,11 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Copy } from "@/components/copy";
 
-interface NavigationMenuProps extends PropsWithChildren {
+type NavigationMenuProps = {
   className?: string;
-}
+};
 
-const NavigationMenu: FC<NavigationMenuProps> = ({ children, className }) => {
+const NavigationMenu: FC<PropsWithChildren<NavigationMenuProps>> = ({ children, className }) => {
   return (
     <div className={className}>
       <ul>{children}</ul>
@@ -19,23 +19,36 @@ const NavigationMenu: FC<NavigationMenuProps> = ({ children, className }) => {
   );
 };
 
+const navigationItemClassName = "rounded-[0.875rem] flex items-center justify-between p-3 hover:backdrop-brightness-95";
+
 const NavigationItemBase: FC<PropsWithChildren> = ({ children }) => (
-  <div className="rounded-[0.875rem] flex items-center justify-between p-3 hover:backdrop-brightness-95">
+  <div className={navigationItemClassName}>
     {children}
   </div>
 );
 
-interface NavigationItemProps {
+type NavigationItemLinkProps = {
   href: string;
-  children: ReactNode;
-}
+};
 
-const NavigationItem: FC<NavigationItemProps> = ({ href, children }) => {
+const NavigationItemLink: FC<PropsWithChildren<NavigationItemLinkProps>> = ({ href, children }) => {
+  return (
+    <Link href={href} className={navigationItemClassName}>
+      {children}
+    </Link>
+  );
+};
+
+type NavigationItemProps = {
+  href: string;
+};
+
+const NavigationItem: FC<PropsWithChildren<NavigationItemProps>> = ({ href, children }) => {
   return (
     <li>
-      <Link href={href} className="rounded-[0.875rem] flex items-center justify-between p-3 hover:backdrop-brightness-95">
+      <NavigationItemLink href={href}>
         {children}
-      </Link>
+      </NavigationItemLink>
     </li>
   );
 };
@@ -57,13 +70,12 @@ const NavigationItemRightContent: FC<PropsWithChildren> = ({ children }) => (
   </div>
 );
 
-interface NavigationDropdownItemProps {
+type NavigationDropdownItemProps = {
   header: ReactNode;
   rightContent?: ReactNode;
-  children: ReactNode;
-}
+};
 
-const NavigationDropdownItem: FC<NavigationDropdownItemProps> = ({ header, rightContent, children }) => {
+const NavigationDropdownItem: FC<PropsWithChildren<NavigationDropdownItemProps>> = ({ header, rightContent, children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -106,4 +118,4 @@ const NavigationDropdownHeader: FC<PropsWithChildren> = ({ children }) => (
   </div>
 );
 
-export { NavigationMenu, NavigationItem, NavigationItemBase, NavigationItemIcon, NavigationItemLabel, NavigationItemRightContent, NavigationDropdownItem, NavigationDropdownHeader };
+export { NavigationMenu, NavigationItem, NavigationItemBase, NavigationItemLink, NavigationItemIcon, NavigationItemLabel, NavigationItemRightContent, NavigationDropdownItem, NavigationDropdownHeader };
