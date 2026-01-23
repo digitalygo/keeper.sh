@@ -11,10 +11,13 @@ import {
 } from "@/components/navigation-menu";
 import { DashboardCalendar } from "@/compositions/dashboard-calendar/dashboard-calendar";
 import { AccountsPopover } from "@/components/accounts-popover";
+import { PageOverlay } from "@/components/page-overlay";
 
 const DashboardPage: FC = () => {
   return (
-    <div className="flex flex-col gap-12 items-stretch">
+    <>
+      <PageOverlay />
+      <div className="flex flex-col gap-12 items-stretch">
       <div className="flex flex-col gap-2 items-stretch">
         <Suspense fallback={null}>
           <DashboardCalendar />
@@ -117,7 +120,8 @@ const DashboardPage: FC = () => {
       </div>
 
       <KeeperLogoDark className="size-8 text-border self-center" />
-    </div>
+      </div>
+    </>
   );
 };
 

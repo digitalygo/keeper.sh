@@ -1,12 +1,14 @@
 "use client";
 
 import type { FC } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
+import { useAtom } from "jotai";
 import { User } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { AccountsPreview, AccountItem } from "@/compositions/connected-accounts/connected-accounts";
 import { NavigationItemIcon, NavigationItemLabel, NavigationItemRightContent, NavigationMenu } from "./navigation-menu";
 import { cn } from "@/utils/cn";
+import { pageOverlayActiveAtom } from "@/atoms/page-overlay";
 
 export type Account = {
   id: string;
@@ -39,22 +41,15 @@ const AccountsPopoverTriggerContent: FC = () => {
 const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const firstAccountLinkRef = useRef<HTMLAnchorElement>(null);
   const dummyTriggerRef = useRef<HTMLDivElement>(null);
   const dummyPopoverHeightRef = useRef<number>(0);
 
-  const [isOpen, setOpen] = useState<boolean>(false);
+  const [isOpen, setOpen] = useAtom(pageOverlayActiveAtom);
 
   const handleToggle = () => {
-    if (isOpen) {
-      setOpen(false);
-      triggerRef.current?.focus();
-    } else {
-      setOpen(true);
-    }
+    setOpen(!isOpen);
   };
 
-  // Measure dummy trigger height for morph animation
   useEffect(() => {
     const { current: dummyTrigger } = dummyTriggerRef;
     if (!dummyTrigger) return;
@@ -73,19 +68,12 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
     };
   }, []);
 
-  // Focus first account when opened
   useEffect(() => {
-    if (!isOpen || !firstAccountLinkRef.current) return;
-
-    // Delay to allow animation to complete
-    const timeout = setTimeout(() => {
-      firstAccountLinkRef.current?.focus();
-    }, 160);
-
-    return () => clearTimeout(timeout);
+    if (isOpen) {
+      popoverRef.current?.focus();
+    }
   }, [isOpen]);
 
-  // Close on ESC key
   useEffect(() => {
     if (!isOpen) return;
 
@@ -98,35 +86,12 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
-
-  // Close on click outside
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        popoverRef.current &&
-        triggerRef.current &&
-        !popoverRef.current.contains(target) &&
-        !triggerRef.current.contains(target)
-      ) {
-        setTimeout(() => {
-          setOpen(false);
-          triggerRef.current?.focus();
-        }, 0);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, setOpen]);
 
   return (
     <div className="relative grid grid-cols-1 grid-rows-1 *:col-start-1 *:row-start-1">
       <motion.div className="relative">
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isOpen && (
             <motion.div
               ref={popoverRef}
@@ -137,23 +102,23 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
               tabIndex={-1}
               className={
                 cn(
-                  "flex flex-col items-stretch justify-start shadow-xl border border-border -m-px bg-surface-elevated rounded-[0.875rem] absolute top-0 inset-x-0 overflow-hidden z-20 pointer-events-none",
+                  "flex flex-col items-stretch justify-start shadow-md border border-border -m-px bg-surface-elevated rounded-[0.875rem] absolute top-0 inset-x-0 overflow-hidden z-20 pointer-events-none outline-none",
                 )
               }
-              transition={{ duration: 0.16, height: { duration: 0.16 * 2 } }}
+              transition={{ duration: 0.20, height: { duration: 0.20 * 2 } }}
               style={{ transform: `translateY(calc(-50% + ${dummyPopoverHeightRef.current / 2}px))` }}
               initial={{ height: dummyPopoverHeightRef.current }}
               animate={{ height: 'auto' }}
               exit={{
                 height: dummyPopoverHeightRef.current,
-                transition: { duration: 0.16, height: { duration: 0.16 * 2 }, opacity: { delay: 0.16 * 3/2 } },
+                transition: { duration: 0.20, height: { duration: 0.20 * 2 }, opacity: { delay: 0.20 * 2 } },
                 opacity: 0,
               }}
             >
               <div className="relative">
                 <NavigationMenu>
-                  <motion.div
-                    transition={{ duration: 0.16 }}
+                  <motion.li
+                    transition={{ duration: 0.20 }}
                     initial={{ opacity: 1, filter: 'none', height: 'auto' }}
                     animate={{ opacity: 0, filter: 'blur(4px)', height: 0, translateY: -dummyPopoverHeightRef.current }}
                     exit={{ opacity: 1, filter: 'none', height: 'auto', translateY: 0 }}
@@ -161,18 +126,17 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
                     <div className="w-full rounded-[0.875rem] flex items-center justify-between p-3">
                       <AccountsPopoverTriggerContent />
                     </div>
-                  </motion.div>
-                  <motion.div
+                  </motion.li>
+                  <motion.li
                     className="rounded-2xl p-0.5 pointer-events-auto"
-                    transition={{ duration: 0.16 }}
+                    transition={{ duration: 0.20 }}
                     initial={{ opacity: 0, filter: 'blur(8px)' }}
                     animate={{ opacity: 1, filter: 'none' }}
                     exit={{ opacity: 0, filter: 'blur(8px)' }}
                   >
-                    {accounts.map((account, index) => (
+                    {accounts.map((account) => (
                       <AccountItem
                         key={account.id}
-                        ref={index === 0 ? firstAccountLinkRef : undefined}
                         className="rounded-[0.6875rem]"
                         href={account.href}
                         icon={account.icon}
@@ -182,7 +146,7 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
                         status={account.status}
                       />
                     ))}
-                  </motion.div>
+                  </motion.li>
                 </NavigationMenu>
               </div>
             </motion.div>
