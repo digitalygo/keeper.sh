@@ -102,23 +102,23 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
               tabIndex={-1}
               className={
                 cn(
-                  "flex flex-col items-stretch justify-start shadow-md border border-border -m-px bg-surface-elevated rounded-[0.875rem] absolute top-0 inset-x-0 overflow-hidden z-20 pointer-events-none outline-none",
+                  "flex flex-col items-stretch justify-start shadow-lg border border-border -m-px bg-surface-elevated rounded-[0.875rem] absolute top-0 inset-x-0 overflow-hidden z-20 pointer-events-none outline-none",
                 )
               }
-              transition={{ duration: 0.20, height: { duration: 0.20 * 2 } }}
+              transition={{ duration: 0.16, height: { duration: 0.16 * 2 } }}
               style={{ transform: `translateY(calc(-50% + ${dummyPopoverHeightRef.current / 2}px))` }}
               initial={{ height: dummyPopoverHeightRef.current }}
               animate={{ height: 'auto' }}
               exit={{
                 height: dummyPopoverHeightRef.current,
-                transition: { duration: 0.20, height: { duration: 0.20 * 2 }, opacity: { delay: 0.20 * 2 } },
+                transition: { duration: 0.16, height: { duration: 0.16 * 2 }, opacity: { delay: 0.16 * 2 } },
                 opacity: 0,
               }}
             >
               <div className="relative">
                 <NavigationMenu>
                   <motion.li
-                    transition={{ duration: 0.20 }}
+                    transition={{ duration: 0.16 }}
                     initial={{ opacity: 1, filter: 'none', height: 'auto' }}
                     animate={{ opacity: 0, filter: 'blur(4px)', height: 0, translateY: -dummyPopoverHeightRef.current }}
                     exit={{ opacity: 1, filter: 'none', height: 'auto', translateY: 0 }}
@@ -129,7 +129,7 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
                   </motion.li>
                   <motion.li
                     className="rounded-2xl p-0.5 pointer-events-auto"
-                    transition={{ duration: 0.20 }}
+                    transition={{ duration: 0.16 }}
                     initial={{ opacity: 0, filter: 'blur(8px)' }}
                     animate={{ opacity: 1, filter: 'none' }}
                     exit={{ opacity: 0, filter: 'blur(8px)' }}
