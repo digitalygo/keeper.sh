@@ -10,7 +10,6 @@ import {
   NavigationItemRightContent,
 } from "@/components/navigation-menu";
 import { DashboardCalendar } from "@/compositions/dashboard-calendar/dashboard-calendar";
-import { AccountItem } from "@/compositions/connected-accounts/connected-accounts";
 import { AccountsPopover } from "@/components/accounts-popover";
 
 const DashboardPage: FC = () => {
@@ -32,12 +31,46 @@ const DashboardPage: FC = () => {
         </NavigationMenu>
 
         <NavigationMenu className="bg-surface-elevated rounded-2xl shadow-xs border border-border overflow-visible p-0.5">
-          <AccountsPopover>
-            <AccountItem href="/dashboard/accounts/1" icon="/integrations/icon-google.svg" name="Personal" email="ridafkih@gmail.com" eventCount={142} status="synced" />
-            <AccountItem href="/dashboard/accounts/2" icon="/integrations/icon-google.svg" name="Work" email="rida@ridafkih.dev" eventCount={89} status="error" />
-            <AccountItem href="/dashboard/accounts/3" icon="/integrations/icon-icloud.svg" name="Family" email="rida@icloud.com" eventCount={23} status="syncing" />
-            <AccountItem href="/dashboard/accounts/4" icon="/integrations/icon-fastmail.svg" name="Personal" email="rida@keeper.sh" eventCount={56} status="synced" />
-          </AccountsPopover>
+          <AccountsPopover
+            accounts={[
+              {
+                id: '1',
+                href: '/dashboard/accounts/1',
+                icon: '/integrations/icon-google.svg',
+                name: 'Personal',
+                email: 'ridafkih@gmail.com',
+                eventCount: 142,
+                status: 'synced',
+              },
+              {
+                id: '2',
+                href: '/dashboard/accounts/2',
+                icon: '/integrations/icon-google.svg',
+                name: 'Work',
+                email: 'rida@ridafkih.dev',
+                eventCount: 89,
+                status: 'error',
+              },
+              {
+                id: '3',
+                href: '/dashboard/accounts/3',
+                icon: '/integrations/icon-icloud.svg',
+                name: 'Family',
+                email: 'rida@icloud.com',
+                eventCount: 23,
+                status: 'syncing',
+              },
+              {
+                id: '4',
+                href: '/dashboard/accounts/4',
+                icon: '/integrations/icon-fastmail.svg',
+                name: 'Personal',
+                email: 'rida@keeper.sh',
+                eventCount: 56,
+                status: 'synced',
+              },
+            ]}
+          />
 
           <NavigationItem href="/dashboard/calendars">
             <NavigationItemIcon>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC, PropsWithChildren, ReactNode, Ref } from "react";
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -34,21 +34,25 @@ type NavigationItemLinkProps = {
   className?: string;
 };
 
-const NavigationItemLink: FC<PropsWithChildren<NavigationItemLinkProps>> = ({ href, onClick, className, children }) => {
-  if (!href) {
-    return (
-      <button onClick={onClick} className={cn(navigationItemClassName, className)}>
-        {children}
-      </button>
-    )
-  }
+const NavigationItemLink = forwardRef<HTMLAnchorElement, PropsWithChildren<NavigationItemLinkProps>>(
+  ({ href, onClick, className, children }, ref) => {
+    if (!href) {
+      return (
+        <button onClick={onClick} className={cn(navigationItemClassName, className)}>
+          {children}
+        </button>
+      );
+    }
 
-  return (
-    <Link href={href} className={cn(navigationItemClassName, className)}>
-      {children}
-    </Link>
-  );
-};
+    return (
+      <Link ref={ref} href={href} className={cn(navigationItemClassName, className)}>
+        {children}
+      </Link>
+    );
+  }
+);
+
+NavigationItemLink.displayName = 'NavigationItemLink';
 
 type NavigationItemProps = {
   ref?: Ref<HTMLLIElement>
