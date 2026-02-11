@@ -12,7 +12,7 @@ services:
     # ports:
     #   - "80:80"
     volumes:
-      - ${APPDATA}/keeper/pgsql:/var/lib/postgresql/data
+      - keeper-data:/var/lib/postgresql/data
     tmpfs:
       - /tmp:noexec,nosuid,size=100m
     healthcheck:
@@ -30,3 +30,6 @@ services:
       - CHOWN
       - SETGID
       - SETUID
+
+volumes:
+  keeper-data: {}
