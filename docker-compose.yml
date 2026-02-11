@@ -9,6 +9,7 @@ services:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - TRUSTED_ORIGINS=${TRUSTED_ORIGINS}
+      - RESEND_API_KEY=${RESEND_API_KEY}
     # ports:
     #   - "80:80"
     volumes:
