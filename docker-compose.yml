@@ -5,6 +5,7 @@ services:
     image: ghcr.io/ridafkih/keeper-standalone:latest
     container_name: keeper
     hostname: keeper
+    pull_policy: always
     environment:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
