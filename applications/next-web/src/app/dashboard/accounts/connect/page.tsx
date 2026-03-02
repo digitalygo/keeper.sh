@@ -51,7 +51,7 @@ const ConnectAccountPage: FC = () => {
         <NavigationItem href="/dashboard/accounts/connect/fastmail">
           <NavigationItemIcon>
             <Image width={15} height={15} src="/integrations/icon-fastmail.svg" alt="" />
-            <NavigationItemLabel>Connect FastMail</NavigationItemLabel>
+            <NavigationItemLabel>Connect Fastmail</NavigationItemLabel>
           </NavigationItemIcon>
           <NavigationItemRightContent />
         </NavigationItem>

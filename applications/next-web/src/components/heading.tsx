@@ -43,6 +43,6 @@ export const Heading3: FC<HeadingProps> = ({ className, children, inverted, ...p
 
 export const Heading4: FC<HeadingProps> = ({ className, children, inverted, ...props }) => {
   return (
-    <h4 {...props} className={cn(headingFont.className, heading({ size: "md", inverted }), className)}>{children}</h4>
+    <h4 {...props} className={cn(headingFont.className, heading({ inverted }), className)}>{children}</h4>
   )
 }
