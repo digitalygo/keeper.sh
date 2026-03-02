@@ -1,1 +1,41 @@
 @import "tailwindcss";
+
+html,
+body,
+#root {
+  @apply w-full h-full bg-background;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src:
+    local("Geist Sans"),
+    url("./assets/fonts/Geist[wght].ttf") format("ttf");
+}
+
+@theme {
+  --color-foreground: var(--color-neutral-950);
+  --color-background: var(--color-neutral-50);
+
+  --color-interactive-border: var(--color-neutral-200);
+
+  --color-foreground-muted: color-mix(
+    in srgb,
+    var(--color-foreground),
+    transparent 40%
+  );
+
+  --color-foreground-hover: color-mix(
+    in srgb,
+    var(--color-foreground),
+    transparent 20%
+  );
+
+  --color-background-hover: color-mix(
+    in srgb,
+    var(--color-foreground),
+    var(--color-background) 96.125%
+  );
+
+  --font-sans: "Geist Sans", system-ui, sans-serif;
+}

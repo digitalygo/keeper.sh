@@ -5,7 +5,7 @@ export const Route = createFileRoute('/(marketing)/')({
 })
 
 function RouteComponent() {
-  return <div>
-    <h1>Run up!</h1>
-  </div>
+  return (
+    <></>
+  )
 }
