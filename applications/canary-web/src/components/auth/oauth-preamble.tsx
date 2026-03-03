@@ -5,7 +5,7 @@ import { Heading2 } from "../ui/heading";
 import { Text } from "../ui/text";
 import { TextLink } from "../ui/text-link";
 import { Divider } from "../ui/divider";
-import { Button, LinkButton, ButtonIcon } from "../ui/button";
+import { Button, ButtonText, LinkButton, ButtonIcon } from "../ui/button";
 
 type Provider = "google" | "outlook";
 
@@ -55,7 +55,7 @@ export function OAuthPreamble({ provider, backHref }: OAuthPreambleProps) {
             </ButtonIcon>
           </LinkButton>
           <Button type="submit" className="grow justify-center">
-            Connect
+            <ButtonText>Connect</ButtonText>
           </Button>
         </div>
       </form>
