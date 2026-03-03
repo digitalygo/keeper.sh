@@ -17,10 +17,22 @@ html {
   --ui-background: var(--color-neutral-50);
   --ui-background-inverse: var(--ui-foreground);
   --ui-foreground-inverse: var(--ui-background);
-  --ui-interactive-border: var(--color-neutral-200);
-  --ui-foreground-muted: color-mix(in srgb, var(--ui-foreground), transparent 40%);
-  --ui-foreground-hover: color-mix(in srgb, var(--ui-foreground), transparent 20%);
-  --ui-illustration-stripe: color-mix(in srgb, var(--ui-foreground), transparent 92%);
+  --ui-interactive-border: var(--color-neutral-300);
+  --ui-foreground-muted: color-mix(
+    in srgb,
+    var(--ui-foreground),
+    transparent 40%
+  );
+  --ui-foreground-hover: color-mix(
+    in srgb,
+    var(--ui-foreground),
+    transparent 20%
+  );
+  --ui-illustration-stripe: color-mix(
+    in srgb,
+    var(--ui-foreground),
+    transparent 92%
+  );
   --ui-foreground-inverse-muted: color-mix(
     in srgb,
     var(--ui-foreground-inverse),
@@ -84,9 +96,21 @@ html {
     --ui-background-inverse: var(--ui-foreground);
     --ui-foreground-inverse: var(--ui-background);
     --ui-interactive-border: var(--color-neutral-800);
-    --ui-foreground-muted: color-mix(in srgb, var(--ui-foreground), transparent 40%);
-    --ui-foreground-hover: color-mix(in srgb, var(--ui-foreground), transparent 16%);
-    --ui-illustration-stripe: color-mix(in srgb, var(--ui-foreground), transparent 88%);
+    --ui-foreground-muted: color-mix(
+      in srgb,
+      var(--ui-foreground),
+      transparent 40%
+    );
+    --ui-foreground-hover: color-mix(
+      in srgb,
+      var(--ui-foreground),
+      transparent 16%
+    );
+    --ui-illustration-stripe: color-mix(
+      in srgb,
+      var(--ui-foreground),
+      transparent 88%
+    );
     --ui-foreground-inverse-muted: color-mix(
       in srgb,
       var(--ui-foreground-inverse),
