@@ -1,6 +1,6 @@
 import { useSetAtom } from 'jotai'
 import { createFileRoute } from '@tanstack/react-router'
-import { Heading1, Heading2 } from '../../components/ui/heading'
+import { Heading1, Heading2, Heading3 } from '../../components/ui/heading'
 import { Text } from '../../components/ui/text'
 import { ButtonIcon, ButtonText, ExternalLinkButton, LinkButton } from '../../components/ui/button'
 import { MarketingIllustrationCalendar, MarketingIllustrationCalendarCard, Skew, SkewTuple } from '../../components/marketing/marketing-illustration-calendar'
@@ -184,7 +184,7 @@ function RouteComponent() {
                 <MarketingFeatureBentoCard key={feature.id} className={feature.gridClassName}>
                   <MarketingFeatureBentoIllustration />
                   <MarketingFeatureBentoBody>
-                    <Heading2 as={3}>{feature.title}</Heading2>
+                    <Heading3 as="h2">{feature.title}</Heading3>
                     <Text size="sm" className="text-left">
                       {feature.description}
                     </Text>

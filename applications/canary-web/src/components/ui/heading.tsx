@@ -13,12 +13,13 @@ const heading = tv({
 });
 
 type HeadingLevel = 1 | 2 | 3;
-type HeadingProps = PropsWithChildren<{ level: HeadingLevel; as?: HeadingLevel; className?: string }>;
+type HeadingTag = "h1" | "h2" | "h3" | "span" | "p";
+type HeadingProps = PropsWithChildren<{ level: HeadingLevel; as?: HeadingTag; className?: string }>;
 
 const tags = { 1: "h1", 2: "h2", 3: "h3" } as const;
 
 function HeadingBase({ children, level, as, className }: HeadingProps) {
-  const Tag = tags[as ?? level];
+  const Tag = as ?? tags[level];
   return <Tag className={heading({ level, className })}>{children}</Tag>;
 }
 

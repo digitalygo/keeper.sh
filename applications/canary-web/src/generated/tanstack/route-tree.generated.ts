@@ -10,10 +10,17 @@
 
 import { Route as rootRouteImport } from './../../routes/__root'
 import { Route as marketingRouteRouteImport } from './../../routes/(marketing)/route'
+import { Route as authRouteRouteImport } from './../../routes/(auth)/route'
 import { Route as marketingIndexRouteImport } from './../../routes/(marketing)/index'
+import { Route as authRegisterIndexRouteImport } from './../../routes/(auth)/register/index'
+import { Route as authLoginIndexRouteImport } from './../../routes/(auth)/login/index'
 
 const marketingRouteRoute = marketingRouteRouteImport.update({
   id: '/(marketing)',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authRouteRoute = authRouteRouteImport.update({
+  id: '/(auth)',
   getParentRoute: () => rootRouteImport,
 } as any)
 const marketingIndexRoute = marketingIndexRouteImport.update({
@@ -21,27 +28,51 @@ const marketingIndexRoute = marketingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => marketingRouteRoute,
 } as any)
+const authRegisterIndexRoute = authRegisterIndexRouteImport.update({
+  id: '/register/',
+  path: '/register/',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authLoginIndexRoute = authLoginIndexRouteImport.update({
+  id: '/login/',
+  path: '/login/',
+  getParentRoute: () => authRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof marketingIndexRoute
+  '/login/': typeof authLoginIndexRoute
+  '/register/': typeof authRegisterIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof marketingIndexRoute
+  '/login': typeof authLoginIndexRoute
+  '/register': typeof authRegisterIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/(auth)': typeof authRouteRouteWithChildren
   '/(marketing)': typeof marketingRouteRouteWithChildren
   '/(marketing)/': typeof marketingIndexRoute
+  '/(auth)/login/': typeof authLoginIndexRoute
+  '/(auth)/register/': typeof authRegisterIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/login/' | '/register/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/(marketing)' | '/(marketing)/'
+  to: '/' | '/login' | '/register'
+  id:
+    | '__root__'
+    | '/(auth)'
+    | '/(marketing)'
+    | '/(marketing)/'
+    | '/(auth)/login/'
+    | '/(auth)/register/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  authRouteRoute: typeof authRouteRouteWithChildren
   marketingRouteRoute: typeof marketingRouteRouteWithChildren
 }
 
@@ -54,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(auth)': {
+      id: '/(auth)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof authRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(marketing)/': {
       id: '/(marketing)/'
       path: '/'
@@ -61,8 +99,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(auth)/register/': {
+      id: '/(auth)/register/'
+      path: '/register'
+      fullPath: '/register/'
+      preLoaderRoute: typeof authRegisterIndexRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/login/': {
+      id: '/(auth)/login/'
+      path: '/login'
+      fullPath: '/login/'
+      preLoaderRoute: typeof authLoginIndexRouteImport
+      parentRoute: typeof authRouteRoute
+    }
   }
 }
+
+interface authRouteRouteChildren {
+  authLoginIndexRoute: typeof authLoginIndexRoute
+  authRegisterIndexRoute: typeof authRegisterIndexRoute
+}
+
+const authRouteRouteChildren: authRouteRouteChildren = {
+  authLoginIndexRoute: authLoginIndexRoute,
+  authRegisterIndexRoute: authRegisterIndexRoute,
+}
+
+const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
+  authRouteRouteChildren,
+)
 
 interface marketingRouteRouteChildren {
   marketingIndexRoute: typeof marketingIndexRoute
@@ -77,6 +143,7 @@ const marketingRouteRouteWithChildren = marketingRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  authRouteRoute: authRouteRouteWithChildren,
   marketingRouteRoute: marketingRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
