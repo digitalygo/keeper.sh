@@ -124,7 +124,7 @@ const PRICING_PLANS: PricingPlan[] = [
 ]
 
 const PRICING_FEATURES: PricingFeature[] = [
-  { label: 'Sync Interval', free: 'Every 30 minutes', pro: 'Every 60 seconds' },
+  { label: 'Sync Interval', free: 'Every 30 minutes', pro: 'Every 1 minute' },
   { label: 'Number of Source Calendars', free: '0-2', pro: 'infinity' },
   { label: 'Number of Destination Calendars', free: '0-1', pro: 'infinity' },
   { label: 'Aggregated iCal Link', free: 'check', pro: 'check' },

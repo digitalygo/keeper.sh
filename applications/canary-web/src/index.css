@@ -8,6 +8,10 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  color-scheme: light;
+}
+
 @font-face {
   font-family: "Geist Sans";
   src: url("./assets/fonts/Geist[wght].ttf") format("truetype");
@@ -62,4 +66,53 @@ body,
   --font-serif: "Lora", Georgia, serif;
 
   --breakpoint-xs: 28rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+
+  @theme {
+    --color-foreground: var(--color-neutral-100);
+    --color-background: var(--color-neutral-950);
+    --color-background-inverse: var(--color-neutral-100);
+    --color-foreground-inverse: var(--color-neutral-950);
+
+    --color-interactive-border: color-mix(
+      in srgb,
+      var(--color-foreground),
+      transparent 84%
+    );
+
+    --color-foreground-muted: color-mix(
+      in srgb,
+      var(--color-foreground),
+      transparent 40%
+    );
+
+    --color-foreground-hover: color-mix(
+      in srgb,
+      var(--color-foreground),
+      transparent 16%
+    );
+
+    --color-illustration-stripe: color-mix(
+      in srgb,
+      var(--color-foreground),
+      transparent 88%
+    );
+
+    --color-foreground-inverse-muted: color-mix(
+      in srgb,
+      var(--color-foreground-inverse),
+      transparent 40%
+    );
+
+    --color-background-hover: color-mix(
+      in srgb,
+      var(--color-foreground),
+      var(--color-background) 90%
+    );
+  }
 }
