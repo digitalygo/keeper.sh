@@ -11,6 +11,19 @@ import {
   MarketingFeatureBentoIllustration,
   MarketingFeatureBentoSection,
 } from '../../components/marketing/marketing-feature-bento'
+import {
+  MarketingPricingComparisonGrid,
+  MarketingPricingComparisonSpacer,
+  MarketingPricingFeatureDisplay,
+  MarketingPricingFeatureLabel,
+  type MarketingPricingFeatureValueKind,
+  MarketingPricingFeatureMatrix,
+  MarketingPricingFeatureRow,
+  MarketingPricingFeatureValue,
+  MarketingPricingIntro,
+  MarketingPricingPlanCard,
+  MarketingPricingSection,
+} from '../../components/marketing/marketing-pricing-section'
 import { calendarEmphasizedAtom } from '../../state/calendar-emphasized'
 import { ArrowRightIcon, ArrowUpRightIcon } from 'lucide-react'
 
@@ -72,6 +85,52 @@ const MARKETING_FEATURES: MarketingFeature[] = [
   },
 ]
 
+type PricingFeature = {
+  label: string
+  free: MarketingPricingFeatureValueKind
+  pro: MarketingPricingFeatureValueKind
+}
+
+type PricingPlan = {
+  id: string
+  name: string
+  price: string
+  period: string
+  description: string
+  ctaLabel: string
+  highlighted?: boolean
+}
+
+const PRICING_PLANS: PricingPlan[] = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: '$0',
+    period: 'per month',
+    description:
+      'For users that just want to get basic calendar syncing up and running.',
+    ctaLabel: 'Get Started',
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '$5',
+    period: 'per month',
+    description:
+      'For power users who want minutely syncs and unlimited calendars.',
+    ctaLabel: 'Start Free Trial',
+    highlighted: true,
+  },
+]
+
+const PRICING_FEATURES: PricingFeature[] = [
+  { label: 'Sync Interval', free: 'Every 30 minutes', pro: 'Every 60 seconds' },
+  { label: 'Number of Source Calendars', free: '0-2', pro: 'infinity' },
+  { label: 'Number of Destination Calendars', free: '0-1', pro: 'infinity' },
+  { label: 'Aggregated iCal Link', free: 'check', pro: 'check' },
+  { label: 'Priority Support', free: 'minus', pro: 'check' },
+]
+
 export const Route = createFileRoute('/(marketing)/')({
   component: RouteComponent,
 })
@@ -118,7 +177,7 @@ function RouteComponent() {
                 <MarketingFeatureBentoCard key={feature.id} className={feature.gridClassName}>
                   <MarketingFeatureBentoIllustration />
                   <MarketingFeatureBentoBody>
-                    <Heading2>{feature.title}</Heading2>
+                    <Heading2 as={3}>{feature.title}</Heading2>
                     <Text size="sm" className="text-left">
                       {feature.description}
                     </Text>
@@ -127,6 +186,47 @@ function RouteComponent() {
               ))}
             </MarketingFeatureBentoGrid>
           </MarketingFeatureBentoSection>
+
+          <MarketingPricingSection>
+            <MarketingPricingIntro>
+              <Heading2 className="text-center">Hosted Pricing</Heading2>
+              <Text size='sm'>
+                Keeper uses a low-cost freemium model to give you a solid range of choice. Check the GitHub repository for self-hosting options.
+              </Text>
+            </MarketingPricingIntro>
+
+            <MarketingPricingComparisonGrid>
+              <MarketingPricingComparisonSpacer />
+
+              {PRICING_PLANS.map((plan) => (
+                <MarketingPricingPlanCard
+                  key={plan.id}
+                  highlighted={plan.highlighted}
+                  name={plan.name}
+                  price={plan.price}
+                  period={plan.period}
+                  description={plan.description}
+                  ctaLabel={plan.ctaLabel}
+                />
+              ))}
+
+              <MarketingPricingFeatureMatrix>
+                {PRICING_FEATURES.map((feature) => (
+                  <MarketingPricingFeatureRow key={feature.label}>
+                    <MarketingPricingFeatureLabel>
+                      <Text size="sm" className="text-left text-nowrap">{feature.label}</Text>
+                    </MarketingPricingFeatureLabel>
+                    <MarketingPricingFeatureValue>
+                      <MarketingPricingFeatureDisplay value={feature.free} muted />
+                    </MarketingPricingFeatureValue>
+                    <MarketingPricingFeatureValue>
+                      <MarketingPricingFeatureDisplay value={feature.pro} muted />
+                    </MarketingPricingFeatureValue>
+                  </MarketingPricingFeatureRow>
+                ))}
+              </MarketingPricingFeatureMatrix>
+            </MarketingPricingComparisonGrid>
+          </MarketingPricingSection>
         </div>
       </div>
     </div>

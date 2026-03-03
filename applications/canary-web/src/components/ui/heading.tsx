@@ -6,8 +6,8 @@ const heading = tv({
   variants: {
     level: {
       1: "text-4xl",
-      2: "text-xl",
-      3: "text-lg",
+      2: "text-2xl",
+      3: "text-xl",
     },
   },
 });

@@ -23,6 +23,8 @@ body,
 @theme {
   --color-foreground: var(--color-neutral-950);
   --color-background: var(--color-neutral-50);
+  --color-background-inverse: var(--color-foreground);
+  --color-foreground-inverse: var(--color-background);
 
   --color-interactive-border: var(--color-neutral-200);
 
@@ -38,6 +40,18 @@ body,
     transparent 20%
   );
 
+  --color-illustration-stripe: color-mix(
+    in srgb,
+    var(--color-foreground),
+    transparent 92%
+  );
+
+  --color-foreground-inverse-muted: color-mix(
+    in srgb,
+    var(--color-foreground-inverse),
+    transparent 40%
+  );
+
   --color-background-hover: color-mix(
     in srgb,
     var(--color-foreground),
@@ -46,4 +60,6 @@ body,
 
   --font-sans: "Geist Sans", system-ui, sans-serif;
   --font-serif: "Lora", Georgia, serif;
+
+  --breakpoint-xs: 28rem;
 }
