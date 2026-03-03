@@ -12,6 +12,27 @@ html {
   color-scheme: light;
 }
 
+:root {
+  --ui-foreground: var(--color-neutral-950);
+  --ui-background: var(--color-neutral-50);
+  --ui-background-inverse: var(--ui-foreground);
+  --ui-foreground-inverse: var(--ui-background);
+  --ui-interactive-border: var(--color-neutral-200);
+  --ui-foreground-muted: color-mix(in srgb, var(--ui-foreground), transparent 40%);
+  --ui-foreground-hover: color-mix(in srgb, var(--ui-foreground), transparent 20%);
+  --ui-illustration-stripe: color-mix(in srgb, var(--ui-foreground), transparent 92%);
+  --ui-foreground-inverse-muted: color-mix(
+    in srgb,
+    var(--ui-foreground-inverse),
+    transparent 40%
+  );
+  --ui-background-hover: color-mix(
+    in srgb,
+    var(--ui-foreground),
+    var(--ui-background) 96.125%
+  );
+}
+
 @font-face {
   font-family: "Geist Sans";
   src: url("./assets/fonts/Geist[wght].ttf") format("truetype");
@@ -25,42 +46,16 @@ html {
 }
 
 @theme {
-  --color-foreground: var(--color-neutral-950);
-  --color-background: var(--color-neutral-50);
-  --color-background-inverse: var(--color-foreground);
-  --color-foreground-inverse: var(--color-background);
-
-  --color-interactive-border: var(--color-neutral-200);
-
-  --color-foreground-muted: color-mix(
-    in srgb,
-    var(--color-foreground),
-    transparent 40%
-  );
-
-  --color-foreground-hover: color-mix(
-    in srgb,
-    var(--color-foreground),
-    transparent 20%
-  );
-
-  --color-illustration-stripe: color-mix(
-    in srgb,
-    var(--color-foreground),
-    transparent 92%
-  );
-
-  --color-foreground-inverse-muted: color-mix(
-    in srgb,
-    var(--color-foreground-inverse),
-    transparent 40%
-  );
-
-  --color-background-hover: color-mix(
-    in srgb,
-    var(--color-foreground),
-    var(--color-background) 96.125%
-  );
+  --color-foreground: var(--ui-foreground);
+  --color-background: var(--ui-background);
+  --color-background-inverse: var(--ui-background-inverse);
+  --color-foreground-inverse: var(--ui-foreground-inverse);
+  --color-interactive-border: var(--ui-interactive-border);
+  --color-foreground-muted: var(--ui-foreground-muted);
+  --color-foreground-hover: var(--ui-foreground-hover);
+  --color-illustration-stripe: var(--ui-illustration-stripe);
+  --color-foreground-inverse-muted: var(--ui-foreground-inverse-muted);
+  --color-background-hover: var(--ui-background-hover);
 
   --font-sans: "Geist Sans", system-ui, sans-serif;
   --font-serif: "Lora", Georgia, serif;
@@ -73,46 +68,24 @@ html {
     color-scheme: dark;
   }
 
-  @theme {
-    --color-foreground: var(--color-neutral-100);
-    --color-background: var(--color-neutral-950);
-    --color-background-inverse: var(--color-neutral-100);
-    --color-foreground-inverse: var(--color-neutral-950);
-
-    --color-interactive-border: color-mix(
+  :root {
+    --ui-foreground: var(--color-neutral-100);
+    --ui-background: var(--color-neutral-950);
+    --ui-background-inverse: var(--ui-foreground);
+    --ui-foreground-inverse: var(--ui-background);
+    --ui-interactive-border: var(--color-neutral-800);
+    --ui-foreground-muted: color-mix(in srgb, var(--ui-foreground), transparent 40%);
+    --ui-foreground-hover: color-mix(in srgb, var(--ui-foreground), transparent 16%);
+    --ui-illustration-stripe: color-mix(in srgb, var(--ui-foreground), transparent 88%);
+    --ui-foreground-inverse-muted: color-mix(
       in srgb,
-      var(--color-foreground),
-      transparent 84%
-    );
-
-    --color-foreground-muted: color-mix(
-      in srgb,
-      var(--color-foreground),
+      var(--ui-foreground-inverse),
       transparent 40%
     );
-
-    --color-foreground-hover: color-mix(
+    --ui-background-hover: color-mix(
       in srgb,
-      var(--color-foreground),
-      transparent 16%
-    );
-
-    --color-illustration-stripe: color-mix(
-      in srgb,
-      var(--color-foreground),
-      transparent 88%
-    );
-
-    --color-foreground-inverse-muted: color-mix(
-      in srgb,
-      var(--color-foreground-inverse),
-      transparent 40%
-    );
-
-    --color-background-hover: color-mix(
-      in srgb,
-      var(--color-foreground),
-      var(--color-background) 90%
+      var(--ui-foreground),
+      var(--ui-background) 90%
     );
   }
 }
