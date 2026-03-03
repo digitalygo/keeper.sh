@@ -5,6 +5,7 @@ import { MarketingFooter, MarketingFooterTagline, MarketingFooterNav, MarketingF
 import KeeperLogo from "../../assets/keeper.svg?react";
 import { ButtonText, LinkButton } from '../../components/ui/button';
 import { GithubStarButton } from '../../components/ui/github-star-button';
+import { SessionSlot } from '../../components/ui/session-slot';
 import { HeartIcon } from 'lucide-react';
 
 export const Route = createFileRoute('/(marketing)')({
@@ -18,15 +19,27 @@ function RouteComponent() {
         <MarketingHeaderBranding>
           <KeeperLogo className="max-w-6" />
         </MarketingHeaderBranding>
-        <MarketingHeaderActions>
-          <GithubStarButton />
-          <LinkButton size="compact" variant="border" to="/login">
-            <ButtonText>Login</ButtonText>
-          </LinkButton>
-          <LinkButton size="compact" variant="highlight" to="/register">
-            <ButtonText>Register</ButtonText>
-          </LinkButton>
-        </MarketingHeaderActions>
+        <SessionSlot
+          authenticated={
+            <MarketingHeaderActions>
+              <GithubStarButton />
+              <LinkButton size="compact" variant="highlight" to="/dashboard">
+                <ButtonText>Dashboard</ButtonText>
+              </LinkButton>
+            </MarketingHeaderActions>
+          }
+          unauthenticated={
+            <MarketingHeaderActions>
+              <GithubStarButton />
+              <LinkButton size="compact" variant="border" to="/login">
+                <ButtonText>Login</ButtonText>
+              </LinkButton>
+              <LinkButton size="compact" variant="highlight" to="/register">
+                <ButtonText>Register</ButtonText>
+              </LinkButton>
+            </MarketingHeaderActions>
+          }
+        />
       </MarketingHeader>
       <Layout>
       <LayoutItem>

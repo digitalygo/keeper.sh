@@ -1,9 +1,16 @@
-import type { SubmitEvent } from "react";
-import { Link } from "@tanstack/react-router";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useRef, type FormEvent, type ChangeEvent, type Ref } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { motion, AnimatePresence, type Variants } from "motion/react";
 import { ArrowLeft, LoaderCircle } from "lucide-react";
-import { authFormStatusAtom, authFormErrorAtom, type AuthFormStatus } from "../../state/auth-form";
+import {
+  authFormStatusAtom,
+  authFormErrorAtom,
+  authFormStepAtom,
+  authFormEmailAtom,
+  type AuthFormStatus,
+} from "../../state/auth-form";
+import { signInWithEmail, signUpWithEmail } from "../../lib/auth";
 import { Button, LinkButton, ButtonText, ButtonIcon } from "../ui/button";
 import { Divider } from "../ui/divider";
 import { Heading2 } from "../ui/heading";
@@ -18,6 +25,7 @@ export type AuthScreenCopy = {
   switchPrompt: string;
   switchCta: string;
   switchTo: "/login" | "/register";
+  action: "signIn" | "signUp";
 };
 
 type SocialAuthProvider = {
@@ -26,8 +34,6 @@ type SocialAuthProvider = {
   to: "/auth/google" | "/auth/outlook";
   iconSrc: string;
 };
-
-const AUTH_ERROR_MESSAGE = "Invalid email or password. Please try again.";
 
 const SOCIAL_AUTH_PROVIDERS: readonly SocialAuthProvider[] = [
   { id: "google", label: "Google", to: "/auth/google", iconSrc: "/integrations/icon-google.svg" },
@@ -53,7 +59,7 @@ export function AuthForm({ copy }: { copy: AuthScreenCopy }) {
       </div>
       <SocialAuthButtons oauthActionLabel={copy.oauthActionLabel} />
       <Divider>or</Divider>
-      <EmailForm submitLabel={copy.submitLabel} />
+      <EmailForm submitLabel={copy.submitLabel} action={copy.action} />
       <div className="flex flex-col gap-1.5">
         <AuthError />
         <Text size="sm" tone="muted" align="center">
@@ -82,24 +88,82 @@ function SocialAuthButtons({ oauthActionLabel }: { oauthActionLabel: string }) {
   );
 }
 
-function EmailForm({ submitLabel }: { submitLabel: string }) {
+function EmailForm({ submitLabel, action }: { submitLabel: string; action: "signIn" | "signUp" }) {
+  const navigate = useNavigate();
+  const store = useStore();
+  const step = useAtomValue(authFormStepAtom);
+  const setStep = useSetAtom(authFormStepAtom);
   const setStatus = useSetAtom(authFormStatusAtom);
   const setError = useSetAtom(authFormErrorAtom);
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatus("loading");
+  const passwordRef = useRef<HTMLInputElement>(null);
 
-    setTimeout(() => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const email = store.get(authFormEmailAtom);
+
+    if (step === "email") {
+      if (!email) return;
+      setStep("password");
+      requestAnimationFrame(() => passwordRef.current?.focus());
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const password = formData.get("password");
+    if (!password || typeof password !== "string") return;
+
+    setStatus("loading");
+    try {
+      if (action === "signIn") {
+        await signInWithEmail(email, password);
+      } else {
+        await signUpWithEmail(email, password);
+      }
       setStatus("idle");
-      setError({ message: AUTH_ERROR_MESSAGE, active: true });
-    }, 1500);
+      if (action === "signUp") {
+        sessionStorage.setItem("pendingVerificationEmail", email);
+        navigate({ to: "/verify-email" });
+      } else {
+        navigate({ to: "/dashboard" });
+      }
+    } catch (error) {
+      setStatus("idle");
+      setError({
+        message: error instanceof Error ? error.message : "Something went wrong. Please try again.",
+        active: true,
+      });
+    }
+  };
+
+  const handleBack = () => {
+    setStep("email");
+    setError(null);
   };
 
   return (
     <form onSubmit={handleSubmit} className="contents">
-      <EmailInput />
+      <div className="flex flex-col gap-1.5">
+        <EmailInput disabled={step === "password"} />
+        <AnimatePresence>
+          {step === "password" && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <PasswordInput ref={passwordRef} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       <div className="flex items-stretch">
-        <BackButton />
+        {step === "password" ? (
+          <StepBackButton onBack={handleBack} />
+        ) : (
+          <BackButton />
+        )}
         <SubmitButton>{submitLabel}</SubmitButton>
       </div>
     </form>
@@ -128,7 +192,35 @@ function AuthError() {
   );
 }
 
-function EmailInput() {
+function EmailInput({ disabled }: { disabled?: boolean }) {
+  const status = useAtomValue(authFormStatusAtom);
+  const email = useAtomValue(authFormEmailAtom);
+  const setEmail = useSetAtom(authFormEmailAtom);
+  const error = useAtomValue(authFormErrorAtom);
+  const setError = useSetAtom(authFormErrorAtom);
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setEmail(event.target.value);
+    if (error?.active) {
+      setError({ ...error, active: false });
+    }
+  };
+
+  return (
+    <Input
+      id="email"
+      name="email"
+      value={email}
+      disabled={disabled || status === "loading"}
+      type="email"
+      placeholder="johndoe+keeper@example.com"
+      tone={error?.active ? "error" : "neutral"}
+      onChange={handleChange}
+    />
+  );
+}
+
+function PasswordInput({ ref }: { ref?: Ref<HTMLInputElement> }) {
   const status = useAtomValue(authFormStatusAtom);
   const error = useAtomValue(authFormErrorAtom);
   const setError = useSetAtom(authFormErrorAtom);
@@ -141,11 +233,12 @@ function EmailInput() {
 
   return (
     <Input
-      id="email"
-      name="email"
+      ref={ref}
+      id="password"
+      name="password"
       disabled={status === "loading"}
-      type="email"
-      placeholder="johndoe+keeper@example.com"
+      type="password"
+      placeholder="Password"
       tone={error?.active ? "error" : "neutral"}
       onChange={handleChange}
     />
@@ -171,6 +264,31 @@ function BackButton() {
               <ArrowLeft size={16} />
             </ButtonIcon>
           </LinkButton>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function StepBackButton({ onBack }: { onBack: () => void }) {
+  const status = useAtomValue(authFormStatusAtom);
+
+  return (
+    <AnimatePresence initial={false}>
+      {status !== "loading" && (
+        <motion.div
+          className="flex items-stretch"
+          variants={backButtonVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ width: { duration: 0.24 }, opacity: { duration: 0.12 } }}
+        >
+          <Button type="button" variant="border" className="self-stretch justify-center mr-2" onClick={onBack}>
+            <ButtonIcon>
+              <ArrowLeft size={16} />
+            </ButtonIcon>
+          </Button>
         </motion.div>
       )}
     </AnimatePresence>

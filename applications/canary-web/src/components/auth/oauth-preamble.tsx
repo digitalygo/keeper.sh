@@ -1,6 +1,7 @@
-import type { ReactNode, SubmitEvent } from "react";
+import type { ReactNode, FormEvent } from "react";
 import { ArrowLeft, ArrowLeftRight, Check } from "lucide-react";
 import KeeperLogo from "../../assets/keeper.svg?react";
+import { authClient } from "../../lib/auth-client";
 import { Heading2 } from "../ui/heading";
 import { Text } from "../ui/text";
 import { TextLink } from "../ui/text-link";
@@ -22,17 +23,19 @@ const PERMISSIONS = [
   "Add or remove calendar events",
 ];
 
-interface OAuthPreambleProps {
+const PROVIDER_SOCIAL_MAP: Partial<Record<Provider, string>> = {
+  google: "google",
+  outlook: "microsoft",
+};
+
+interface PreambleLayoutProps {
   provider: Provider;
   backHref: string;
-  context: "auth" | "link";
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  children?: ReactNode;
 }
 
-export function OAuthPreamble({ provider, backHref, context }: OAuthPreambleProps) {
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-  };
-
+function PreambleLayout({ provider, backHref, onSubmit, children }: PreambleLayoutProps) {
   return (
     <>
       <ProviderIconPair>
@@ -57,7 +60,7 @@ export function OAuthPreamble({ provider, backHref, context }: OAuthPreambleProp
         ))}
       </ul>
       <Divider />
-      <form onSubmit={handleSubmit} className="contents">
+      <form onSubmit={onSubmit} className="contents">
         <div className="flex items-stretch gap-2">
           <LinkButton to={backHref} variant="border" className="self-stretch justify-center px-3.5">
             <ButtonIcon>
@@ -69,12 +72,45 @@ export function OAuthPreamble({ provider, backHref, context }: OAuthPreambleProp
           </Button>
         </div>
       </form>
-      {context === "auth" && (
-        <TextLink to={backHref}>
-          Don&apos;t import my calendars yet, just log me in.
-        </TextLink>
-      )}
+      {children}
     </>
+  );
+}
+
+interface AuthOAuthPreambleProps {
+  provider: Provider;
+  backHref: string;
+}
+
+export function AuthOAuthPreamble({ provider, backHref }: AuthOAuthPreambleProps) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const socialProvider = PROVIDER_SOCIAL_MAP[provider];
+    if (!socialProvider) return;
+    await authClient.signIn.social({ callbackURL: "/dashboard", provider: socialProvider });
+  };
+
+  return (
+    <PreambleLayout provider={provider} backHref={backHref} onSubmit={handleSubmit}>
+      <TextLink to={backHref}>
+        Don&apos;t import my calendars yet, just log me in.
+      </TextLink>
+    </PreambleLayout>
+  );
+}
+
+interface LinkOAuthPreambleProps {
+  provider: Provider;
+  backHref: string;
+}
+
+export function LinkOAuthPreamble({ provider, backHref }: LinkOAuthPreambleProps) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
+
+  return (
+    <PreambleLayout provider={provider} backHref={backHref} onSubmit={handleSubmit} />
   );
 }
 

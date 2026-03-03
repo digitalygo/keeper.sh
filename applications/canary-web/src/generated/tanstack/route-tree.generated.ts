@@ -14,6 +14,7 @@ import { Route as marketingRouteRouteImport } from './../../routes/(marketing)/r
 import { Route as dashboardRouteRouteImport } from './../../routes/(dashboard)/route'
 import { Route as authRouteRouteImport } from './../../routes/(auth)/route'
 import { Route as marketingIndexRouteImport } from './../../routes/(marketing)/index'
+import { Route as authVerifyEmailRouteImport } from './../../routes/(auth)/verify-email'
 import { Route as authRegisterRouteImport } from './../../routes/(auth)/register'
 import { Route as authLoginRouteImport } from './../../routes/(auth)/login'
 import { Route as oauthDashboardRouteRouteImport } from './../../routes/(oauth)/dashboard/route'
@@ -57,6 +58,11 @@ const marketingIndexRoute = marketingIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => marketingRouteRoute,
+} as any)
+const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => authRouteRoute,
 } as any)
 const authRegisterRoute = authRegisterRouteImport.update({
   id: '/register',
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof oauthDashboardRouteRouteWithChildren
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/verify-email': typeof authVerifyEmailRoute
   '/': typeof marketingIndexRoute
   '/dashboard/connect': typeof oauthDashboardConnectRouteRouteWithChildren
   '/dashboard/settings': typeof dashboardDashboardSettingsRouteRouteWithChildren
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof dashboardDashboardIndexRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/verify-email': typeof authVerifyEmailRoute
   '/': typeof marketingIndexRoute
   '/dashboard/connect': typeof dashboardDashboardConnectIndexRoute
   '/auth/google': typeof oauthAuthGoogleRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/(oauth)/dashboard': typeof oauthDashboardRouteRouteWithChildren
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/register': typeof authRegisterRoute
+  '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/(marketing)/': typeof marketingIndexRoute
   '/(dashboard)/dashboard/connect': typeof dashboardDashboardConnectRouteRouteWithChildren
   '/(dashboard)/dashboard/settings': typeof dashboardDashboardSettingsRouteRouteWithChildren
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/register'
+    | '/verify-email'
     | '/'
     | '/dashboard/connect'
     | '/dashboard/settings'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/register'
+    | '/verify-email'
     | '/'
     | '/dashboard/connect'
     | '/auth/google'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/(oauth)/dashboard'
     | '/(auth)/login'
     | '/(auth)/register'
+    | '/(auth)/verify-email'
     | '/(marketing)/'
     | '/(dashboard)/dashboard/connect'
     | '/(dashboard)/dashboard/settings'
@@ -379,6 +391,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof marketingIndexRouteImport
       parentRoute: typeof marketingRouteRoute
+    }
+    '/(auth)/verify-email': {
+      id: '/(auth)/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof authVerifyEmailRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(auth)/register': {
       id: '/(auth)/register'
@@ -540,11 +559,13 @@ declare module '@tanstack/react-router' {
 interface authRouteRouteChildren {
   authLoginRoute: typeof authLoginRoute
   authRegisterRoute: typeof authRegisterRoute
+  authVerifyEmailRoute: typeof authVerifyEmailRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
   authLoginRoute: authLoginRoute,
   authRegisterRoute: authRegisterRoute,
+  authVerifyEmailRoute: authVerifyEmailRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(

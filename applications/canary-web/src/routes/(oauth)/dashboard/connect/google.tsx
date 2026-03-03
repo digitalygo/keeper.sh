@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { OAuthPreamble } from "../../../../components/auth/oauth-preamble";
+import { LinkOAuthPreamble } from "../../../../components/auth/oauth-preamble";
 
 export const Route = createFileRoute("/(oauth)/dashboard/connect/google")({
   component: RouteComponent,
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/(oauth)/dashboard/connect/google")({
 function RouteComponent() {
   return (
     <div className="flex flex-col gap-3 w-full max-w-xs self-center">
-      <OAuthPreamble provider="google" backHref="/dashboard/connect" context="link" />
+      <LinkOAuthPreamble provider="google" backHref="/dashboard/connect" />
     </div>
   );
 }

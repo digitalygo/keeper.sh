@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, KeyRound, Plus } from "lucide-react";
+import useSWR from "swr";
 import { LinkButton, Button, ButtonIcon, ButtonText } from "../../../../components/ui/button";
+import { authClient } from "../../../../lib/auth-client";
 import {
   Modal,
   ModalContent,
@@ -24,18 +26,35 @@ export const Route = createFileRoute(
   component: RouteComponent,
 });
 
+interface Passkey {
+  id: string;
+  name?: string | null;
+  createdAt: Date;
+}
+
+const fetchPasskeys = async (): Promise<Passkey[]> => {
+  const { data } = await authClient.passkey.listUserPasskeys();
+  return data ?? [];
+};
+
 function RouteComponent() {
-  const passkeys = [
-    { id: "1", name: "MacBook Pro", createdAt: "Jan 15, 2026" },
-  ];
+  const { data: passkeys = [], mutate } = useSWR("passkeys", fetchPasskeys);
+  const [deleteTarget, setDeleteTarget] = useState<Passkey | null>(null);
 
-  const [deleteTarget, setDeleteTarget] = useState<typeof passkeys[number] | null>(null);
-
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await authClient.passkey.deletePasskey({ id: deleteTarget.id });
     setDeleteTarget(null);
+    mutate();
   };
 
-  const handleAdd = () => {};
+  const handleAdd = async () => {
+    await authClient.passkey.addPasskey();
+    mutate();
+  };
+
+  const formatDate = (date: Date) =>
+    new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -49,10 +68,10 @@ function RouteComponent() {
           <NavigationMenuItem key={passkey.id} onClick={() => setDeleteTarget(passkey)}>
             <NavigationMenuItemIcon>
               <KeyRound size={15} />
-              <NavigationMenuItemLabel>{passkey.name}</NavigationMenuItemLabel>
+              <NavigationMenuItemLabel>{passkey.name ?? "Passkey"}</NavigationMenuItemLabel>
             </NavigationMenuItemIcon>
             <NavigationMenuItemTrailing>
-              <Text size="sm" tone="muted">{passkey.createdAt}</Text>
+              <Text size="sm" tone="muted">{formatDate(passkey.createdAt)}</Text>
             </NavigationMenuItemTrailing>
           </NavigationMenuItem>
         ))}
@@ -67,7 +86,7 @@ function RouteComponent() {
         <ModalContent>
           <ModalTitle>Delete passkey?</ModalTitle>
           <ModalDescription>
-            This will remove "{deleteTarget?.name}" from your account. You won't be able to use it to sign in anymore.
+            This will remove "{deleteTarget?.name ?? "Passkey"}" from your account. You won't be able to use it to sign in anymore.
           </ModalDescription>
           <ModalFooter>
             <Button variant="destructive" className="w-full justify-center" onClick={handleDelete}>

@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, KeyRound, Lock, Mail, Trash2 } from "lucide-react";
 import { LinkButton, Button, ButtonIcon, ButtonText } from "../../../../components/ui/button";
+import { useSession } from "../../../../hooks/use-session";
 import { Input } from "../../../../components/ui/input";
+import { deleteAccount } from "../../../../lib/auth";
 import {
   Modal,
   ModalContent,
@@ -24,12 +26,19 @@ export const Route = createFileRoute("/(dashboard)/dashboard/settings/")({
 });
 
 function RouteComponent() {
-  const email = "user@example.com";
+  const { user } = useSession();
+  const navigate = useNavigate();
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const email = user?.email ?? "";
   const passkeyCount = 1;
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
+    const password = passwordRef.current?.value;
+    if (!password) return;
+    await deleteAccount(password);
     setDeleteOpen(false);
+    navigate({ to: "/login" });
   };
 
   return (
@@ -84,7 +93,7 @@ function RouteComponent() {
           <ModalDescription>
             This action is permanent and cannot be undone. All of your data, calendars, and connected accounts will be permanently deleted.
           </ModalDescription>
-          <Input type="password" placeholder="Confirm your password" />
+          <Input ref={passwordRef} type="password" placeholder="Confirm your password" />
           <ModalFooter>
             <Button variant="destructive" className="w-full justify-center" onClick={handleDeleteAccount}>
               <ButtonText>Delete my account</ButtonText>

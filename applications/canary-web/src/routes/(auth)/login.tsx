@@ -13,6 +13,7 @@ const copy: AuthScreenCopy = {
   switchPrompt: "Don't have an account yet?",
   switchCta: "Register",
   switchTo: "/register",
+  action: "signIn",
 };
 
 function RouteComponent() {

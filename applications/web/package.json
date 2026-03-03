@@ -2,13 +2,7 @@
   "name": "@keeper.sh/web",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "bun next dev --turbopack",
-    "build": "bun --bun next build",
-    "start": "bun --bun next start",
-    "types": "tsc --noEmit",
-    "lint": "oxlint ."
-  },
+  "scripts": {},
   "dependencies": {
     "@base-ui/react": "1.0.0",
     "@better-auth/passkey": "^1.4.10",

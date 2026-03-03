@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Link2, Calendar, CalendarDays, Settings, Sparkles, LogOut, Bell, Eye } from "lucide-react";
+import { signOut } from "../../../lib/auth";
 import KeeperLogo from "../../../assets/keeper.svg?react";
 import {
   NavigationMenu,
@@ -17,7 +18,11 @@ export const Route = createFileRoute("/(dashboard)/dashboard/")({
 });
 
 function RouteComponent() {
-  const handleLogout = () => {};
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
   const [notifications, setNotifications] = useState(true);
   const [publicProfile, setPublicProfile] = useState(false);
 
