@@ -9,6 +9,8 @@ services:
     environment:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - BETTER_AUTH_URL=https://${URL}
+      - WEBSOCKET_URL=wss://${URL}/api/socket
       - TRUSTED_ORIGINS=${TRUSTED_ORIGINS}
       - RESEND_API_KEY=${RESEND_API_KEY}
     networks:
