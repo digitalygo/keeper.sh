@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR, { preload, useSWRConfig } from "swr";
 import { Calendar, LoaderCircle } from "lucide-react";
+import { ErrorState } from "../../../../components/ui/error-state";
 import { BackButton } from "../../../../components/ui/back-button";
 import { Button, ButtonText } from "../../../../components/ui/button";
 import { Text } from "../../../../components/ui/text";
+import { fetcher } from "../../../../lib/fetcher";
 import { getAccountLabel } from "../../../../utils/accounts";
 import {
   NavigationMenu,
@@ -74,7 +76,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-1.5">
         <BackButton />
-        <Text size="sm" tone="danger">Something went wrong. Please try again.</Text>
+        <ErrorState onRetry={() => { globalMutate(`/api/accounts/${accountId}`); globalMutate("/api/sources"); }} />
       </div>
     );
   }
@@ -101,7 +103,11 @@ function RouteComponent() {
           <NavigationMenuEmptyItem>No calendars</NavigationMenuEmptyItem>
         ) : (
           calendars.map((calendar) => (
-            <NavigationMenuItem key={calendar.id} to={`/dashboard/accounts/${accountId}/${calendar.id}`}>
+            <NavigationMenuItem
+              key={calendar.id}
+              to={`/dashboard/accounts/${accountId}/${calendar.id}`}
+              onMouseEnter={() => preload(`/api/sources/${calendar.id}`, fetcher)}
+            >
               <NavigationMenuItemIcon>
                 <Calendar size={15} />
                 <NavigationMenuItemLabel>
@@ -170,8 +176,10 @@ function RouteComponent() {
                 });
                 setDeleting(false);
                 if (response.ok) {
-                  await globalMutate("/api/accounts");
-                  await globalMutate("/api/sources");
+                  await Promise.all([
+                    globalMutate("/api/accounts"),
+                    globalMutate("/api/sources"),
+                  ]);
                   navigate({ to: "/dashboard" });
                 }
               }}

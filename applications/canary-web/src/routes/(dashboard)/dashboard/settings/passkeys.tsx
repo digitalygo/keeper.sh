@@ -18,6 +18,7 @@ import {
   NavigationMenuItemLabel,
   NavigationMenuItemTrailing,
 } from "../../../../components/ui/navigation-menu";
+import { ErrorState } from "../../../../components/ui/error-state";
 import { Text } from "../../../../components/ui/text";
 
 export const Route = createFileRoute(
@@ -38,7 +39,7 @@ const fetchPasskeys = async (): Promise<Passkey[]> => {
 };
 
 function RouteComponent() {
-  const { data: passkeys = [], error, mutate } = useSWR("passkeys", fetchPasskeys);
+  const { data: passkeys = [], error, mutate } = useSWR("auth/passkeys", fetchPasskeys);
   const [deleteTarget, setDeleteTarget] = useState<Passkey | null>(null);
 
   const handleDelete = async () => {
@@ -73,7 +74,7 @@ function RouteComponent() {
           <ArrowLeft size={16} />
         </ButtonIcon>
       </LinkButton>
-      {error && <Text size="sm" tone="danger">Failed to load passkeys.</Text>}
+      {error && <ErrorState message="Failed to load passkeys." onRetry={() => mutate()} />}
       <NavigationMenu>
         {passkeys.map((passkey) => (
           <NavigationMenuItem key={passkey.id} onClick={() => setDeleteTarget(passkey)}>

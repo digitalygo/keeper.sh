@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import useSWR from "swr";
 import { LoaderCircle } from "lucide-react";
+import { ErrorState } from "../../../../components/ui/error-state";
 import { BackButton } from "../../../../components/ui/back-button";
 import { Text } from "../../../../components/ui/text";
 import { getAccountLabel } from "../../../../utils/accounts";
@@ -55,7 +56,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-1.5">
         <BackButton fallback={`/dashboard/accounts/${accountId}`} />
-        <Text size="sm" tone="danger">Something went wrong. Please try again.</Text>
+        <ErrorState onRetry={() => mutateCalendar()} />
       </div>
     );
   }

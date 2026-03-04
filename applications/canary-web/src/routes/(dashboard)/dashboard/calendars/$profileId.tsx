@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import useSWR, { useSWRConfig } from "swr";
 import { LoaderCircle, ArrowDown } from "lucide-react";
+import { ErrorState } from "../../../../components/ui/error-state";
 import { BackButton } from "../../../../components/ui/back-button";
 import { Button, ButtonText } from "../../../../components/ui/button";
 import { ProviderIcon } from "../../../../components/ui/provider-icon";
@@ -60,7 +61,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-1.5">
         <BackButton fallback="/dashboard/calendars" />
-        <Text size="sm" tone="danger">Something went wrong. Please try again.</Text>
+        <ErrorState onRetry={() => mutateProfile()} />
       </div>
     );
   }

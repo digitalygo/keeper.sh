@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import useSWR from "swr";
+import useSWR, { preload } from "swr";
 import { CalendarPlus, CalendarSync, CalendarDays, Settings, Sparkles, LogOut, Bell, Eye } from "lucide-react";
+import { ErrorState } from "../../../components/ui/error-state";
 import { signOut } from "../../../lib/auth";
+import { fetcher } from "../../../lib/fetcher";
 import KeeperLogo from "../../../assets/keeper.svg?react";
 import { EventGraph } from "../../../components/dashboard/event-graph";
 import { ProviderIcon } from "../../../components/ui/provider-icon";
@@ -41,7 +43,7 @@ function RouteComponent() {
   };
   const [notifications, setNotifications] = useState(true);
   const [publicProfile, setPublicProfile] = useState(false);
-  const { data: calendarsData, error } = useSWR<CalendarSource[]>("/api/sources");
+  const { data: calendarsData, error, mutate: mutateCalendars } = useSWR<CalendarSource[]>("/api/sources");
   const calendars = calendarsData ?? [];
 
   return (
@@ -59,10 +61,17 @@ function RouteComponent() {
         </NavigationMenu>
         <NavigationMenu>
           {error && (
-            <Text size="sm" tone="danger">Failed to load calendars.</Text>
+            <ErrorState message="Failed to load calendars." onRetry={() => mutateCalendars()} />
           )}
           {calendars.map((calendar) => (
-            <NavigationMenuItem key={calendar.id} to={`/dashboard/accounts/${calendar.accountId}/${calendar.id}`}>
+            <NavigationMenuItem
+              key={calendar.id}
+              to={`/dashboard/accounts/${calendar.accountId}/${calendar.id}`}
+              onMouseEnter={() => {
+                preload(`/api/accounts/${calendar.accountId}`, fetcher);
+                preload(`/api/sources/${calendar.id}`, fetcher);
+              }}
+            >
               <div className="flex items-center gap-2 shrink-0">
                 <ProviderIcon provider={calendar.provider} calendarType={calendar.calendarType} />
                 <Text size="sm" tone="muted">{calendar.name}</Text>

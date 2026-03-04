@@ -71,9 +71,6 @@ const resolvePeriod = (dayOffset: number): Period => {
 const pluralize = (count: number, singular: string) =>
   count === 1 ? `${count} ${singular}` : `${count} ${singular}s`;
 
-const formatSummary = (count: number, dateLabel: string) =>
-  `${pluralize(count, "event")} · ${dateLabel}`;
-
 const buildDays = (events: EventBlock[]) => {
   const counts = new Array<number>(TOTAL_DAYS).fill(0);
   for (const event of events) {

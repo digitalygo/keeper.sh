@@ -20,7 +20,11 @@ function RootComponent() {
         revalidateOnFocus: true,
         revalidateOnReconnect: true,
         shouldRetryOnError: true,
+        errorRetryCount: 3,
         dedupingInterval: 2000,
+        onError: (error, key) => {
+          console.error(`[SWR] ${key}:`, error);
+        },
       }}
     >
       <Outlet />

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import useSWR from "swr";
 import { LoaderCircle, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ErrorState } from "../../../../components/ui/error-state";
 import { BackButton } from "../../../../components/ui/back-button";
 import { Button, ButtonText } from "../../../../components/ui/button";
 import { ProviderIcon } from "../../../../components/ui/provider-icon";
@@ -57,7 +58,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-1.5">
         <BackButton />
-        <Text size="sm" tone="danger">Something went wrong. Please try again.</Text>
+        <ErrorState onRetry={() => mutateProfiles()} />
       </div>
     );
   }

@@ -15,7 +15,7 @@ const fetchSession = async (): Promise<SessionUser | null> => {
 };
 
 export function useSession() {
-  const { data: user, isLoading } = useSWR("session", fetchSession, {
+  const { data: user, isLoading } = useSWR("auth/session", fetchSession, {
     revalidateOnFocus: false,
   });
   return { user: user ?? null, isLoading };

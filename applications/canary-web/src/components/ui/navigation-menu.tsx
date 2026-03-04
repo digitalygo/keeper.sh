@@ -158,10 +158,11 @@ export function NavigationMenu({ children, variant, className }: NavigationMenuP
 type NavigationMenuItemProps = PropsWithChildren<{
   to?: ComponentPropsWithoutRef<typeof Link>["to"];
   onClick?: () => void;
+  onMouseEnter?: () => void;
   className?: string;
 }>;
 
-export function NavigationMenuItem({ to, onClick, className, children }: NavigationMenuItemProps) {
+export function NavigationMenuItem({ to, onClick, onMouseEnter, className, children }: NavigationMenuItemProps) {
   const variant = use(MenuVariantContext);
   const interactive = !!(to || onClick);
   const itemClass = navigationMenuItem({ variant, interactive, className });
@@ -175,7 +176,7 @@ export function NavigationMenuItem({ to, onClick, className, children }: Navigat
   if (to) {
     return (
       <li>
-        <Link to={to} className={itemClass}>
+        <Link to={to} className={itemClass} onMouseEnter={onMouseEnter}>
           {content}
         </Link>
       </li>
