@@ -8,6 +8,7 @@ import { fetcher } from "../../../lib/fetcher";
 import KeeperLogo from "../../../assets/keeper.svg?react";
 import { EventGraph } from "../../../components/dashboard/event-graph";
 import { ProviderIcon } from "../../../components/ui/provider-icon";
+import type { CalendarSource } from "../../../types/api";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -23,17 +24,6 @@ import { getAccountLabel } from "../../../utils/accounts";
 export const Route = createFileRoute("/(dashboard)/dashboard/")({
   component: RouteComponent,
 });
-
-interface CalendarSource {
-  id: string;
-  name: string;
-  calendarType: string;
-  capabilities: string[];
-  accountId: string;
-  provider: string;
-  displayName: string | null;
-  email: string | null;
-}
 
 function RouteComponent() {
   const navigate = useNavigate();

@@ -4,7 +4,9 @@ import { LoaderCircle } from "lucide-react";
 import { ErrorState } from "../../../../components/ui/error-state";
 import { BackButton } from "../../../../components/ui/back-button";
 import { Text } from "../../../../components/ui/text";
+import { apiFetch } from "../../../../lib/fetcher";
 import { getAccountLabel } from "../../../../utils/accounts";
+import type { CalendarAccount, CalendarDetail } from "../../../../types/api";
 import {
   NavigationMenu,
   NavigationMenuEditableItem,
@@ -16,28 +18,6 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
 });
-
-interface CalendarAccount {
-  id: string;
-  provider: string;
-  displayName: string | null;
-  email: string | null;
-}
-
-interface CalendarDetail {
-  id: string;
-  name: string;
-  calendarType: string;
-  capabilities: string[];
-  provider: string;
-  url: string | null;
-  calendarUrl: string | null;
-  excludeWorkingLocation: boolean;
-  excludeFocusTime: boolean;
-  excludeOutOfOffice: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
 function RouteComponent() {
   const { accountId, calendarId } = Route.useParams();
@@ -84,9 +64,8 @@ function RouteComponent() {
           onCommit={async (name) => {
             await mutateCalendar(
               async (current) => {
-                await fetch(`/api/sources/${calendarId}`, {
+                await apiFetch(`/api/sources/${calendarId}`, {
                   method: "PATCH",
-                  credentials: "include",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ name }),
                 });

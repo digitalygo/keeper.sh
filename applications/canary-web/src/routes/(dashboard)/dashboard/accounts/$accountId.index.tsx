@@ -6,8 +6,9 @@ import { ErrorState } from "../../../../components/ui/error-state";
 import { BackButton } from "../../../../components/ui/back-button";
 import { Button, ButtonText } from "../../../../components/ui/button";
 import { Text } from "../../../../components/ui/text";
-import { fetcher } from "../../../../lib/fetcher";
+import { fetcher, apiFetch } from "../../../../lib/fetcher";
 import { getAccountLabel } from "../../../../utils/accounts";
+import type { CalendarAccount, CalendarSource } from "../../../../types/api";
 import {
   NavigationMenu,
   NavigationMenuEmptyItem,
@@ -29,28 +30,6 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
 });
-
-interface CalendarAccount {
-  id: string;
-  provider: string;
-  displayName: string | null;
-  email: string | null;
-  authType: string;
-  needsReauthentication: boolean;
-  calendarCount: number;
-  createdAt: string;
-}
-
-interface CalendarSource {
-  id: string;
-  name: string;
-  calendarType: string;
-  capabilities: string[];
-  accountId: string;
-  provider: string;
-  email: string | null;
-  needsReauthentication: boolean;
-}
 
 function RouteComponent() {
   const { accountId } = Route.useParams();
@@ -170,17 +149,15 @@ function RouteComponent() {
               className="w-full justify-center"
               onClick={async () => {
                 setDeleting(true);
-                const response = await fetch(`/api/accounts/${accountId}`, {
-                  credentials: "include",
-                  method: "DELETE",
-                });
-                setDeleting(false);
-                if (response.ok) {
+                try {
+                  await apiFetch(`/api/accounts/${accountId}`, { method: "DELETE" });
                   await Promise.all([
                     globalMutate("/api/accounts"),
                     globalMutate("/api/sources"),
                   ]);
                   navigate({ to: "/dashboard" });
+                } finally {
+                  setDeleting(false);
                 }
               }}
               disabled={deleting}

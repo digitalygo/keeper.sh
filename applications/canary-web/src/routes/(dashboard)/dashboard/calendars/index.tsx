@@ -7,6 +7,8 @@ import { BackButton } from "../../../../components/ui/back-button";
 import { Button, ButtonText } from "../../../../components/ui/button";
 import { ProviderIcon } from "../../../../components/ui/provider-icon";
 import { Text } from "../../../../components/ui/text";
+import { apiFetch } from "../../../../lib/fetcher";
+import type { SyncProfile, CalendarEntry } from "../../../../types/api";
 import {
   NavigationMenu,
   NavigationMenuCheckboxItem,
@@ -27,22 +29,6 @@ import {
 export const Route = createFileRoute("/(dashboard)/dashboard/calendars/")({
   component: RouteComponent,
 });
-
-interface SyncProfile {
-  id: string;
-  name: string;
-  sources: string[];
-  destinations: string[];
-  createdAt: string;
-}
-
-interface CalendarEntry {
-  id: string;
-  name: string;
-  calendarType: string;
-  capabilities: string[];
-  provider?: string;
-}
 
 function RouteComponent() {
   const { data: profiles, isLoading, error, mutate: mutateProfiles } = useSWR<SyncProfile[]>(
@@ -86,9 +72,8 @@ function RouteComponent() {
   const handleNameCommit = async (name: string) => {
     if (isNewSlot) {
       setNewProfileName(name);
-      await fetch("/api/profiles", {
+      await apiFetch("/api/profiles", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
@@ -100,9 +85,8 @@ function RouteComponent() {
     const updated = profiles.map((p) => (p.id === profile.id ? { ...p, name } : p));
     await mutateProfiles(
       async () => {
-        await fetch(`/api/profiles/${profile.id}`, {
+        await apiFetch(`/api/profiles/${profile.id}`, {
           method: "PATCH",
-          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name }),
         });
@@ -170,18 +154,26 @@ function RouteComponent() {
           deleting={deleting}
           onConfirm={async () => {
             setDeleting(true);
-            const response = await fetch(`/api/profiles/${profile.id}`, {
-              credentials: "include",
-              method: "DELETE",
-            });
-            setDeleting(false);
-            if (response.ok) {
-              await mutateProfiles();
-              const newLength = profiles.length - 1;
+            const remaining = profiles.filter((p) => p.id !== profile.id);
+            try {
+              await mutateProfiles(
+                async () => {
+                  await apiFetch(`/api/profiles/${profile.id}`, { method: "DELETE" });
+                  return remaining;
+                },
+                {
+                  optimisticData: remaining,
+                  rollbackOnError: true,
+                  revalidate: false,
+                },
+              );
+              const newLength = remaining.length;
               if (currentIndex >= newLength) {
                 setCurrentIndex(Math.max(0, newLength - 1));
               }
               setDeleteOpen(false);
+            } finally {
+              setDeleting(false);
             }
           }}
         />
@@ -211,9 +203,8 @@ function NewProfileSlot({ name, calendars, onProfileCreated }: NewProfileSlotPro
     if (profileIdRef.current) return profileIdRef.current;
     if (creatingRef.current) return creatingRef.current;
 
-    creatingRef.current = fetch("/api/profiles", {
+    creatingRef.current = apiFetch("/api/profiles", {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: nameRef.current }),
     })
@@ -236,9 +227,8 @@ function NewProfileSlot({ name, calendars, onProfileCreated }: NewProfileSlotPro
     setSources(next);
 
     const profileId = await ensureProfile();
-    await fetch(`/api/profiles/${profileId}/sources`, {
+    await apiFetch(`/api/profiles/${profileId}/sources`, {
       method: "PUT",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ calendarIds: [...next] }),
     });
@@ -255,9 +245,8 @@ function NewProfileSlot({ name, calendars, onProfileCreated }: NewProfileSlotPro
     setDestinations(next);
 
     const profileId = await ensureProfile();
-    await fetch(`/api/profiles/${profileId}/destinations`, {
+    await apiFetch(`/api/profiles/${profileId}/destinations`, {
       method: "PUT",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ calendarIds: [...next] }),
     });
@@ -355,9 +344,8 @@ function ProfileDetail({ profile, profiles, calendars, mutateProfiles, onDelete 
 
     await updateProfile(
       { ...profile, sources: updatedSources },
-      () => fetch(`/api/profiles/${profile.id}/sources`, {
+      () => apiFetch(`/api/profiles/${profile.id}/sources`, {
         method: "PUT",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ calendarIds: updatedSources }),
       }).then(() => {}),
@@ -371,9 +359,8 @@ function ProfileDetail({ profile, profiles, calendars, mutateProfiles, onDelete 
 
     await updateProfile(
       { ...profile, destinations: updatedDestinations },
-      () => fetch(`/api/profiles/${profile.id}/destinations`, {
+      () => apiFetch(`/api/profiles/${profile.id}/destinations`, {
         method: "PUT",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ calendarIds: updatedDestinations }),
       }).then(() => {}),

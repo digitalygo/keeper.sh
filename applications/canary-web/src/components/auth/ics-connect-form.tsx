@@ -1,7 +1,9 @@
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import { LoaderCircle, Upload } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useSWRConfig } from "swr";
 import { getFormData } from "../../lib/forms";
+import { apiFetch } from "../../lib/fetcher";
 import { BackButton } from "../ui/back-button";
 import { Button, ButtonText } from "../ui/button";
 import { Divider } from "../ui/divider";
@@ -10,6 +12,7 @@ import { Text } from "../ui/text";
 
 export function ICSFeedForm() {
   const navigate = useNavigate();
+  const { mutate: globalMutate } = useSWRConfig();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,20 +27,22 @@ export function ICSFeedForm() {
     setSubmitting(true);
     setError(null);
 
-    const response = await fetch("/api/ics", {
-      body: JSON.stringify({ name: "iCal Feed", url }),
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Failed to subscribe to feed");
+    try {
+      await apiFetch("/api/ics", {
+        body: JSON.stringify({ name: "iCal Feed", url }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+    } catch {
+      setError("Failed to subscribe to feed");
       setSubmitting(false);
       return;
     }
 
+    await Promise.all([
+      globalMutate("/api/accounts"),
+      globalMutate("/api/sources"),
+    ]);
     navigate({ to: "/dashboard/calendars" });
   };
 

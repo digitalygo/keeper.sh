@@ -7,6 +7,7 @@ import { Button, ButtonText } from "../ui/button";
 import { Divider } from "../ui/divider";
 import { Input } from "../ui/input";
 import { Text } from "../ui/text";
+import { apiFetch } from "../../lib/fetcher";
 
 type CalDAVProvider = "fastmail" | "icloud" | "caldav";
 
@@ -46,17 +47,15 @@ export function CalDAVConnectForm({ provider }: CalDAVConnectFormProps) {
     setLoading(true);
     setError(null);
 
-    const discoverResponse = await fetch("/api/sources/caldav/discover", {
+    const discoverResponse = await apiFetch("/api/sources/caldav/discover", {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ serverUrl, username, password }),
-    });
+    }).catch(() => null);
 
-    if (!discoverResponse.ok) {
+    if (!discoverResponse) {
       setLoading(false);
-      const data = await discoverResponse.json();
-      setError(data.error ?? "Failed to discover calendars");
+      setError("Failed to discover calendars");
       return;
     }
 
@@ -69,24 +68,22 @@ export function CalDAVConnectForm({ provider }: CalDAVConnectFormProps) {
     }
 
     for (const calendar of calendars) {
-      const response = await fetch("/api/sources/caldav", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          calendarUrl: calendar.url,
-          name: calendar.displayName,
-          password,
-          provider,
-          serverUrl,
-          username,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
+      try {
+        await apiFetch("/api/sources/caldav", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            calendarUrl: calendar.url,
+            name: calendar.displayName,
+            password,
+            provider,
+            serverUrl,
+            username,
+          }),
+        });
+      } catch {
         setLoading(false);
-        setError(data.error ?? `Failed to import ${calendar.displayName}`);
+        setError(`Failed to import ${calendar.displayName}`);
         return;
       }
     }

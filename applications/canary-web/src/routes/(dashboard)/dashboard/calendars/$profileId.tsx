@@ -7,6 +7,8 @@ import { BackButton } from "../../../../components/ui/back-button";
 import { Button, ButtonText } from "../../../../components/ui/button";
 import { ProviderIcon } from "../../../../components/ui/provider-icon";
 import { Text } from "../../../../components/ui/text";
+import { apiFetch } from "../../../../lib/fetcher";
+import type { SyncProfile, CalendarEntry } from "../../../../types/api";
 import {
   NavigationMenu,
   NavigationMenuCheckboxItem,
@@ -29,22 +31,6 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
 });
-
-interface SyncProfile {
-  id: string;
-  name: string;
-  sources: string[];
-  destinations: string[];
-  createdAt: string;
-}
-
-interface CalendarEntry {
-  id: string;
-  name: string;
-  calendarType: string;
-  capabilities: string[];
-  provider?: string;
-}
 
 function RouteComponent() {
   const { profileId } = Route.useParams();
@@ -90,9 +76,8 @@ function RouteComponent() {
 
     await mutateProfile(
       async (current) => {
-        await fetch(`/api/profiles/${profileId}/sources`, {
+        await apiFetch(`/api/profiles/${profileId}/sources`, {
           method: "PUT",
-          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ calendarIds: updatedSources }),
         });
@@ -113,9 +98,8 @@ function RouteComponent() {
 
     await mutateProfile(
       async (current) => {
-        await fetch(`/api/profiles/${profileId}/destinations`, {
+        await apiFetch(`/api/profiles/${profileId}/destinations`, {
           method: "PUT",
-          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ calendarIds: updatedDestinations }),
         });
@@ -138,9 +122,8 @@ function RouteComponent() {
           onCommit={async (name) => {
             await mutateProfile(
               async (current) => {
-                await fetch(`/api/profiles/${profileId}`, {
+                await apiFetch(`/api/profiles/${profileId}`, {
                   method: "PATCH",
-                  credentials: "include",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ name }),
                 });
@@ -207,14 +190,12 @@ function RouteComponent() {
         deleting={deleting}
         onConfirm={async () => {
           setDeleting(true);
-          const response = await fetch(`/api/profiles/${profileId}`, {
-            credentials: "include",
-            method: "DELETE",
-          });
-          setDeleting(false);
-          if (response.ok) {
+          try {
+            await apiFetch(`/api/profiles/${profileId}`, { method: "DELETE" });
             await globalMutate("/api/profiles");
             navigate({ to: "/dashboard/calendars" });
+          } finally {
+            setDeleting(false);
           }
         }}
       />
