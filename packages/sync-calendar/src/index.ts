@@ -1,4 +1,4 @@
-import type { calendarSourcesTable } from "@keeper.sh/database/schema";
+import type { calendarsTable } from "@keeper.sh/database/schema";
 import { calendarSnapshotsTable, eventStatesTable } from "@keeper.sh/database/schema";
 import { pullRemoteCalendar } from "@keeper.sh/pull-calendar";
 import { diffEvents, parseIcsEvents } from "@keeper.sh/sync-events";
@@ -11,18 +11,18 @@ const EMPTY_EVENTS_COUNT = 0;
 
 class RemoteCalendarSyncError extends Error {
   constructor(
-    public sourceId: string,
+    public calendarId: string,
     cause: unknown,
   ) {
-    super(`Failed to sync remote calendar ${sourceId}`);
+    super(`Failed to sync remote calendar ${calendarId}`);
     this.cause = cause;
   }
 }
 
-type Source = typeof calendarSourcesTable.$inferSelect;
+type Source = typeof calendarsTable.$inferSelect;
 
 interface SyncCalendarService {
-  createSnapshot: (sourceId: string, ical: string) => Promise<void>;
+  createSnapshot: (calendarId: string, ical: string) => Promise<void>;
   syncSourceFromSnapshot: (source: Source) => Promise<void>;
   fetchAndSyncSource: (source: Source) => Promise<void>;
 }
@@ -41,12 +41,12 @@ const toStoredEvent = (row: {
 
 const createSyncCalendarService = (database: BunSQLDatabase): SyncCalendarService => {
   const getLatestSnapshot = async (
-    sourceId: string,
+    calendarId: string,
   ): Promise<ReturnType<typeof parseIcsCalendar> | null> => {
     const [snapshot] = await database
       .select({ ical: calendarSnapshotsTable.ical })
       .from(calendarSnapshotsTable)
-      .where(eq(calendarSnapshotsTable.sourceId, sourceId))
+      .where(eq(calendarSnapshotsTable.calendarId, calendarId))
       .orderBy(desc(calendarSnapshotsTable.createdAt))
       .limit(FIRST_RESULT_LIMIT);
 
@@ -57,7 +57,7 @@ const createSyncCalendarService = (database: BunSQLDatabase): SyncCalendarServic
   };
 
   const getStoredEvents = async (
-    sourceId: string,
+    calendarId: string,
   ): Promise<{ endTime: Date; id: string; startTime: Date; uid: string }[]> => {
     const results = await database
       .select({
@@ -67,7 +67,7 @@ const createSyncCalendarService = (database: BunSQLDatabase): SyncCalendarServic
         startTime: eventStatesTable.startTime,
       })
       .from(eventStatesTable)
-      .where(eq(eventStatesTable.sourceId, sourceId));
+      .where(eq(eventStatesTable.calendarId, calendarId));
 
     const events = [];
     for (const row of results) {
@@ -80,26 +80,26 @@ const createSyncCalendarService = (database: BunSQLDatabase): SyncCalendarServic
     return events;
   };
 
-  const removeEvents = async (_sourceId: string, eventIds: string[]): Promise<void> => {
+  const removeEvents = async (_calendarId: string, eventIds: string[]): Promise<void> => {
     await database.delete(eventStatesTable).where(inArray(eventStatesTable.id, eventIds));
   };
 
   const addEvents = async (
-    sourceId: string,
+    calendarId: string,
     events: { uid: string; startTime: Date; endTime: Date }[],
   ): Promise<void> => {
     const rows = events.map((event) => ({
       endTime: event.endTime,
       sourceEventUid: event.uid,
-      sourceId,
+      calendarId,
       startTime: event.startTime,
     }));
 
     await database.insert(eventStatesTable).values(rows);
   };
 
-  const createSnapshot = async (sourceId: string, ical: string): Promise<void> => {
-    await database.insert(calendarSnapshotsTable).values({ ical, sourceId });
+  const createSnapshot = async (calendarId: string, ical: string): Promise<void> => {
+    await database.insert(calendarSnapshotsTable).values({ ical, calendarId });
   };
 
   const syncSourceFromSnapshot = async (source: Source): Promise<void> => {

@@ -1,9 +1,9 @@
-import { calendarDestinationsTable } from "@keeper.sh/database/schema";
+import { calendarAccountsTable, calendarsTable } from "@keeper.sh/database/schema";
 import { createCalDAVClient } from "@keeper.sh/provider-caldav";
 import { encryptPassword } from "@keeper.sh/encryption";
 import { isCalDAVProvider } from "@keeper.sh/provider-registry";
 import type { CalDAVProviderId } from "@keeper.sh/provider-registry";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { saveCalDAVDestination } from "./destinations";
 import { triggerDestinationSync } from "./sync";
 import { database, encryptionKey, premiumService } from "../context";
@@ -91,9 +91,14 @@ const createCalDAVDestination = async (
   calendarUrl: string,
 ): Promise<void> => {
   const existingDestinations = await database
-    .select({ id: calendarDestinationsTable.id })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.userId, userId));
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["destination", "both"]),
+      ),
+    );
 
   const allowed = await premiumService.canAddDestination(userId, existingDestinations.length);
   if (!allowed) {

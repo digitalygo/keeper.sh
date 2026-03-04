@@ -1,5 +1,5 @@
 import {
-  calendarSourcesTable,
+  calendarsTable,
   eventStatesTable,
   sourceDestinationMappingsTable,
 } from "@keeper.sh/database/schema";
@@ -10,23 +10,23 @@ import type { SyncableEvent } from "../types";
 
 const EMPTY_SOURCES_COUNT = 0;
 
-const getMappedSourceIds = async (
+const getMappedSourceCalendarIds = async (
   database: BunSQLDatabase,
-  destinationId: string,
+  destinationCalendarId: string,
 ): Promise<string[]> => {
   const mappings = await database
-    .select({ sourceId: sourceDestinationMappingsTable.sourceId })
+    .select({ sourceCalendarId: sourceDestinationMappingsTable.sourceCalendarId })
     .from(sourceDestinationMappingsTable)
-    .where(eq(sourceDestinationMappingsTable.destinationId, destinationId));
+    .where(eq(sourceDestinationMappingsTable.destinationCalendarId, destinationCalendarId));
 
-  return mappings.map((mapping) => mapping.sourceId);
+  return mappings.map((mapping) => mapping.sourceCalendarId);
 };
 
-const fetchEventsForSources = async (
+const fetchEventsForCalendars = async (
   database: BunSQLDatabase,
-  sourceIds: string[],
+  calendarIds: string[],
 ): Promise<SyncableEvent[]> => {
-  if (sourceIds.length === EMPTY_SOURCES_COUNT) {
+  if (calendarIds.length === EMPTY_SOURCES_COUNT) {
     return [];
   }
 
@@ -34,20 +34,20 @@ const fetchEventsForSources = async (
 
   const results = await database
     .select({
+      calendarId: eventStatesTable.calendarId,
+      calendarName: calendarsTable.name,
+      calendarType: calendarsTable.calendarType,
+      calendarUrl: calendarsTable.url,
       endTime: eventStatesTable.endTime,
       id: eventStatesTable.id,
       sourceEventUid: eventStatesTable.sourceEventUid,
-      sourceId: eventStatesTable.sourceId,
-      sourceName: calendarSourcesTable.name,
-      sourceType: calendarSourcesTable.sourceType,
-      sourceUrl: calendarSourcesTable.url,
       startTime: eventStatesTable.startTime,
     })
     .from(eventStatesTable)
-    .innerJoin(calendarSourcesTable, eq(eventStatesTable.sourceId, calendarSourcesTable.id))
+    .innerJoin(calendarsTable, eq(eventStatesTable.calendarId, calendarsTable.id))
     .where(
       and(
-        inArray(eventStatesTable.sourceId, sourceIds),
+        inArray(eventStatesTable.calendarId, calendarIds),
         gte(eventStatesTable.startTime, startOfToday),
       ),
     )
@@ -61,14 +61,14 @@ const fetchEventsForSources = async (
     }
 
     syncableEvents.push({
+      calendarId: result.calendarId,
+      calendarName: result.calendarName,
+      calendarUrl: result.calendarUrl ?? result.calendarType,
       endTime: result.endTime,
       id: result.id,
       sourceEventUid: result.sourceEventUid,
-      sourceId: result.sourceId,
-      sourceName: result.sourceName,
-      sourceUrl: result.sourceUrl ?? result.sourceType,
       startTime: result.startTime,
-      summary: result.sourceName ?? "Busy",
+      summary: result.calendarName ?? "Busy",
     });
   }
 
@@ -77,15 +77,15 @@ const fetchEventsForSources = async (
 
 const getEventsForDestination = async (
   database: BunSQLDatabase,
-  destinationId: string,
+  destinationCalendarId: string,
 ): Promise<SyncableEvent[]> => {
-  const sourceIds = await getMappedSourceIds(database, destinationId);
+  const sourceCalendarIds = await getMappedSourceCalendarIds(database, destinationCalendarId);
 
-  if (sourceIds.length === EMPTY_SOURCES_COUNT) {
+  if (sourceCalendarIds.length === EMPTY_SOURCES_COUNT) {
     return [];
   }
 
-  return fetchEventsForSources(database, sourceIds);
+  return fetchEventsForCalendars(database, sourceCalendarIds);
 };
 
 export { getEventsForDestination };

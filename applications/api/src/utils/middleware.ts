@@ -1,9 +1,9 @@
 import type { MaybePromise } from "bun";
 import { WideEvent } from "@keeper.sh/log";
 import { ErrorResponse } from "./responses";
-import { calendarDestinationsTable, calendarSourcesTable } from "@keeper.sh/database/schema";
+import { calendarsTable } from "@keeper.sh/database/schema";
 import { user as userTable } from "@keeper.sh/database/auth-schema";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { auth, database, premiumService } from "../context";
 
 const HTTP_ERROR_THRESHOLD = 400;
@@ -65,12 +65,22 @@ const fetchUserCounts = async (
   try {
     const [sources] = await database
       .select({ count: count() })
-      .from(calendarSourcesTable)
-      .where(eq(calendarSourcesTable.userId, userId));
+      .from(calendarsTable)
+      .where(
+        and(
+          eq(calendarsTable.userId, userId),
+          inArray(calendarsTable.role, ["source", "both"]),
+        ),
+      );
     const [destinations] = await database
       .select({ count: count() })
-      .from(calendarDestinationsTable)
-      .where(eq(calendarDestinationsTable.userId, userId));
+      .from(calendarsTable)
+      .where(
+        and(
+          eq(calendarsTable.userId, userId),
+          inArray(calendarsTable.role, ["destination", "both"]),
+        ),
+      );
     return {
       "destination.count": destinations?.count ?? DEFAULT_COUNT,
       "source.count": sources?.count ?? DEFAULT_COUNT,

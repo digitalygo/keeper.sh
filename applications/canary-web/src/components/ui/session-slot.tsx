@@ -42,7 +42,7 @@ export function SessionSlot({ authenticated, unauthenticated }: SessionSlotProps
 
   return (
     <FadeIn direction="from-top" className={slotContainer({ resolved })}>
-      <div className="grid [grid-template-columns:1fr] [grid-template-rows:1fr]">
+      <div className="grid grid-cols-[1fr] grid-rows-[1fr]">
         <SlotLayer visible={resolved && !!user}>{authenticated}</SlotLayer>
         <SlotLayer visible={resolved && !user}>{unauthenticated}</SlotLayer>
       </div>

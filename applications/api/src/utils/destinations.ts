@@ -1,10 +1,11 @@
 import {
   caldavCredentialsTable,
-  calendarDestinationsTable,
+  calendarAccountsTable,
+  calendarsTable,
   oauthCredentialsTable,
   syncStatusTable,
 } from "@keeper.sh/database/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type {
   AuthorizationUrlOptions,
   OAuthTokens,
@@ -63,55 +64,55 @@ interface CalendarDestination {
   needsReauthentication: boolean;
 }
 
-interface ExistingDestination {
+interface ExistingAccount {
   id: string;
   userId: string;
   oauthCredentialId: string | null;
   caldavCredentialId: string | null;
 }
 
-const findExistingDestination = async (
+const findExistingAccount = async (
   provider: string,
   accountId: string,
-): Promise<ExistingDestination | undefined> => {
-  const [destination] = await database
+): Promise<ExistingAccount | undefined> => {
+  const [account] = await database
     .select({
-      caldavCredentialId: calendarDestinationsTable.caldavCredentialId,
-      id: calendarDestinationsTable.id,
-      oauthCredentialId: calendarDestinationsTable.oauthCredentialId,
-      userId: calendarDestinationsTable.userId,
+      caldavCredentialId: calendarAccountsTable.caldavCredentialId,
+      id: calendarAccountsTable.id,
+      oauthCredentialId: calendarAccountsTable.oauthCredentialId,
+      userId: calendarAccountsTable.userId,
     })
-    .from(calendarDestinationsTable)
+    .from(calendarAccountsTable)
     .where(
       and(
-        eq(calendarDestinationsTable.provider, provider),
-        eq(calendarDestinationsTable.accountId, accountId),
+        eq(calendarAccountsTable.provider, provider),
+        eq(calendarAccountsTable.accountId, accountId),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
 
-  return destination;
+  return account;
 };
 
-const validateDestinationOwnership = (
-  existingDestination: ExistingDestination | undefined,
+const validateAccountOwnership = (
+  existingAccount: ExistingAccount | undefined,
   userId: string,
 ): void => {
-  if (existingDestination && existingDestination.userId !== userId) {
+  if (existingAccount && existingAccount.userId !== userId) {
     throw new Error("This account is already linked to another user");
   }
 };
 
-const initializeSyncStatus = async (destinationId: string): Promise<void> => {
-  await database.insert(syncStatusTable).values({ destinationId }).onConflictDoNothing();
+const initializeSyncStatus = async (calendarId: string): Promise<void> => {
+  await database.insert(syncStatusTable).values({ calendarId }).onConflictDoNothing();
 };
 
-const setupNewDestination = async (userId: string, destinationId: string): Promise<void> => {
-  await initializeSyncStatus(destinationId);
-  await createMappingsForNewDestination(userId, destinationId);
+const setupNewDestination = async (userId: string, calendarId: string): Promise<void> => {
+  await initializeSyncStatus(calendarId);
+  await createMappingsForNewDestination(userId, calendarId);
 };
 
-interface DestinationInsertData {
+interface AccountInsertData {
   userId: string;
   provider: string;
   accountId: string;
@@ -121,7 +122,7 @@ interface DestinationInsertData {
   needsReauthentication?: boolean;
 }
 
-const upsertDestination = async (data: DestinationInsertData): Promise<string | undefined> => {
+const upsertAccountAndCalendar = async (data: AccountInsertData): Promise<string | undefined> => {
   const { oauthCredentialId, caldavCredentialId, needsReauthentication, ...base } = data;
 
   const setClause: Record<string, unknown> = { email: base.email };
@@ -134,21 +135,57 @@ const upsertDestination = async (data: DestinationInsertData): Promise<string | 
     setClause.caldavCredentialId = caldavCredentialId;
   }
 
-  const [destination] = await database
-    .insert(calendarDestinationsTable)
+  const authType = oauthCredentialId ? "oauth" : "caldav";
+
+  const [account] = await database
+    .insert(calendarAccountsTable)
     .values({
-      ...base,
-      oauthCredentialId,
+      accountId: base.accountId,
+      authType,
       caldavCredentialId,
+      email: base.email,
       needsReauthentication,
+      oauthCredentialId,
+      provider: base.provider,
+      userId: base.userId,
     })
     .onConflictDoUpdate({
       set: setClause,
-      target: [calendarDestinationsTable.provider, calendarDestinationsTable.accountId],
+      target: [calendarAccountsTable.provider, calendarAccountsTable.accountId],
     })
-    .returning({ id: calendarDestinationsTable.id });
+    .returning({ id: calendarAccountsTable.id });
 
-  return destination?.id;
+  if (!account) {
+    return undefined;
+  }
+
+  const [existingCalendar] = await database
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.accountId, account.id),
+        eq(calendarsTable.role, "destination"),
+      ),
+    )
+    .limit(FIRST_RESULT_LIMIT);
+
+  if (existingCalendar) {
+    return existingCalendar.id;
+  }
+
+  const [calendar] = await database
+    .insert(calendarsTable)
+    .values({
+      accountId: account.id,
+      calendarType: authType,
+      name: `${base.provider} destination`,
+      role: "destination",
+      userId: base.userId,
+    })
+    .returning({ id: calendarsTable.id });
+
+  return calendar?.id;
 };
 
 const saveCalendarDestination = async (
@@ -161,34 +198,47 @@ const saveCalendarDestination = async (
   expiresAt: Date,
   needsReauthentication = false,
 ): Promise<void> => {
-  const existingDestination = await findExistingDestination(provider, accountId);
-  validateDestinationOwnership(existingDestination, userId);
+  const existingAccount = await findExistingAccount(provider, accountId);
+  validateAccountOwnership(existingAccount, userId);
 
-  if (existingDestination?.oauthCredentialId) {
+  if (existingAccount?.oauthCredentialId) {
     await database
       .update(oauthCredentialsTable)
       .set({ accessToken, expiresAt, refreshToken })
-      .where(eq(oauthCredentialsTable.id, existingDestination.oauthCredentialId));
+      .where(eq(oauthCredentialsTable.id, existingAccount.oauthCredentialId));
 
     await database
-      .update(calendarDestinationsTable)
+      .update(calendarAccountsTable)
       .set({ email, needsReauthentication })
-      .where(eq(calendarDestinationsTable.id, existingDestination.id));
+      .where(eq(calendarAccountsTable.id, existingAccount.id));
 
-    await initializeSyncStatus(existingDestination.id);
+    const [existingCalendar] = await database
+      .select({ id: calendarsTable.id })
+      .from(calendarsTable)
+      .where(
+        and(
+          eq(calendarsTable.accountId, existingAccount.id),
+          eq(calendarsTable.role, "destination"),
+        ),
+      )
+      .limit(FIRST_RESULT_LIMIT);
+
+    if (existingCalendar) {
+      await initializeSyncStatus(existingCalendar.id);
+    }
     return;
   }
 
   const [credential] = await database
     .insert(oauthCredentialsTable)
-    .values({ accessToken, expiresAt, refreshToken })
+    .values({ accessToken, email, expiresAt, provider, refreshToken, userId })
     .returning({ id: oauthCredentialsTable.id });
 
   if (!credential) {
     throw new Error("Failed to create OAuth credentials");
   }
 
-  const destinationId = await upsertDestination({
+  const calendarId = await upsertAccountAndCalendar({
     accountId,
     email,
     needsReauthentication,
@@ -197,51 +247,57 @@ const saveCalendarDestination = async (
     userId,
   });
 
-  if (destinationId) {
-    await setupNewDestination(userId, destinationId);
+  if (calendarId) {
+    await setupNewDestination(userId, calendarId);
   }
 };
 
 const listCalendarDestinations = async (userId: string): Promise<CalendarDestination[]> => {
-  const destinations = await database
+  const accounts = await database
     .select({
-      email: calendarDestinationsTable.email,
-      id: calendarDestinationsTable.id,
-      needsReauthentication: calendarDestinationsTable.needsReauthentication,
-      provider: calendarDestinationsTable.provider,
+      email: calendarAccountsTable.email,
+      id: calendarAccountsTable.id,
+      needsReauthentication: calendarAccountsTable.needsReauthentication,
+      provider: calendarAccountsTable.provider,
     })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.userId, userId));
+    .from(calendarAccountsTable)
+    .innerJoin(calendarsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
+    .where(
+      and(
+        eq(calendarAccountsTable.userId, userId),
+        inArray(calendarsTable.role, ["destination", "both"]),
+      ),
+    );
 
-  return destinations;
+  return accounts;
 };
 
 const deleteCalendarDestination = async (
   userId: string,
-  destinationId: string,
+  accountId: string,
 ): Promise<boolean> => {
   const result = await database
-    .delete(calendarDestinationsTable)
+    .delete(calendarAccountsTable)
     .where(
       and(
-        eq(calendarDestinationsTable.userId, userId),
-        eq(calendarDestinationsTable.id, destinationId),
+        eq(calendarAccountsTable.userId, userId),
+        eq(calendarAccountsTable.id, accountId),
       ),
     )
-    .returning({ id: calendarDestinationsTable.id });
+    .returning({ id: calendarAccountsTable.id });
 
   return result.length > EMPTY_RESULT_COUNT;
 };
 
-const getDestinationAccountId = async (destinationId: string): Promise<string | null> => {
-  const [destination] = await database
-    .select({ accountId: calendarDestinationsTable.accountId })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.id, destinationId))
+const getAccountExternalId = async (accountId: string): Promise<string | null> => {
+  const [account] = await database
+    .select({ accountId: calendarAccountsTable.accountId })
+    .from(calendarAccountsTable)
+    .where(eq(calendarAccountsTable.id, accountId))
     .limit(FIRST_RESULT_LIMIT);
 
-  if (destination?.accountId) {
-    return destination.accountId;
+  if (account?.accountId) {
+    return account.accountId;
   }
   return null;
 };
@@ -256,43 +312,80 @@ const saveCalDAVDestination = async (
   username: string,
   encryptedPassword: string,
 ): Promise<void> => {
-  const existingDestination = await findExistingDestination(provider, accountId);
-  validateDestinationOwnership(existingDestination, userId);
+  const existingAccount = await findExistingAccount(provider, accountId);
+  validateAccountOwnership(existingAccount, userId);
 
-  if (existingDestination?.caldavCredentialId) {
+  if (existingAccount?.caldavCredentialId) {
     await database
       .update(caldavCredentialsTable)
-      .set({ calendarUrl, encryptedPassword, serverUrl, username })
-      .where(eq(caldavCredentialsTable.id, existingDestination.caldavCredentialId));
+      .set({ encryptedPassword, serverUrl, username })
+      .where(eq(caldavCredentialsTable.id, existingAccount.caldavCredentialId));
 
     await database
-      .update(calendarDestinationsTable)
+      .update(calendarAccountsTable)
       .set({ email })
-      .where(eq(calendarDestinationsTable.id, existingDestination.id));
+      .where(eq(calendarAccountsTable.id, existingAccount.id));
 
-    await initializeSyncStatus(existingDestination.id);
+    const [existingCalendar] = await database
+      .select({ id: calendarsTable.id })
+      .from(calendarsTable)
+      .where(
+        and(
+          eq(calendarsTable.accountId, existingAccount.id),
+          eq(calendarsTable.role, "destination"),
+        ),
+      )
+      .limit(FIRST_RESULT_LIMIT);
+
+    if (existingCalendar) {
+      await database
+        .update(calendarsTable)
+        .set({ calendarUrl })
+        .where(eq(calendarsTable.id, existingCalendar.id));
+      await initializeSyncStatus(existingCalendar.id);
+    }
     return;
   }
 
   const [credential] = await database
     .insert(caldavCredentialsTable)
-    .values({ calendarUrl, encryptedPassword, serverUrl, username })
+    .values({ encryptedPassword, serverUrl, username })
     .returning({ id: caldavCredentialsTable.id });
 
   if (!credential) {
     throw new Error("Failed to create CalDAV credentials");
   }
 
-  const destinationId = await upsertDestination({
-    accountId,
-    caldavCredentialId: credential.id,
-    email,
-    provider,
-    userId,
-  });
+  const [account] = await database
+    .insert(calendarAccountsTable)
+    .values({
+      accountId,
+      authType: "caldav",
+      caldavCredentialId: credential.id,
+      email,
+      provider,
+      userId,
+    })
+    .returning({ id: calendarAccountsTable.id });
 
-  if (destinationId) {
-    await setupNewDestination(userId, destinationId);
+  if (!account) {
+    throw new Error("Failed to create calendar account");
+  }
+
+  const [calendar] = await database
+    .insert(calendarsTable)
+    .values({
+      accountId: account.id,
+      calendarType: "caldav",
+      calendarUrl,
+      name: `${provider} destination`,
+      role: "destination",
+      userId,
+    })
+    .returning({ id: calendarsTable.id });
+
+  if (calendar) {
+    await setupNewDestination(userId, calendar.id);
   }
 };
 
@@ -306,6 +399,6 @@ export {
   saveCalendarDestination,
   listCalendarDestinations,
   deleteCalendarDestination,
-  getDestinationAccountId,
+  getAccountExternalId as getDestinationAccountId,
   saveCalDAVDestination,
 };

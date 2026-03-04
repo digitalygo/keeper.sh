@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { CalendarPlus, CalendarArrowDown, Calendar, CalendarDays, Settings, Sparkles, LogOut, Bell, Eye } from "lucide-react";
 import { signOut } from "../../../lib/auth";
 import KeeperLogo from "../../../assets/keeper.svg?react";
+import { EventGraph } from "../../../components/dashboard/event-graph";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -38,6 +39,7 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-4">
+      <EventGraph />
       <div className="flex flex-col gap-1.5">
         <NavigationMenu>
           <NavigationMenuItem to="/dashboard/connect/source">

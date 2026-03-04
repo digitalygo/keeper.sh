@@ -7,6 +7,7 @@ const text = tv({
     size: {
       base: "text-base",
       sm: "text-sm",
+      xs: "text-xs",
     },
     tone: {
       muted: "text-foreground-muted",
@@ -28,7 +29,7 @@ const text = tv({
 });
 
 type TextProps = PropsWithChildren<{
-  size?: "base" | "sm";
+  size?: "base" | "sm" | "xs";
   tone?: "muted" | "inverse" | "inverseMuted" | "default" | "danger";
   align?: "center" | "left";
   className?: string;

@@ -2,6 +2,7 @@ import type { AuthType, ProviderDefinition } from "@keeper.sh/provider-core";
 
 const googleCalendarDefinition = {
   authType: "oauth",
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-google.svg",
   id: "google",
   name: "Google Calendar",
@@ -37,6 +38,7 @@ const googleCalendarDefinition = {
 
 const outlookDefinition = {
   authType: "oauth",
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-outlook.svg",
   id: "outlook",
   name: "Outlook",
@@ -51,6 +53,7 @@ const caldavDefinition = {
     usernameHelp: "Your CalDAV username",
     usernameLabel: "Username",
   },
+  capabilities: { canRead: true, canWrite: true },
   id: "caldav",
   name: "CalDAV",
 } as const satisfies ProviderDefinition;
@@ -64,6 +67,7 @@ const fastmailDefinition = {
     usernameHelp: "Your Fastmail email address",
     usernameLabel: "Email",
   },
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-fastmail.svg",
   id: "fastmail",
   name: "Fastmail",
@@ -78,9 +82,17 @@ const icloudDefinition = {
     usernameHelp: "Your Apple ID email address",
     usernameLabel: "Apple ID",
   },
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-icloud.svg",
   id: "icloud",
   name: "iCloud",
+} as const satisfies ProviderDefinition;
+
+const icsDefinition = {
+  authType: "none",
+  capabilities: { canRead: true, canWrite: false },
+  id: "ics",
+  name: "ICS Feed",
 } as const satisfies ProviderDefinition;
 
 const PROVIDER_DEFINITIONS = [
@@ -89,6 +101,7 @@ const PROVIDER_DEFINITIONS = [
   fastmailDefinition,
   icloudDefinition,
   caldavDefinition,
+  icsDefinition,
 ] as const;
 
 type ProviderId = (typeof PROVIDER_DEFINITIONS)[number]["id"];

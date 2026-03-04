@@ -58,6 +58,12 @@ html {
 }
 
 @font-face {
+  font-family: "Geist Mono";
+  src: url("./assets/fonts/GeistMono[wght].ttf") format("truetype");
+  font-weight: 100 900;
+}
+
+@font-face {
   font-family: "Lora";
   src: url("./assets/fonts/Lora[wght].ttf") format("truetype");
   font-weight: 100 900;
@@ -84,6 +90,7 @@ html {
 
   --font-sans: "Geist Sans", system-ui, sans-serif;
   --font-serif: "Lora", Georgia, serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
 
   --breakpoint-xs: 28rem;
 }

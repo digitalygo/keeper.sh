@@ -65,6 +65,7 @@ export {
 export type {
   AuthType,
   CalDAVProviderConfig,
+  ProviderCapabilities,
   ProviderDefinition,
   SourcePreferenceOption,
   SourcePreferencesConfig,

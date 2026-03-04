@@ -1,34 +1,31 @@
-import { caldavSourceCredentialsTable, calendarSourcesTable } from "@keeper.sh/database/schema";
+import { calendarAccountsTable, caldavCredentialsTable, calendarsTable } from "@keeper.sh/database/schema";
 import { and, eq } from "drizzle-orm";
 import { decryptPassword } from "@keeper.sh/encryption";
 import type { CalDAVSourceAccount, CalDAVSourceProviderConfig } from "../types";
 
-const CALDAV_SOURCE_TYPE = "caldav";
+const CALDAV_CALENDAR_TYPE = "caldav";
 
 interface CalDAVSourceService {
   getAllCalDAVSources: () => Promise<CalDAVSourceAccount[]>;
   getCalDAVSourcesByProvider: (provider: string) => Promise<CalDAVSourceAccount[]>;
   getCalDAVSourcesForUser: (userId: string) => Promise<CalDAVSourceAccount[]>;
   getDecryptedPassword: (encryptedPassword: string) => string;
-  updateSyncToken: (sourceId: string, syncToken: string | null) => Promise<void>;
+  updateSyncToken: (calendarId: string, syncToken: string | null) => Promise<void>;
 }
 
 const mapSourceToAccount = (source: {
   calendarUrl: string | null;
   encryptedPassword: string;
   name: string;
-  provider: string | null;
+  provider: string;
   serverUrl: string;
-  sourceId: string;
+  calendarId: string;
   syncToken: string | null;
   userId: string;
   username: string;
 }): CalDAVSourceAccount => {
   if (!source.calendarUrl) {
-    throw new Error(`CalDAV source ${source.sourceId} is missing calendarUrl`);
-  }
-  if (!source.provider) {
-    throw new Error(`CalDAV source ${source.sourceId} is missing provider`);
+    throw new Error(`CalDAV source ${source.calendarId} is missing calendarUrl`);
   }
   return {
     ...source,
@@ -43,22 +40,23 @@ const createCalDAVSourceService = (config: CalDAVSourceProviderConfig): CalDAVSo
   const getAllCalDAVSources = async (): Promise<CalDAVSourceAccount[]> => {
     const sources = await database
       .select({
-        calendarUrl: calendarSourcesTable.calendarUrl,
-        encryptedPassword: caldavSourceCredentialsTable.encryptedPassword,
-        name: calendarSourcesTable.name,
-        provider: calendarSourcesTable.provider,
-        serverUrl: caldavSourceCredentialsTable.serverUrl,
-        sourceId: calendarSourcesTable.id,
-        syncToken: calendarSourcesTable.syncToken,
-        userId: calendarSourcesTable.userId,
-        username: caldavSourceCredentialsTable.username,
+        calendarId: calendarsTable.id,
+        calendarUrl: calendarsTable.calendarUrl,
+        encryptedPassword: caldavCredentialsTable.encryptedPassword,
+        name: calendarsTable.name,
+        provider: calendarAccountsTable.provider,
+        serverUrl: caldavCredentialsTable.serverUrl,
+        syncToken: calendarsTable.syncToken,
+        userId: calendarsTable.userId,
+        username: caldavCredentialsTable.username,
       })
-      .from(calendarSourcesTable)
+      .from(calendarsTable)
+      .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
       .innerJoin(
-        caldavSourceCredentialsTable,
-        eq(calendarSourcesTable.caldavCredentialId, caldavSourceCredentialsTable.id),
+        caldavCredentialsTable,
+        eq(calendarAccountsTable.caldavCredentialId, caldavCredentialsTable.id),
       )
-      .where(eq(calendarSourcesTable.sourceType, CALDAV_SOURCE_TYPE));
+      .where(eq(calendarsTable.calendarType, CALDAV_CALENDAR_TYPE));
 
     return sources.map((source) => mapSourceToAccount(source));
   };
@@ -66,25 +64,26 @@ const createCalDAVSourceService = (config: CalDAVSourceProviderConfig): CalDAVSo
   const getCalDAVSourcesByProvider = async (provider: string): Promise<CalDAVSourceAccount[]> => {
     const sources = await database
       .select({
-        calendarUrl: calendarSourcesTable.calendarUrl,
-        encryptedPassword: caldavSourceCredentialsTable.encryptedPassword,
-        name: calendarSourcesTable.name,
-        provider: calendarSourcesTable.provider,
-        serverUrl: caldavSourceCredentialsTable.serverUrl,
-        sourceId: calendarSourcesTable.id,
-        syncToken: calendarSourcesTable.syncToken,
-        userId: calendarSourcesTable.userId,
-        username: caldavSourceCredentialsTable.username,
+        calendarId: calendarsTable.id,
+        calendarUrl: calendarsTable.calendarUrl,
+        encryptedPassword: caldavCredentialsTable.encryptedPassword,
+        name: calendarsTable.name,
+        provider: calendarAccountsTable.provider,
+        serverUrl: caldavCredentialsTable.serverUrl,
+        syncToken: calendarsTable.syncToken,
+        userId: calendarsTable.userId,
+        username: caldavCredentialsTable.username,
       })
-      .from(calendarSourcesTable)
+      .from(calendarsTable)
+      .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
       .innerJoin(
-        caldavSourceCredentialsTable,
-        eq(calendarSourcesTable.caldavCredentialId, caldavSourceCredentialsTable.id),
+        caldavCredentialsTable,
+        eq(calendarAccountsTable.caldavCredentialId, caldavCredentialsTable.id),
       )
       .where(
         and(
-          eq(calendarSourcesTable.sourceType, CALDAV_SOURCE_TYPE),
-          eq(calendarSourcesTable.provider, provider),
+          eq(calendarsTable.calendarType, CALDAV_CALENDAR_TYPE),
+          eq(calendarAccountsTable.provider, provider),
         ),
       );
 
@@ -94,25 +93,26 @@ const createCalDAVSourceService = (config: CalDAVSourceProviderConfig): CalDAVSo
   const getCalDAVSourcesForUser = async (userId: string): Promise<CalDAVSourceAccount[]> => {
     const sources = await database
       .select({
-        calendarUrl: calendarSourcesTable.calendarUrl,
-        encryptedPassword: caldavSourceCredentialsTable.encryptedPassword,
-        name: calendarSourcesTable.name,
-        provider: calendarSourcesTable.provider,
-        serverUrl: caldavSourceCredentialsTable.serverUrl,
-        sourceId: calendarSourcesTable.id,
-        syncToken: calendarSourcesTable.syncToken,
-        userId: calendarSourcesTable.userId,
-        username: caldavSourceCredentialsTable.username,
+        calendarId: calendarsTable.id,
+        calendarUrl: calendarsTable.calendarUrl,
+        encryptedPassword: caldavCredentialsTable.encryptedPassword,
+        name: calendarsTable.name,
+        provider: calendarAccountsTable.provider,
+        serverUrl: caldavCredentialsTable.serverUrl,
+        syncToken: calendarsTable.syncToken,
+        userId: calendarsTable.userId,
+        username: caldavCredentialsTable.username,
       })
-      .from(calendarSourcesTable)
+      .from(calendarsTable)
+      .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
       .innerJoin(
-        caldavSourceCredentialsTable,
-        eq(calendarSourcesTable.caldavCredentialId, caldavSourceCredentialsTable.id),
+        caldavCredentialsTable,
+        eq(calendarAccountsTable.caldavCredentialId, caldavCredentialsTable.id),
       )
       .where(
         and(
-          eq(calendarSourcesTable.sourceType, CALDAV_SOURCE_TYPE),
-          eq(calendarSourcesTable.userId, userId),
+          eq(calendarsTable.calendarType, CALDAV_CALENDAR_TYPE),
+          eq(calendarsTable.userId, userId),
         ),
       );
 
@@ -122,11 +122,11 @@ const createCalDAVSourceService = (config: CalDAVSourceProviderConfig): CalDAVSo
   const getDecryptedPassword = (encryptedPassword: string): string =>
     decryptPassword(encryptedPassword, encryptionKey);
 
-  const updateSyncToken = async (sourceId: string, syncToken: string | null): Promise<void> => {
+  const updateSyncToken = async (calendarId: string, syncToken: string | null): Promise<void> => {
     await database
-      .update(calendarSourcesTable)
+      .update(calendarsTable)
       .set({ syncToken })
-      .where(eq(calendarSourcesTable.id, sourceId));
+      .where(eq(calendarsTable.id, calendarId));
   };
 
   return {

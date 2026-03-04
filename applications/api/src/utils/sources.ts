@@ -1,13 +1,13 @@
-import { calendarSourcesTable } from "@keeper.sh/database/schema";
+import { calendarAccountsTable, calendarsTable } from "@keeper.sh/database/schema";
 import { CalendarFetchError, fetchAndSyncSource, pullRemoteCalendar } from "@keeper.sh/calendar";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { triggerDestinationSync } from "./sync";
 import { createMappingsForNewSource } from "./source-destination-mappings";
 import { spawnBackgroundJob } from "./background-task";
 import { database, premiumService } from "../context";
 
 const FIRST_RESULT_LIMIT = 1;
-const ICAL_SOURCE_TYPE = "ical";
+const ICAL_CALENDAR_TYPE = "ical";
 
 class SourceLimitError extends Error {
   constructor() {
@@ -41,26 +41,26 @@ interface Source {
 const getUserSources = async (userId: string): Promise<Source[]> => {
   const sources = await database
     .select()
-    .from(calendarSourcesTable)
+    .from(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, ICAL_SOURCE_TYPE),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, ICAL_CALENDAR_TYPE),
       ),
     );
 
   return sources;
 };
 
-const verifySourceOwnership = async (userId: string, sourceId: string): Promise<boolean> => {
+const verifySourceOwnership = async (userId: string, calendarId: string): Promise<boolean> => {
   const [source] = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.id, sourceId),
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, ICAL_SOURCE_TYPE),
+        eq(calendarsTable.id, calendarId),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, ICAL_CALENDAR_TYPE),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
@@ -83,9 +83,14 @@ const validateSourceUrl = async (url: string): Promise<void> => {
  */
 const createSource = async (userId: string, name: string, url: string): Promise<Source> => {
   const existingSources = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
-    .where(eq(calendarSourcesTable.userId, userId));
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["source", "both"]),
+      ),
+    );
 
   const allowed = await premiumService.canAddSource(userId, existingSources.length);
   if (!allowed) {
@@ -98,9 +103,29 @@ const createSource = async (userId: string, name: string, url: string): Promise<
     throw new InvalidSourceUrlError(error);
   }
 
+  const [account] = await database
+    .insert(calendarAccountsTable)
+    .values({
+      authType: "none",
+      provider: "ics",
+      userId,
+    })
+    .returning({ id: calendarAccountsTable.id });
+
+  if (!account) {
+    throw new Error("Failed to create calendar account");
+  }
+
   const [source] = await database
-    .insert(calendarSourcesTable)
-    .values({ name, sourceType: ICAL_SOURCE_TYPE, url, userId })
+    .insert(calendarsTable)
+    .values({
+      accountId: account.id,
+      calendarType: ICAL_CALENDAR_TYPE,
+      name,
+      role: "source",
+      url,
+      userId,
+    })
     .returning();
 
   if (!source) {
@@ -109,7 +134,7 @@ const createSource = async (userId: string, name: string, url: string): Promise<
 
   await createMappingsForNewSource(userId, source.id);
 
-  spawnBackgroundJob("ical-source-sync", { userId, sourceId: source.id }, async () => {
+  spawnBackgroundJob("ical-source-sync", { userId, calendarId: source.id }, async () => {
     await fetchAndSyncSource(database, source);
     triggerDestinationSync(userId);
   });
@@ -122,14 +147,14 @@ const createSource = async (userId: string, name: string, url: string): Promise<
  * Returns true if deleted, false if not found.
  * Triggers destination sync after deletion.
  */
-const deleteSource = async (userId: string, sourceId: string): Promise<boolean> => {
+const deleteSource = async (userId: string, calendarId: string): Promise<boolean> => {
   const [deleted] = await database
-    .delete(calendarSourcesTable)
+    .delete(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.id, sourceId),
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, ICAL_SOURCE_TYPE),
+        eq(calendarsTable.id, calendarId),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, ICAL_CALENDAR_TYPE),
       ),
     )
     .returning();

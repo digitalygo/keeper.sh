@@ -1,4 +1,4 @@
-import { oauthSourceCredentialsTable } from "@keeper.sh/database/schema";
+import { oauthCredentialsTable } from "@keeper.sh/database/schema";
 import { and, eq } from "drizzle-orm";
 import { withAuth, withWideEvent } from "../../../utils/middleware";
 import { ErrorResponse } from "../../../utils/responses";
@@ -9,12 +9,12 @@ const FIRST_RESULT_LIMIT = 1;
 
 const userOwnsSourceCredential = async (userId: string, credentialId: string): Promise<boolean> => {
   const [credential] = await database
-    .select({ id: oauthSourceCredentialsTable.id })
-    .from(oauthSourceCredentialsTable)
+    .select({ id: oauthCredentialsTable.id })
+    .from(oauthCredentialsTable)
     .where(
       and(
-        eq(oauthSourceCredentialsTable.id, credentialId),
-        eq(oauthSourceCredentialsTable.userId, userId),
+        eq(oauthCredentialsTable.id, credentialId),
+        eq(oauthCredentialsTable.userId, userId),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);

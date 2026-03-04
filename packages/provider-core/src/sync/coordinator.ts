@@ -16,7 +16,7 @@ const enrichWideEventWithSyncContext = (userId: string, generation: number): voi
 
 interface DestinationSyncResult {
   userId: string;
-  destinationId: string;
+  calendarId: string;
   localEventCount: number;
   remoteEventCount: number;
   broadcast?: boolean;
@@ -26,7 +26,7 @@ type SyncStage = "fetching" | "comparing" | "processing" | "error";
 
 interface SyncProgressUpdate {
   userId: string;
-  destinationId: string;
+  calendarId: string;
   status: "syncing" | "error";
   stage: SyncStage;
   localEventCount: number;

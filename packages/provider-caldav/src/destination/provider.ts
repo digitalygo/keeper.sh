@@ -50,14 +50,14 @@ const createCalDAVProvider = (
 
     const results = await Promise.all(
       accounts.map(async (account) => {
-        const localEvents = await getEventsForDestination(config.database, account.destinationId);
+        const localEvents = await getEventsForDestination(config.database, account.calendarId);
 
         const password = caldavService.getDecryptedPassword(account.encryptedPassword);
         const provider = new CalDAVProviderInstance(
           {
+            calendarId: account.calendarId,
             calendarUrl: account.calendarUrl,
             database: config.database,
-            destinationId: account.destinationId,
             serverUrl: account.serverUrl,
             userId: account.userId,
             username: account.username,

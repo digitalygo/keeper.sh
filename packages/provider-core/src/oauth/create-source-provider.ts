@@ -15,16 +15,15 @@ const toError = (reason: unknown): Error => {
 };
 
 interface OAuthSourceAccount {
-  sourceId: string;
+  calendarId: string;
+  calendarAccountId: string;
   userId: string;
   externalCalendarId: string;
   syncToken: string | null;
   accessToken: string;
   refreshToken: string;
   accessTokenExpiresAt: Date;
-  credentialId: string;
-  oauthCredentialId?: string;
-  oauthSourceCredentialId?: string;
+  oauthCredentialId: string;
   provider: string;
 }
 

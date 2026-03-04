@@ -1,15 +1,15 @@
 import {
-  caldavSourceCredentialsTable,
-  calendarDestinationsTable,
-  calendarSourcesTable,
+  caldavCredentialsTable,
+  calendarAccountsTable,
+  calendarsTable,
   sourceDestinationMappingsTable,
 } from "@keeper.sh/database/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { encryptPassword } from "@keeper.sh/encryption";
 import { database, premiumService, encryptionKey } from "../context";
 
 const FIRST_RESULT_LIMIT = 1;
-const CALDAV_SOURCE_TYPE = "caldav";
+const CALDAV_CALENDAR_TYPE = "caldav";
 
 class CalDAVSourceLimitError extends Error {
   constructor() {
@@ -51,38 +51,37 @@ interface CreateCalDAVSourceData {
 
 const getUserCalDAVSources = async (userId: string, provider?: string): Promise<CalDAVSource[]> => {
   const conditions = [
-    eq(calendarSourcesTable.userId, userId),
-    eq(calendarSourcesTable.sourceType, CALDAV_SOURCE_TYPE),
+    eq(calendarsTable.userId, userId),
+    eq(calendarsTable.calendarType, CALDAV_CALENDAR_TYPE),
+    inArray(calendarsTable.role, ["source", "both"]),
   ];
 
   if (provider) {
-    conditions.push(eq(calendarSourcesTable.provider, provider));
+    conditions.push(eq(calendarAccountsTable.provider, provider));
   }
 
   const sources = await database
     .select({
-      calendarUrl: calendarSourcesTable.calendarUrl,
-      createdAt: calendarSourcesTable.createdAt,
-      id: calendarSourcesTable.id,
-      name: calendarSourcesTable.name,
-      provider: calendarSourcesTable.provider,
-      serverUrl: caldavSourceCredentialsTable.serverUrl,
-      userId: calendarSourcesTable.userId,
-      username: caldavSourceCredentialsTable.username,
+      calendarUrl: calendarsTable.calendarUrl,
+      createdAt: calendarsTable.createdAt,
+      id: calendarsTable.id,
+      name: calendarsTable.name,
+      provider: calendarAccountsTable.provider,
+      serverUrl: caldavCredentialsTable.serverUrl,
+      userId: calendarsTable.userId,
+      username: caldavCredentialsTable.username,
     })
-    .from(calendarSourcesTable)
+    .from(calendarsTable)
+    .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
     .innerJoin(
-      caldavSourceCredentialsTable,
-      eq(calendarSourcesTable.caldavCredentialId, caldavSourceCredentialsTable.id),
+      caldavCredentialsTable,
+      eq(calendarAccountsTable.caldavCredentialId, caldavCredentialsTable.id),
     )
     .where(and(...conditions));
 
   return sources.map((source) => {
     if (!source.calendarUrl) {
       throw new Error(`CalDAV source ${source.id} is missing calendarUrl`);
-    }
-    if (!source.provider) {
-      throw new Error(`CalDAV source ${source.id} is missing provider`);
     }
     return {
       ...source,
@@ -93,12 +92,17 @@ const getUserCalDAVSources = async (userId: string, provider?: string): Promise<
 };
 
 const countUserSources = async (userId: string): Promise<number> => {
-  const caldavSources = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
-    .where(eq(calendarSourcesTable.userId, userId));
+  const sources = await database
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["source", "both"]),
+      ),
+    );
 
-  return caldavSources.length;
+  return sources.length;
 };
 
 const createCalDAVSource = async (
@@ -113,13 +117,13 @@ const createCalDAVSource = async (
   }
 
   const [existingSource] = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.calendarUrl, data.calendarUrl),
-        eq(calendarSourcesTable.sourceType, CALDAV_SOURCE_TYPE),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarUrl, data.calendarUrl),
+        eq(calendarsTable.calendarType, CALDAV_CALENDAR_TYPE),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
@@ -135,26 +139,40 @@ const createCalDAVSource = async (
   const encryptedPassword = encryptPassword(data.password, encryptionKey);
 
   const [credential] = await database
-    .insert(caldavSourceCredentialsTable)
+    .insert(caldavCredentialsTable)
     .values({
       encryptedPassword,
       serverUrl: data.serverUrl,
       username: data.username,
     })
-    .returning({ id: caldavSourceCredentialsTable.id });
+    .returning({ id: caldavCredentialsTable.id });
 
   if (!credential) {
     throw new Error("Failed to create CalDAV source credential");
   }
 
-  const [source] = await database
-    .insert(calendarSourcesTable)
+  const [account] = await database
+    .insert(calendarAccountsTable)
     .values({
+      authType: "caldav",
       caldavCredentialId: credential.id,
+      provider: data.provider,
+      userId,
+    })
+    .returning({ id: calendarAccountsTable.id });
+
+  if (!account) {
+    throw new Error("Failed to create calendar account");
+  }
+
+  const [source] = await database
+    .insert(calendarsTable)
+    .values({
+      accountId: account.id,
+      calendarType: CALDAV_CALENDAR_TYPE,
       calendarUrl: data.calendarUrl,
       name: data.name,
-      provider: data.provider,
-      sourceType: CALDAV_SOURCE_TYPE,
+      role: "source",
       userId,
     })
     .returning();
@@ -164,14 +182,19 @@ const createCalDAVSource = async (
   }
 
   const destinations = await database
-    .select({ id: calendarDestinationsTable.id })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.userId, userId));
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["destination", "both"]),
+      ),
+    );
 
   if (destinations.length > 0) {
-    const mappings = destinations.map((destination) => ({
-      destinationId: destination.id,
-      sourceId: source.id,
+    const mappings = destinations.map((dest) => ({
+      destinationCalendarId: dest.id,
+      sourceCalendarId: source.id,
     }));
 
     await database.insert(sourceDestinationMappingsTable).values(mappings);
@@ -189,43 +212,41 @@ const createCalDAVSource = async (
   };
 };
 
-const deleteCalDAVSource = async (userId: string, sourceId: string): Promise<boolean> => {
-  const [source] = await database
-    .select({ caldavCredentialId: calendarSourcesTable.caldavCredentialId })
-    .from(calendarSourcesTable)
+const deleteCalDAVSource = async (userId: string, calendarId: string): Promise<boolean> => {
+  const [calendar] = await database
+    .select({
+      accountId: calendarsTable.accountId,
+    })
+    .from(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.id, sourceId),
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, CALDAV_SOURCE_TYPE),
+        eq(calendarsTable.id, calendarId),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, CALDAV_CALENDAR_TYPE),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
 
-  if (!source) {
+  if (!calendar) {
     throw new CalDAVSourceNotFoundError();
   }
 
-  await database.delete(calendarSourcesTable).where(eq(calendarSourcesTable.id, sourceId));
+  await database.delete(calendarsTable).where(eq(calendarsTable.id, calendarId));
 
-  if (source.caldavCredentialId) {
-    await database
-      .delete(caldavSourceCredentialsTable)
-      .where(eq(caldavSourceCredentialsTable.id, source.caldavCredentialId));
-  }
+  // Cascade will handle credential cleanup through calendar_accounts
 
   return true;
 };
 
-const verifyCalDAVSourceOwnership = async (userId: string, sourceId: string): Promise<boolean> => {
+const verifyCalDAVSourceOwnership = async (userId: string, calendarId: string): Promise<boolean> => {
   const [source] = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.id, sourceId),
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, CALDAV_SOURCE_TYPE),
+        eq(calendarsTable.id, calendarId),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, CALDAV_CALENDAR_TYPE),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);

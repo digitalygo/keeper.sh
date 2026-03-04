@@ -1,29 +1,34 @@
-import { syncStatusTable, calendarDestinationsTable } from "@keeper.sh/database/schema";
+import { syncStatusTable, calendarsTable } from "@keeper.sh/database/schema";
 import { createWebsocketHandler } from "@keeper.sh/broadcast";
 import type { Socket } from "@keeper.sh/broadcast";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { database } from "../context";
 
 const sendInitialSyncStatus = async (userId: string, socket: Socket): Promise<void> => {
   const statuses = await database
     .select({
-      destinationId: syncStatusTable.destinationId,
+      calendarId: syncStatusTable.calendarId,
       lastSyncedAt: syncStatusTable.lastSyncedAt,
       localEventCount: syncStatusTable.localEventCount,
       remoteEventCount: syncStatusTable.remoteEventCount,
     })
     .from(syncStatusTable)
     .innerJoin(
-      calendarDestinationsTable,
-      eq(syncStatusTable.destinationId, calendarDestinationsTable.id),
+      calendarsTable,
+      eq(syncStatusTable.calendarId, calendarsTable.id),
     )
-    .where(eq(calendarDestinationsTable.userId, userId));
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["destination", "both"]),
+      ),
+    );
 
   for (const status of statuses) {
     socket.send(
       JSON.stringify({
         data: {
-          destinationId: status.destinationId,
+          calendarId: status.calendarId,
           inSync: status.localEventCount === status.remoteEventCount,
           lastSyncedAt: status.lastSyncedAt?.toISOString(),
           localEventCount: status.localEventCount,

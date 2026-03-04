@@ -37,7 +37,7 @@ const onDestinationSync = async (result: DestinationSyncResult): Promise<void> =
   await database
     .insert(syncStatusTable)
     .values({
-      destinationId: result.destinationId,
+      calendarId: result.calendarId,
       lastSyncedAt: now,
       localEventCount: result.localEventCount,
       remoteEventCount: result.remoteEventCount,
@@ -48,12 +48,12 @@ const onDestinationSync = async (result: DestinationSyncResult): Promise<void> =
         localEventCount: result.localEventCount,
         remoteEventCount: result.remoteEventCount,
       },
-      target: [syncStatusTable.destinationId],
+      target: [syncStatusTable.calendarId],
     });
 
   if (result.broadcast !== false) {
     broadcastService.emit(result.userId, "sync:status", {
-      destinationId: result.destinationId,
+      calendarId: result.calendarId,
       inSync: result.localEventCount === result.remoteEventCount,
       lastSyncedAt: now.toISOString(),
       localEventCount: result.localEventCount,
@@ -65,7 +65,7 @@ const onDestinationSync = async (result: DestinationSyncResult): Promise<void> =
 
 const onSyncProgress = (update: SyncProgressUpdate): void => {
   broadcastService.emit(update.userId, "sync:status", {
-    destinationId: update.destinationId,
+    calendarId: update.calendarId,
     inSync: update.inSync,
     lastOperation: update.lastOperation,
     localEventCount: update.localEventCount,

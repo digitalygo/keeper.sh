@@ -1,4 +1,4 @@
-import { calendarSourcesTable, eventStatesTable } from "@keeper.sh/database/schema";
+import { calendarsTable, eventStatesTable } from "@keeper.sh/database/schema";
 import { KEEPER_EVENT_SUFFIX } from "@keeper.sh/constants";
 import { generateIcsCalendar } from "ts-ics";
 import type { IcsCalendar, IcsEvent } from "ts-ics";
@@ -7,7 +7,6 @@ import { resolveUserIdentifier } from "./user";
 import { database } from "../context";
 
 const EMPTY_SOURCES_COUNT = 0;
-const ICAL_SOURCE_TYPE = "ical";
 
 interface CalendarEvent {
   id: string;
@@ -48,12 +47,12 @@ const generateUserCalendar = async (identifier: string): Promise<string | null> 
   }
 
   const sources = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, ICAL_SOURCE_TYPE),
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["source", "both"]),
       ),
     );
 
@@ -61,7 +60,7 @@ const generateUserCalendar = async (identifier: string): Promise<string | null> 
     return formatEventsAsIcal([]);
   }
 
-  const sourceIds = sources.map(({ id }) => id);
+  const calendarIds = sources.map(({ id }) => id);
   const events = await database
     .select({
       endTime: eventStatesTable.endTime,
@@ -69,7 +68,7 @@ const generateUserCalendar = async (identifier: string): Promise<string | null> 
       startTime: eventStatesTable.startTime,
     })
     .from(eventStatesTable)
-    .where(inArray(eventStatesTable.sourceId, sourceIds))
+    .where(inArray(eventStatesTable.calendarId, calendarIds))
     .orderBy(asc(eventStatesTable.startTime));
 
   return formatEventsAsIcal(events);

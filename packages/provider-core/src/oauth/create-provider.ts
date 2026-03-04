@@ -55,7 +55,7 @@ const createOAuthDestinationProvider = <
 
     const results = await Promise.all(
       accounts.map(async (account) => {
-        const localEvents = await getEventsForDestination(database, account.destinationId);
+        const localEvents = await getEventsForDestination(database, account.calendarId);
 
         const config = buildConfig(database, account, broadcastSyncStatus);
         const provider = createProviderInstance(config, oauthProvider);

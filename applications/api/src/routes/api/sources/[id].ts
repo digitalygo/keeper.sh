@@ -1,4 +1,4 @@
-import { calendarSourcesTable } from "@keeper.sh/database/schema";
+import { calendarAccountsTable, calendarsTable } from "@keeper.sh/database/schema";
 import { and, eq } from "drizzle-orm";
 import { withAuth, withWideEvent } from "../../../utils/middleware";
 import { ErrorResponse } from "../../../utils/responses";
@@ -17,23 +17,24 @@ export const GET = withWideEvent(
 
     const [source] = await database
       .select({
-        id: calendarSourcesTable.id,
-        name: calendarSourcesTable.name,
-        sourceType: calendarSourcesTable.sourceType,
-        provider: calendarSourcesTable.provider,
-        url: calendarSourcesTable.url,
-        calendarUrl: calendarSourcesTable.calendarUrl,
-        excludeWorkingLocation: calendarSourcesTable.excludeWorkingLocation,
-        excludeFocusTime: calendarSourcesTable.excludeFocusTime,
-        excludeOutOfOffice: calendarSourcesTable.excludeOutOfOffice,
-        createdAt: calendarSourcesTable.createdAt,
-        updatedAt: calendarSourcesTable.updatedAt,
+        id: calendarsTable.id,
+        name: calendarsTable.name,
+        calendarType: calendarsTable.calendarType,
+        provider: calendarAccountsTable.provider,
+        url: calendarsTable.url,
+        calendarUrl: calendarsTable.calendarUrl,
+        excludeWorkingLocation: calendarsTable.excludeWorkingLocation,
+        excludeFocusTime: calendarsTable.excludeFocusTime,
+        excludeOutOfOffice: calendarsTable.excludeOutOfOffice,
+        createdAt: calendarsTable.createdAt,
+        updatedAt: calendarsTable.updatedAt,
       })
-      .from(calendarSourcesTable)
+      .from(calendarsTable)
+      .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
       .where(
         and(
-          eq(calendarSourcesTable.id, id),
-          eq(calendarSourcesTable.userId, userId),
+          eq(calendarsTable.id, id),
+          eq(calendarsTable.userId, userId),
         ),
       )
       .limit(1);
@@ -62,12 +63,12 @@ export const PATCH = withWideEvent(
     }
 
     const [updated] = await database
-      .update(calendarSourcesTable)
+      .update(calendarsTable)
       .set({ name })
       .where(
         and(
-          eq(calendarSourcesTable.id, id),
-          eq(calendarSourcesTable.userId, userId),
+          eq(calendarsTable.id, id),
+          eq(calendarsTable.userId, userId),
         ),
       )
       .returning();
@@ -80,7 +81,7 @@ export const PATCH = withWideEvent(
   }),
 );
 
-const sourceTypeDeleters: Record<string, (userId: string, sourceId: string) => Promise<boolean>> = {
+const calendarTypeDeleters: Record<string, (userId: string, calendarId: string) => Promise<boolean>> = {
   ical: deleteIcsSource,
   oauth: deleteOAuthSource,
   caldav: deleteCalDAVSource,
@@ -95,12 +96,12 @@ export const DELETE = withWideEvent(
     }
 
     const [source] = await database
-      .select({ sourceType: calendarSourcesTable.sourceType })
-      .from(calendarSourcesTable)
+      .select({ calendarType: calendarsTable.calendarType })
+      .from(calendarsTable)
       .where(
         and(
-          eq(calendarSourcesTable.id, id),
-          eq(calendarSourcesTable.userId, userId),
+          eq(calendarsTable.id, id),
+          eq(calendarsTable.userId, userId),
         ),
       )
       .limit(1);
@@ -109,7 +110,7 @@ export const DELETE = withWideEvent(
       return ErrorResponse.notFound().toResponse();
     }
 
-    const deleter = sourceTypeDeleters[source.sourceType];
+    const deleter = calendarTypeDeleters[source.calendarType];
 
     if (!deleter) {
       return ErrorResponse.badRequest("Unknown source type").toResponse();

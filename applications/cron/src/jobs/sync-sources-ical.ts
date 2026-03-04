@@ -1,5 +1,5 @@
 import type { CronOptions } from "cronbake";
-import { calendarSnapshotsTable, calendarSourcesTable } from "@keeper.sh/database/schema";
+import { calendarSnapshotsTable, calendarsTable } from "@keeper.sh/database/schema";
 import { MS_PER_HOUR } from "@keeper.sh/constants";
 import { pullRemoteCalendar } from "@keeper.sh/calendar";
 import { WideEvent } from "@keeper.sh/log";
@@ -8,16 +8,16 @@ import { database } from "../context";
 import { setCronEventFields, withCronWideEvent } from "../utils/with-wide-event";
 import { countSettledResults } from "../utils/count-settled-results";
 
-const ICAL_SOURCE_TYPE = "ical";
+const ICAL_CALENDAR_TYPE = "ical";
 
 interface FetchResult {
   ical: string;
-  sourceId: string;
+  calendarId: string;
 }
 
-const fetchRemoteCalendar = async (sourceId: string, url: string): Promise<FetchResult> => {
+const fetchRemoteCalendar = async (calendarId: string, url: string): Promise<FetchResult> => {
   const { ical } = await pullRemoteCalendar("ical", url);
-  return { ical, sourceId };
+  return { ical, calendarId };
 };
 
 const insertSnapshot = async (
@@ -34,7 +34,7 @@ const SNAPSHOT_RETENTION_HOURS = 6;
 const SNAPSHOT_RETENTION_MS = SNAPSHOT_RETENTION_HOURS * MS_PER_HOUR;
 
 const deleteStaleCalendarSnapshots = async (
-  sourceId: string,
+  calendarId: string,
   referenceDate: Date,
 ): Promise<void> => {
   const staleThreshold = referenceDate.getTime() - SNAPSHOT_RETENTION_MS;
@@ -43,17 +43,17 @@ const deleteStaleCalendarSnapshots = async (
     .delete(calendarSnapshotsTable)
     .where(
       and(
-        eq(calendarSnapshotsTable.sourceId, sourceId),
+        eq(calendarSnapshotsTable.calendarId, calendarId),
         lte(calendarSnapshotsTable.createdAt, new Date(staleThreshold)),
       ),
     );
 };
 
-const getLatestSnapshotHash = async (sourceId: string): Promise<string | null> => {
+const getLatestSnapshotHash = async (calendarId: string): Promise<string | null> => {
   const [latest] = await database
     .select({ contentHash: calendarSnapshotsTable.contentHash })
     .from(calendarSnapshotsTable)
-    .where(eq(calendarSnapshotsTable.sourceId, sourceId))
+    .where(eq(calendarSnapshotsTable.calendarId, calendarId))
     .orderBy(desc(calendarSnapshotsTable.createdAt))
     .limit(1);
 
@@ -67,18 +67,18 @@ interface SnapshotResult {
   error: boolean;
 }
 
-const processSnapshot = async (sourceId: string, ical: string): Promise<SnapshotResult> => {
+const processSnapshot = async (calendarId: string, ical: string): Promise<SnapshotResult> => {
   try {
     const contentHash = computeContentHash(ical);
-    const latestHash = await getLatestSnapshotHash(sourceId);
+    const latestHash = await getLatestSnapshotHash(calendarId);
 
     if (latestHash === contentHash) {
       return { error: false, skipped: true };
     }
 
-    const record = await insertSnapshot({ contentHash, ical, sourceId });
+    const record = await insertSnapshot({ contentHash, ical, calendarId });
     if (record) {
-      await deleteStaleCalendarSnapshots(sourceId, record.createdAt);
+      await deleteStaleCalendarSnapshots(calendarId, record.createdAt);
     }
     return { error: false, skipped: false };
   } catch (error) {
@@ -94,8 +94,8 @@ export default withCronWideEvent({
 
     const remoteSources = await database
       .select()
-      .from(calendarSourcesTable)
-      .where(eq(calendarSourcesTable.sourceType, ICAL_SOURCE_TYPE));
+      .from(calendarsTable)
+      .where(eq(calendarsTable.calendarType, ICAL_CALENDAR_TYPE));
     setCronEventFields({ "source.count": remoteSources.length });
 
     const fetches = remoteSources.map(({ id, url }) => {
@@ -118,7 +118,7 @@ export default withCronWideEvent({
     const insertions: Promise<SnapshotResult>[] = [];
     for (const settlement of settlements) {
       if (settlement.status === "fulfilled") {
-        insertions.push(processSnapshot(settlement.value.sourceId, settlement.value.ical));
+        insertions.push(processSnapshot(settlement.value.calendarId, settlement.value.ical));
       }
     }
 

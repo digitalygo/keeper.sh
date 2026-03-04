@@ -1,5 +1,5 @@
-import { calendarDestinationsTable } from "@keeper.sh/database/schema";
-import { and, eq } from "drizzle-orm";
+import { calendarAccountsTable, calendarsTable } from "@keeper.sh/database/schema";
+import { and, eq, inArray } from "drizzle-orm";
 import { withAuth, withWideEvent } from "../../../utils/middleware";
 import { ErrorResponse } from "../../../utils/responses";
 import { getAuthorizationUrl, isOAuthProvider } from "../../../utils/destinations";
@@ -7,26 +7,31 @@ import { baseUrl, database, premiumService } from "../../../context";
 
 const FIRST_RESULT_LIMIT = 1;
 
-const userOwnsDestination = async (userId: string, destinationId: string): Promise<boolean> => {
-  const [destination] = await database
-    .select({ id: calendarDestinationsTable.id })
-    .from(calendarDestinationsTable)
+const userOwnsDestination = async (userId: string, accountId: string): Promise<boolean> => {
+  const [account] = await database
+    .select({ id: calendarAccountsTable.id })
+    .from(calendarAccountsTable)
     .where(
       and(
-        eq(calendarDestinationsTable.id, destinationId),
-        eq(calendarDestinationsTable.userId, userId),
+        eq(calendarAccountsTable.id, accountId),
+        eq(calendarAccountsTable.userId, userId),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
 
-  return Boolean(destination);
+  return Boolean(account);
 };
 
 const countUserDestinations = async (userId: string): Promise<number> => {
   const destinations = await database
-    .select({ id: calendarDestinationsTable.id })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.userId, userId));
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["destination", "both"]),
+      ),
+    );
 
   return destinations.length;
 };

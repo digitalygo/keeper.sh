@@ -41,7 +41,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
   abstract listRemoteEvents(options: ListRemoteEventsOptions): Promise<RemoteEvent[]>;
 
   async sync(localEvents: SyncableEvent[], context: SyncContext): Promise<SyncResult> {
-    const { database, userId, destinationId } = this.config;
+    const { database, userId, calendarId } = this.config;
 
     try {
       this.emitProgress(context, {
@@ -51,7 +51,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
       });
 
       const [existingMappings, remoteEvents] = await Promise.all([
-        getEventMappingsForDestination(database, destinationId),
+        getEventMappingsForDestination(database, calendarId),
         this.listRemoteEvents({ until: CalendarProvider.getFutureDate() }),
       ]);
 
@@ -75,9 +75,9 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
       }
 
       if (operations.length === EMPTY_OPERATIONS_COUNT) {
-        const mappingCount = await countMappingsForDestination(database, destinationId);
+        const mappingCount = await countMappingsForDestination(database, calendarId);
         await context.onDestinationSync?.({
-          destinationId,
+          calendarId,
           localEventCount: localEvents.length,
           remoteEventCount: mappingCount,
           userId,
@@ -96,10 +96,10 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
         remoteEventCount: remoteEvents.length,
       });
 
-      const finalRemoteCount = await countMappingsForDestination(database, destinationId);
+      const finalRemoteCount = await countMappingsForDestination(database, calendarId);
       await context.onDestinationSync?.({
         broadcast: true,
-        destinationId,
+        calendarId,
         localEventCount: localEvents.length,
         remoteEventCount: finalRemoteCount,
         userId,
@@ -110,7 +110,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
       WideEvent.error(error);
 
       context.onSyncProgress?.({
-        destinationId: this.config.destinationId,
+        calendarId: this.config.calendarId,
         error: String(error),
         inSync: false,
         localEventCount: localEvents.length,
@@ -259,7 +259,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
       remoteEventCount: number;
     },
   ): Promise<SyncResult> {
-    const { database, destinationId } = this.config;
+    const { database, calendarId } = this.config;
     const total = operations.length;
     let current = INITIAL_CURRENT_COUNT;
     let added = INITIAL_ADDED_COUNT;
@@ -282,9 +282,9 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
         }
         if (result?.success && result.remoteId) {
           await createEventMapping(database, {
+            calendarId,
             deleteIdentifier: result.deleteId,
             destinationEventUid: result.remoteId,
-            destinationId,
             endTime: operation.event.endTime,
             eventStateId: operation.event.id,
             startTime: operation.event.startTime,
@@ -305,7 +305,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
           break;
         }
         if (result?.success) {
-          await deleteEventMappingByDestinationUid(database, destinationId, operation.uid);
+          await deleteEventMappingByDestinationUid(database, calendarId, operation.uid);
           removed++;
           if (currentRemoteCount > MIN_REMOTE_COUNT) {
             currentRemoteCount--;
@@ -330,7 +330,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
 
       await params.context.onDestinationSync?.({
         broadcast: false,
-        destinationId: this.config.destinationId,
+        calendarId: this.config.calendarId,
         localEventCount: params.localEventCount,
         remoteEventCount: currentRemoteCount,
         userId: this.config.userId,
@@ -364,7 +364,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
     },
   ): void {
     context.onSyncProgress?.({
-      destinationId: this.config.destinationId,
+      calendarId: this.config.calendarId,
       inSync: false,
       lastOperation: params.lastOperation,
       localEventCount: params.localEventCount,

@@ -46,9 +46,9 @@ const createGoogleCalendarProvider = (
       accessTokenExpiresAt: account.accessTokenExpiresAt,
       accountId: account.accountId,
       broadcastSyncStatus: broadcast,
-      calendarId: "primary",
+      calendarId: account.calendarId,
       database: db,
-      destinationId: account.destinationId,
+      externalCalendarId: "primary",
       refreshToken: account.refreshToken,
       userId: account.userId,
     }),
@@ -119,7 +119,7 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
 
   private buildListEventsUrl(today: Date, until: Date, pageToken: string | null): URL {
     const url = new URL(
-      `calendars/${encodeURIComponent(this.config.calendarId)}/events`,
+      `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events`,
       GOOGLE_CALENDAR_API,
     );
 
@@ -172,7 +172,7 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
 
   private async createEvent(resource: GoogleEvent): Promise<PushResult> {
     const url = new URL(
-      `calendars/${encodeURIComponent(this.config.calendarId)}/events`,
+      `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events`,
       GOOGLE_CALENDAR_API,
     );
 
@@ -208,7 +208,7 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
       }
 
       const url = new URL(
-        `calendars/${encodeURIComponent(this.config.calendarId)}/events/${encodeURIComponent(existing.id)}`,
+        `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events/${encodeURIComponent(existing.id)}`,
         GOOGLE_CALENDAR_API,
       );
 
@@ -242,7 +242,7 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     event?.startTiming("findEventByUid");
 
     const url = new URL(
-      `calendars/${encodeURIComponent(this.config.calendarId)}/events`,
+      `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events`,
       GOOGLE_CALENDAR_API,
     );
 

@@ -91,7 +91,7 @@ const createCalDAVSourceProvider = (
   };
 
   const processEvents = async (
-    sourceId: string,
+    calendarId: string,
     events: SourceEvent[],
   ): Promise<CalDAVSourceSyncResult> => {
     const existingEvents = await database
@@ -100,7 +100,7 @@ const createCalDAVSourceProvider = (
         sourceEventUid: eventStatesTable.sourceEventUid,
       })
       .from(eventStatesTable)
-      .where(eq(eventStatesTable.sourceId, sourceId));
+      .where(eq(eventStatesTable.calendarId, calendarId));
 
     const existingUids = new Set(existingEvents.map((event) => event.sourceEventUid));
     const incomingUids = new Set(events.map((event) => event.uid));
@@ -116,7 +116,7 @@ const createCalDAVSourceProvider = (
         .delete(eventStatesTable)
         .where(
           and(
-            eq(eventStatesTable.sourceId, sourceId),
+            eq(eventStatesTable.calendarId, calendarId),
             inArray(eventStatesTable.sourceEventUid, toRemoveUids),
           ),
         );
@@ -127,7 +127,7 @@ const createCalDAVSourceProvider = (
         toAdd.map((event) => ({
           endTime: event.endTime,
           sourceEventUid: event.uid,
-          sourceId,
+          calendarId,
           startTime: event.startTime,
         })),
       );
@@ -145,7 +145,7 @@ const createCalDAVSourceProvider = (
   ): Promise<CalDAVSourceSyncResult> => {
     try {
       const events = await fetchEventsFromCalDAV(account);
-      return processEvents(account.sourceId, events);
+      return processEvents(account.calendarId, events);
     } catch (error) {
       WideEvent.error(error);
       return {
@@ -179,9 +179,9 @@ const createCalDAVSourceProvider = (
     return combineResults(results);
   };
 
-  const syncSource = async (sourceId: string): Promise<CalDAVSourceSyncResult> => {
+  const syncSource = async (calendarId: string): Promise<CalDAVSourceSyncResult> => {
     const sources = await sourceService.getAllCalDAVSources();
-    const source = sources.find((source) => source.sourceId === sourceId);
+    const source = sources.find((source) => source.calendarId === calendarId);
 
     if (!source) {
       return { eventsAdded: EMPTY_COUNT, eventsRemoved: EMPTY_COUNT, syncToken: null };

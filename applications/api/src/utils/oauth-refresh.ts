@@ -1,7 +1,6 @@
 import {
-  calendarDestinationsTable,
+  calendarAccountsTable,
   oauthCredentialsTable,
-  oauthSourceCredentialsTable,
 } from "@keeper.sh/database/schema";
 import { createGoogleOAuthService } from "@keeper.sh/oauth-google";
 import { createMicrosoftOAuthService } from "@keeper.sh/oauth-microsoft";
@@ -17,7 +16,7 @@ interface RefreshResult {
 }
 
 const refreshGoogleAccessToken = async (
-  destinationId: string,
+  accountId: string,
   refreshToken: string,
 ): Promise<RefreshResult> => {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
@@ -32,13 +31,13 @@ const refreshGoogleAccessToken = async (
   const tokenData = await googleOAuth.refreshAccessToken(refreshToken);
   const newExpiresAt = new Date(Date.now() + tokenData.expires_in * MS_PER_SECOND);
 
-  const [destination] = await database
-    .select({ oauthCredentialId: calendarDestinationsTable.oauthCredentialId })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.id, destinationId))
+  const [account] = await database
+    .select({ oauthCredentialId: calendarAccountsTable.oauthCredentialId })
+    .from(calendarAccountsTable)
+    .where(eq(calendarAccountsTable.id, accountId))
     .limit(FIRST_RESULT_LIMIT);
 
-  if (destination?.oauthCredentialId) {
+  if (account?.oauthCredentialId) {
     await database
       .update(oauthCredentialsTable)
       .set({
@@ -46,7 +45,7 @@ const refreshGoogleAccessToken = async (
         expiresAt: newExpiresAt,
         refreshToken: tokenData.refresh_token ?? refreshToken,
       })
-      .where(eq(oauthCredentialsTable.id, destination.oauthCredentialId));
+      .where(eq(oauthCredentialsTable.id, account.oauthCredentialId));
   }
 
   return {
@@ -56,7 +55,7 @@ const refreshGoogleAccessToken = async (
 };
 
 const refreshMicrosoftAccessToken = async (
-  destinationId: string,
+  accountId: string,
   refreshToken: string,
 ): Promise<RefreshResult> => {
   if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
@@ -71,13 +70,13 @@ const refreshMicrosoftAccessToken = async (
   const tokenData = await microsoftOAuth.refreshAccessToken(refreshToken);
   const newExpiresAt = new Date(Date.now() + tokenData.expires_in * MS_PER_SECOND);
 
-  const [destination] = await database
-    .select({ oauthCredentialId: calendarDestinationsTable.oauthCredentialId })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.id, destinationId))
+  const [account] = await database
+    .select({ oauthCredentialId: calendarAccountsTable.oauthCredentialId })
+    .from(calendarAccountsTable)
+    .where(eq(calendarAccountsTable.id, accountId))
     .limit(FIRST_RESULT_LIMIT);
 
-  if (destination?.oauthCredentialId) {
+  if (account?.oauthCredentialId) {
     await database
       .update(oauthCredentialsTable)
       .set({
@@ -85,7 +84,7 @@ const refreshMicrosoftAccessToken = async (
         expiresAt: newExpiresAt,
         refreshToken: tokenData.refresh_token ?? refreshToken,
       })
-      .where(eq(oauthCredentialsTable.id, destination.oauthCredentialId));
+      .where(eq(oauthCredentialsTable.id, account.oauthCredentialId));
   }
 
   return {
@@ -111,13 +110,13 @@ const refreshGoogleSourceAccessToken = async (
   const newExpiresAt = new Date(Date.now() + tokenData.expires_in * MS_PER_SECOND);
 
   await database
-    .update(oauthSourceCredentialsTable)
+    .update(oauthCredentialsTable)
     .set({
       accessToken: tokenData.access_token,
       expiresAt: newExpiresAt,
       refreshToken: tokenData.refresh_token ?? refreshToken,
     })
-    .where(eq(oauthSourceCredentialsTable.id, credentialId));
+    .where(eq(oauthCredentialsTable.id, credentialId));
 
   return {
     accessToken: tokenData.access_token,
@@ -142,13 +141,13 @@ const refreshMicrosoftSourceAccessToken = async (
   const newExpiresAt = new Date(Date.now() + tokenData.expires_in * MS_PER_SECOND);
 
   await database
-    .update(oauthSourceCredentialsTable)
+    .update(oauthCredentialsTable)
     .set({
       accessToken: tokenData.access_token,
       expiresAt: newExpiresAt,
       refreshToken: tokenData.refresh_token ?? refreshToken,
     })
-    .where(eq(oauthSourceCredentialsTable.id, credentialId));
+    .where(eq(oauthCredentialsTable.id, credentialId));
 
   return {
     accessToken: tokenData.access_token,

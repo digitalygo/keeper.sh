@@ -1,10 +1,9 @@
 import {
-  calendarDestinationsTable,
-  calendarSourcesTable,
+  calendarAccountsTable,
+  calendarsTable,
   oauthCredentialsTable,
-  oauthSourceCredentialsTable,
 } from "@keeper.sh/database/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { spawnBackgroundJob } from "./background-task";
 import { getSourceProvider } from "@keeper.sh/provider-registry/server";
 import { database, premiumService, oauthProviders } from "../context";
@@ -12,7 +11,7 @@ import { createMappingsForNewSource } from "./source-destination-mappings";
 import { triggerDestinationSync } from "./sync";
 
 const FIRST_RESULT_LIMIT = 1;
-const OAUTH_SOURCE_TYPE = "oauth";
+const OAUTH_CALENDAR_TYPE = "oauth";
 
 class OAuthSourceLimitError extends Error {
   constructor() {
@@ -45,8 +44,8 @@ interface OAuthCalendarSource {
   email: string | null;
 }
 
-interface OAuthDestinationWithCredentials {
-  destinationId: string;
+interface OAuthAccountWithCredentials {
+  accountId: string;
   email: string | null;
   accessToken: string;
   refreshToken: string;
@@ -67,50 +66,47 @@ const getUserOAuthSources = async (
 ): Promise<OAuthCalendarSource[]> => {
   const sources = await database
     .select({
-      createdAt: calendarSourcesTable.createdAt,
-      email: oauthSourceCredentialsTable.email,
-      externalCalendarId: calendarSourcesTable.externalCalendarId,
-      id: calendarSourcesTable.id,
-      name: calendarSourcesTable.name,
-      oauthCredentialId: calendarSourcesTable.oauthCredentialId,
-      provider: calendarSourcesTable.provider,
-      userId: calendarSourcesTable.userId,
+      createdAt: calendarsTable.createdAt,
+      email: oauthCredentialsTable.email,
+      externalCalendarId: calendarsTable.externalCalendarId,
+      id: calendarsTable.id,
+      name: calendarsTable.name,
+      provider: calendarAccountsTable.provider,
+      userId: calendarsTable.userId,
     })
-    .from(calendarSourcesTable)
+    .from(calendarsTable)
+    .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
     .leftJoin(
-      oauthSourceCredentialsTable,
-      eq(calendarSourcesTable.oauthCredentialId, oauthSourceCredentialsTable.id),
+      oauthCredentialsTable,
+      eq(calendarAccountsTable.oauthCredentialId, oauthCredentialsTable.id),
     )
     .where(
       and(
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, OAUTH_SOURCE_TYPE),
-        eq(calendarSourcesTable.provider, provider),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, OAUTH_CALENDAR_TYPE),
+        eq(calendarAccountsTable.provider, provider),
+        inArray(calendarsTable.role, ["source", "both"]),
       ),
     );
 
-  return sources.map((source) => {
-    if (!source.provider) {
-      throw new Error(`OAuth source ${source.id} is missing provider`);
-    }
-    return {
-      email: source.email,
-      id: source.id,
-      name: source.name,
-      provider: source.provider,
-    };
-  });
+  return sources.map((source) => ({
+    email: source.email,
+    id: source.id,
+    name: source.name,
+    provider: source.provider,
+  }));
 };
 
-const verifyOAuthSourceOwnership = async (userId: string, sourceId: string): Promise<boolean> => {
+const verifyOAuthSourceOwnership = async (userId: string, calendarId: string): Promise<boolean> => {
   const [source] = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.id, sourceId),
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, OAUTH_SOURCE_TYPE),
+        eq(calendarsTable.id, calendarId),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, OAUTH_CALENDAR_TYPE),
+        inArray(calendarsTable.role, ["source", "both"]),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
@@ -120,27 +116,27 @@ const verifyOAuthSourceOwnership = async (userId: string, sourceId: string): Pro
 
 const getOAuthDestinationCredentials = async (
   userId: string,
-  destinationId: string,
+  accountId: string,
   provider: string,
-): Promise<OAuthDestinationWithCredentials> => {
+): Promise<OAuthAccountWithCredentials> => {
   const [result] = await database
     .select({
       accessToken: oauthCredentialsTable.accessToken,
-      destinationId: calendarDestinationsTable.id,
-      email: calendarDestinationsTable.email,
+      accountId: calendarAccountsTable.id,
+      email: calendarAccountsTable.email,
       expiresAt: oauthCredentialsTable.expiresAt,
-      provider: calendarDestinationsTable.provider,
+      provider: calendarAccountsTable.provider,
       refreshToken: oauthCredentialsTable.refreshToken,
     })
-    .from(calendarDestinationsTable)
+    .from(calendarAccountsTable)
     .innerJoin(
       oauthCredentialsTable,
-      eq(calendarDestinationsTable.oauthCredentialId, oauthCredentialsTable.id),
+      eq(calendarAccountsTable.oauthCredentialId, oauthCredentialsTable.id),
     )
     .where(
       and(
-        eq(calendarDestinationsTable.id, destinationId),
-        eq(calendarDestinationsTable.userId, userId),
+        eq(calendarAccountsTable.id, accountId),
+        eq(calendarAccountsTable.userId, userId),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
@@ -155,7 +151,7 @@ const getOAuthDestinationCredentials = async (
 
   return {
     accessToken: result.accessToken,
-    destinationId: result.destinationId,
+    accountId: result.accountId,
     email: result.email,
     expiresAt: result.expiresAt,
     refreshToken: result.refreshToken,
@@ -181,18 +177,18 @@ const getOAuthSourceCredentials = async (
 ): Promise<OAuthSourceWithCredentials> => {
   const [result] = await database
     .select({
-      accessToken: oauthSourceCredentialsTable.accessToken,
-      credentialId: oauthSourceCredentialsTable.id,
-      email: oauthSourceCredentialsTable.email,
-      expiresAt: oauthSourceCredentialsTable.expiresAt,
-      provider: oauthSourceCredentialsTable.provider,
-      refreshToken: oauthSourceCredentialsTable.refreshToken,
+      accessToken: oauthCredentialsTable.accessToken,
+      credentialId: oauthCredentialsTable.id,
+      email: oauthCredentialsTable.email,
+      expiresAt: oauthCredentialsTable.expiresAt,
+      provider: oauthCredentialsTable.provider,
+      refreshToken: oauthCredentialsTable.refreshToken,
     })
-    .from(oauthSourceCredentialsTable)
+    .from(oauthCredentialsTable)
     .where(
       and(
-        eq(oauthSourceCredentialsTable.id, credentialId),
-        eq(oauthSourceCredentialsTable.userId, userId),
+        eq(oauthCredentialsTable.id, credentialId),
+        eq(oauthCredentialsTable.userId, userId),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
@@ -248,12 +244,12 @@ const createOAuthSource = async (
   } = options;
 
   const [credential] = await database
-    .select({ email: oauthSourceCredentialsTable.email })
-    .from(oauthSourceCredentialsTable)
+    .select({ email: oauthCredentialsTable.email })
+    .from(oauthCredentialsTable)
     .where(
       and(
-        eq(oauthSourceCredentialsTable.id, oauthCredentialId),
-        eq(oauthSourceCredentialsTable.userId, userId),
+        eq(oauthCredentialsTable.id, oauthCredentialId),
+        eq(oauthCredentialsTable.userId, userId),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
@@ -263,42 +259,62 @@ const createOAuthSource = async (
   }
 
   const existingSources = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
-    .where(eq(calendarSourcesTable.userId, userId));
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["source", "both"]),
+      ),
+    );
 
   const allowed = await premiumService.canAddSource(userId, existingSources.length);
   if (!allowed) {
     throw new OAuthSourceLimitError();
   }
 
-  const [existingSource] = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
+  const [existingCalendar] = await database
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
     .where(
       and(
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.externalCalendarId, externalCalendarId),
-        eq(calendarSourcesTable.oauthCredentialId, oauthCredentialId),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.externalCalendarId, externalCalendarId),
+        eq(calendarAccountsTable.oauthCredentialId, oauthCredentialId),
       ),
     )
     .limit(FIRST_RESULT_LIMIT);
 
-  if (existingSource) {
+  if (existingCalendar) {
     throw new DuplicateSourceError();
   }
 
-  const [source] = await database
-    .insert(calendarSourcesTable)
+  const [account] = await database
+    .insert(calendarAccountsTable)
     .values({
+      authType: "oauth",
+      oauthCredentialId,
+      provider,
+      userId,
+    })
+    .returning({ id: calendarAccountsTable.id });
+
+  if (!account) {
+    throw new Error("Failed to create calendar account");
+  }
+
+  const [source] = await database
+    .insert(calendarsTable)
+    .values({
+      accountId: account.id,
+      calendarType: OAUTH_CALENDAR_TYPE,
       excludeFocusTime,
       excludeOutOfOffice,
       excludeWorkingLocation,
       externalCalendarId,
       name,
-      oauthCredentialId,
-      provider,
-      sourceType: OAUTH_SOURCE_TYPE,
+      role: "source",
       userId,
     })
     .returning();
@@ -322,14 +338,15 @@ const createOAuthSource = async (
   };
 };
 
-const deleteOAuthSource = async (userId: string, sourceId: string): Promise<boolean> => {
+const deleteOAuthSource = async (userId: string, calendarId: string): Promise<boolean> => {
   const [deleted] = await database
-    .delete(calendarSourcesTable)
+    .delete(calendarsTable)
     .where(
       and(
-        eq(calendarSourcesTable.id, sourceId),
-        eq(calendarSourcesTable.userId, userId),
-        eq(calendarSourcesTable.sourceType, OAUTH_SOURCE_TYPE),
+        eq(calendarsTable.id, calendarId),
+        eq(calendarsTable.userId, userId),
+        eq(calendarsTable.calendarType, OAUTH_CALENDAR_TYPE),
+        inArray(calendarsTable.role, ["source", "both"]),
       ),
     )
     .returning();

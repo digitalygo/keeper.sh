@@ -1,23 +1,31 @@
-import { calendarDestinationsTable, calendarSourcesTable } from "@keeper.sh/database/schema";
-import { eq } from "drizzle-orm";
+import { calendarsTable } from "@keeper.sh/database/schema";
+import { and, eq, inArray } from "drizzle-orm";
 import type { Plan } from "@keeper.sh/premium";
 import { database, premiumService } from "../context";
 
-const fetchSources = (sourceType?: string) => {
-  if (sourceType) {
+const fetchCalendars = (calendarType?: string) => {
+  if (calendarType) {
     return database
       .select()
-      .from(calendarSourcesTable)
-      .where(eq(calendarSourcesTable.sourceType, sourceType));
+      .from(calendarsTable)
+      .where(
+        and(
+          eq(calendarsTable.calendarType, calendarType),
+          inArray(calendarsTable.role, ["source", "both"]),
+        ),
+      );
   }
-  return database.select().from(calendarSourcesTable);
+  return database
+    .select()
+    .from(calendarsTable)
+    .where(inArray(calendarsTable.role, ["source", "both"]));
 };
 
 const getSourcesByPlan = async (
   targetPlan: Plan,
-  sourceType?: string,
-): Promise<(typeof calendarSourcesTable.$inferSelect)[]> => {
-  const sources = await fetchSources(sourceType);
+  calendarType?: string,
+): Promise<(typeof calendarsTable.$inferSelect)[]> => {
+  const sources = await fetchCalendars(calendarType);
 
   const userPlans = new Map<string, Plan>();
 
@@ -32,8 +40,9 @@ const getSourcesByPlan = async (
 
 const getUsersWithDestinationsByPlan = async (targetPlan: Plan): Promise<string[]> => {
   const destinations = await database
-    .select({ userId: calendarDestinationsTable.userId })
-    .from(calendarDestinationsTable);
+    .select({ userId: calendarsTable.userId })
+    .from(calendarsTable)
+    .where(inArray(calendarsTable.role, ["destination", "both"]));
 
   const uniqueUserIds = [...new Set(destinations.map(({ userId }) => userId))];
   const usersWithPlan: string[] = [];

@@ -1,6 +1,6 @@
-import type { calendarSourcesTable } from "@keeper.sh/database/schema";
 import {
-  calendarDestinationsTable,
+  calendarAccountsTable,
+  calendarsTable,
   calendarSnapshotsTable,
   eventMappingsTable,
   eventStatesTable,
@@ -14,16 +14,16 @@ import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 const FIRST_SNAPSHOT_INDEX = 1;
 const MINIMUM_EVENTS_TO_PROCESS = 0;
 
-type Source = typeof calendarSourcesTable.$inferSelect;
+type Source = typeof calendarsTable.$inferSelect;
 
 const getLatestSnapshot = async (
   database: BunSQLDatabase,
-  sourceId: string,
+  calendarId: string,
 ): Promise<ReturnType<typeof parseIcsCalendar> | null> => {
   const [snapshot] = await database
     .select({ ical: calendarSnapshotsTable.ical })
     .from(calendarSnapshotsTable)
-    .where(eq(calendarSnapshotsTable.sourceId, sourceId))
+    .where(eq(calendarSnapshotsTable.calendarId, calendarId))
     .orderBy(desc(calendarSnapshotsTable.createdAt))
     .limit(FIRST_SNAPSHOT_INDEX);
 
@@ -35,7 +35,7 @@ const getLatestSnapshot = async (
 
 const getStoredEvents = (
   database: BunSQLDatabase,
-  sourceId: string,
+  calendarId: string,
 ): Promise<
   {
     endTime: Date;
@@ -52,7 +52,7 @@ const getStoredEvents = (
       uid: eventStatesTable.sourceEventUid,
     })
     .from(eventStatesTable)
-    .where(eq(eventStatesTable.sourceId, sourceId));
+    .where(eq(eventStatesTable.calendarId, calendarId));
 
 const getUserMappedDestinationUids = async (
   database: BunSQLDatabase,
@@ -62,17 +62,17 @@ const getUserMappedDestinationUids = async (
     .select({ destinationEventUid: eventMappingsTable.destinationEventUid })
     .from(eventMappingsTable)
     .innerJoin(
-      calendarDestinationsTable,
-      eq(eventMappingsTable.destinationId, calendarDestinationsTable.id),
+      calendarsTable,
+      eq(eventMappingsTable.calendarId, calendarsTable.id),
     )
-    .where(eq(calendarDestinationsTable.userId, userId));
+    .where(eq(calendarsTable.userId, userId));
 
   return new Set(results.map(({ destinationEventUid }) => destinationEventUid));
 };
 
 const removeEvents = async (
   database: BunSQLDatabase,
-  _sourceId: string,
+  _calendarId: string,
   events: { id: string; startTime: Date; endTime: Date }[],
 ): Promise<void> => {
   const eventIds = events.map(({ id }) => id);
@@ -82,13 +82,13 @@ const removeEvents = async (
 
 const addEvents = async (
   database: BunSQLDatabase,
-  sourceId: string,
+  calendarId: string,
   events: { uid: string; startTime: Date; endTime: Date }[],
 ): Promise<void> => {
   const rows = events.map((event) => ({
     endTime: event.endTime,
     sourceEventUid: event.uid,
-    sourceId,
+    calendarId,
     startTime: event.startTime,
   }));
 

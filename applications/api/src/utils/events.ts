@@ -1,4 +1,4 @@
-import { calendarSourcesTable, eventStatesTable } from "@keeper.sh/database/schema";
+import { calendarAccountsTable, calendarsTable, eventStatesTable } from "@keeper.sh/database/schema";
 import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 import { normalizeDateRange, parseDateRangeParams } from "./date-range";
 import { database } from "../context";
@@ -30,34 +30,40 @@ const getEventsInRange = async (userId: string, url: URL): Promise<EnrichedEvent
 
   const sources = await database
     .select({
-      id: calendarSourcesTable.id,
-      name: calendarSourcesTable.name,
-      provider: calendarSourcesTable.provider,
-      url: calendarSourcesTable.url,
+      id: calendarsTable.id,
+      name: calendarsTable.name,
+      provider: calendarAccountsTable.provider,
+      url: calendarsTable.url,
     })
-    .from(calendarSourcesTable)
-    .where(eq(calendarSourcesTable.userId, userId));
+    .from(calendarsTable)
+    .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["source", "both"]),
+      ),
+    );
 
   if (sources.length === EMPTY_SOURCES_COUNT) {
     return [];
   }
 
-  const sourceIds = sources.map((source) => source.id);
+  const calendarIds = sources.map((source) => source.id);
   const sourceMap = new Map<string, SourceMetadata>(
     sources.map((source) => [source.id, { name: source.name, provider: source.provider, url: source.url }]),
   );
 
   const events = await database
     .select({
+      calendarId: eventStatesTable.calendarId,
       endTime: eventStatesTable.endTime,
       id: eventStatesTable.id,
-      sourceId: eventStatesTable.sourceId,
       startTime: eventStatesTable.startTime,
     })
     .from(eventStatesTable)
     .where(
       and(
-        inArray(eventStatesTable.sourceId, sourceIds),
+        inArray(eventStatesTable.calendarId, calendarIds),
         gte(eventStatesTable.startTime, start),
         lte(eventStatesTable.startTime, end),
       ),
@@ -73,16 +79,16 @@ const getEventsInRange = async (userId: string, url: URL): Promise<EnrichedEvent
 const enrichEventsWithSources = (
   events: {
     id: string;
-    sourceId: string;
+    calendarId: string;
     startTime: Date;
     endTime: Date;
   }[],
   sourceMap: Map<string, SourceMetadata>,
 ): EnrichedEvent[] =>
   events.map((event) => {
-    const source = sourceMap.get(event.sourceId);
+    const source = sourceMap.get(event.calendarId);
     return {
-      calendarId: event.sourceId,
+      calendarId: event.calendarId,
       endTime: event.endTime,
       id: event.id,
       sourceName: source?.name,

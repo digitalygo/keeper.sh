@@ -1,5 +1,5 @@
-import { calendarDestinationsTable, syncStatusTable } from "@keeper.sh/database/schema";
-import { eq } from "drizzle-orm";
+import { calendarsTable, syncStatusTable } from "@keeper.sh/database/schema";
+import { and, eq, inArray } from "drizzle-orm";
 import { withAuth, withWideEvent } from "../../../utils/middleware";
 import { database } from "../../../context";
 
@@ -7,20 +7,25 @@ const GET = withWideEvent(
   withAuth(async ({ userId }) => {
     const statuses = await database
       .select({
-        destinationId: syncStatusTable.destinationId,
+        calendarId: syncStatusTable.calendarId,
         lastSyncedAt: syncStatusTable.lastSyncedAt,
         localEventCount: syncStatusTable.localEventCount,
         remoteEventCount: syncStatusTable.remoteEventCount,
       })
       .from(syncStatusTable)
       .innerJoin(
-        calendarDestinationsTable,
-        eq(syncStatusTable.destinationId, calendarDestinationsTable.id),
+        calendarsTable,
+        eq(syncStatusTable.calendarId, calendarsTable.id),
       )
-      .where(eq(calendarDestinationsTable.userId, userId));
+      .where(
+        and(
+          eq(calendarsTable.userId, userId),
+          inArray(calendarsTable.role, ["destination", "both"]),
+        ),
+      );
 
     const destinations = statuses.map((status) => ({
-      destinationId: status.destinationId,
+      calendarId: status.calendarId,
       inSync: status.localEventCount === status.remoteEventCount,
       lastSyncedAt: status.lastSyncedAt,
       localEventCount: status.localEventCount,

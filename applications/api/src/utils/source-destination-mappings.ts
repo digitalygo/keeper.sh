@@ -1,78 +1,87 @@
 import {
-  calendarDestinationsTable,
-  calendarSourcesTable,
+  calendarsTable,
   sourceDestinationMappingsTable,
 } from "@keeper.sh/database/schema";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { database } from "../context";
 
 const EMPTY_LIST_COUNT = 0;
 
 interface SourceDestinationMapping {
   id: string;
-  sourceId: string;
-  destinationId: string;
+  sourceCalendarId: string;
+  destinationCalendarId: string;
   createdAt: Date;
-  sourceType: string;
+  calendarType: string;
 }
 
 const getUserMappings = async (userId: string): Promise<SourceDestinationMapping[]> => {
-  const userSources = await database
+  const userSourceCalendars = await database
     .select({
-      id: calendarSourcesTable.id,
-      sourceType: calendarSourcesTable.sourceType,
+      calendarType: calendarsTable.calendarType,
+      id: calendarsTable.id,
     })
-    .from(calendarSourcesTable)
-    .where(eq(calendarSourcesTable.userId, userId));
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["source", "both"]),
+      ),
+    );
 
-  if (userSources.length === EMPTY_LIST_COUNT) {
+  if (userSourceCalendars.length === EMPTY_LIST_COUNT) {
     return [];
   }
 
-  const sourceIds = userSources.map((source) => source.id);
-  const sourceTypeMap = new Map(userSources.map((source) => [source.id, source.sourceType]));
+  const calendarIds = userSourceCalendars.map((c) => c.id);
+  const typeMap = new Map(userSourceCalendars.map((c) => [c.id, c.calendarType]));
 
   const mappings = await database
     .select()
     .from(sourceDestinationMappingsTable)
-    .where(inArray(sourceDestinationMappingsTable.sourceId, sourceIds));
+    .where(inArray(sourceDestinationMappingsTable.sourceCalendarId, calendarIds));
 
   return mappings.map((mapping) => ({
     ...mapping,
-    sourceType: sourceTypeMap.get(mapping.sourceId) ?? "unknown",
+    calendarType: typeMap.get(mapping.sourceCalendarId) ?? "unknown",
   }));
 };
 
-const getDestinationsForSource = async (sourceId: string): Promise<string[]> => {
+const getDestinationsForSource = async (sourceCalendarId: string): Promise<string[]> => {
   const mappings = await database
-    .select({ destinationId: sourceDestinationMappingsTable.destinationId })
+    .select({ destinationCalendarId: sourceDestinationMappingsTable.destinationCalendarId })
     .from(sourceDestinationMappingsTable)
-    .where(eq(sourceDestinationMappingsTable.sourceId, sourceId));
+    .where(eq(sourceDestinationMappingsTable.sourceCalendarId, sourceCalendarId));
 
-  return mappings.map((mapping) => mapping.destinationId);
+  return mappings.map((mapping) => mapping.destinationCalendarId);
 };
 
 const updateSourceMappings = async (
   userId: string,
-  sourceId: string,
-  destinationIds: string[],
+  sourceCalendarId: string,
+  destinationCalendarIds: string[],
 ): Promise<void> => {
-  const userDestinations = await database
-    .select({ id: calendarDestinationsTable.id })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.userId, userId));
+  const userDestCalendars = await database
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["destination", "both"]),
+      ),
+    );
 
-  const validDestinationIds = new Set(userDestinations.map((dest) => dest.id));
-  const filteredDestinationIds = destinationIds.filter((destId) => validDestinationIds.has(destId));
+  const validIds = new Set(userDestCalendars.map((c) => c.id));
+  const filtered = destinationCalendarIds.filter((id) => validIds.has(id));
 
   await database
     .delete(sourceDestinationMappingsTable)
-    .where(eq(sourceDestinationMappingsTable.sourceId, sourceId));
+    .where(eq(sourceDestinationMappingsTable.sourceCalendarId, sourceCalendarId));
 
-  if (filteredDestinationIds.length > EMPTY_LIST_COUNT) {
-    const mappingsToInsert = filteredDestinationIds.map((destinationId) => ({
-      destinationId,
-      sourceId,
+  if (filtered.length > EMPTY_LIST_COUNT) {
+    const mappingsToInsert = filtered.map((destinationCalendarId) => ({
+      destinationCalendarId,
+      sourceCalendarId,
     }));
 
     await database
@@ -82,19 +91,24 @@ const updateSourceMappings = async (
   }
 };
 
-const createMappingsForNewSource = async (userId: string, sourceId: string): Promise<void> => {
-  const userDestinations = await database
-    .select({ id: calendarDestinationsTable.id })
-    .from(calendarDestinationsTable)
-    .where(eq(calendarDestinationsTable.userId, userId));
+const createMappingsForNewSource = async (userId: string, sourceCalendarId: string): Promise<void> => {
+  const userDestCalendars = await database
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["destination", "both"]),
+      ),
+    );
 
-  if (userDestinations.length === EMPTY_LIST_COUNT) {
+  if (userDestCalendars.length === EMPTY_LIST_COUNT) {
     return;
   }
 
-  const mappingsToInsert = userDestinations.map((destination) => ({
-    destinationId: destination.id,
-    sourceId,
+  const mappingsToInsert = userDestCalendars.map((cal) => ({
+    destinationCalendarId: cal.id,
+    sourceCalendarId,
   }));
 
   await database
@@ -105,20 +119,25 @@ const createMappingsForNewSource = async (userId: string, sourceId: string): Pro
 
 const createMappingsForNewDestination = async (
   userId: string,
-  destinationId: string,
+  destinationCalendarId: string,
 ): Promise<void> => {
-  const userSources = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
-    .where(eq(calendarSourcesTable.userId, userId));
+  const userSourceCalendars = await database
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(
+      and(
+        eq(calendarsTable.userId, userId),
+        inArray(calendarsTable.role, ["source", "both"]),
+      ),
+    );
 
-  if (userSources.length === EMPTY_LIST_COUNT) {
+  if (userSourceCalendars.length === EMPTY_LIST_COUNT) {
     return;
   }
 
-  const mappingsToInsert = userSources.map((source) => ({
-    destinationId,
-    sourceId: source.id,
+  const mappingsToInsert = userSourceCalendars.map((cal) => ({
+    destinationCalendarId,
+    sourceCalendarId: cal.id,
   }));
 
   await database

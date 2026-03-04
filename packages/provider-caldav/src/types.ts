@@ -12,10 +12,10 @@ interface CalDAVProviderConfig {
 }
 
 interface CalDAVAccount {
-  destinationId: string;
+  calendarId: string;
   userId: string;
   provider: string;
-  accountId: string;
+  accountId: string | null;
   email: string | null;
   serverUrl: string;
   calendarUrl: string;
@@ -24,7 +24,7 @@ interface CalDAVAccount {
 }
 
 interface CalDAVSourceAccount {
-  sourceId: string;
+  calendarId: string;
   userId: string;
   provider: string;
   serverUrl: string;
@@ -37,7 +37,7 @@ interface CalDAVSourceAccount {
 
 interface CalDAVSourceConfig {
   database: BunSQLDatabase;
-  sourceId: string;
+  calendarId: string;
   userId: string;
   calendarUrl: string;
   serverUrl: string;
