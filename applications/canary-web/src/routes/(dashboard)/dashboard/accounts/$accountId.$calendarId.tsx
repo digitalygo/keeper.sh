@@ -15,6 +15,13 @@ export const Route = createFileRoute(
   component: RouteComponent,
 });
 
+interface CalendarAccount {
+  id: string;
+  provider: string;
+  displayName: string | null;
+  email: string | null;
+}
+
 interface CalendarDetail {
   id: string;
   name: string;
@@ -45,13 +52,14 @@ function formatCalendarType(type: string): string {
 
 function RouteComponent() {
   const { accountId, calendarId } = Route.useParams();
+  const { data: account } = useSWR<CalendarAccount>(`/api/accounts/${accountId}`, fetcher);
   const {
     data: calendar,
     isLoading,
     mutate: mutateCalendar,
   } = useSWR<CalendarDetail>(`/api/sources/${calendarId}`, fetcher);
 
-  if (isLoading || !calendar) {
+  if (isLoading || !calendar || !account) {
     return (
       <div className="flex flex-col gap-1.5">
         <BackButton fallback={`/dashboard/accounts/${accountId}`} />
@@ -118,7 +126,11 @@ function RouteComponent() {
         )}
         <NavigationMenuItem>
           <Text size="sm" tone="muted" className="shrink-0">Added</Text>
-          <Text size="sm" tone="muted">{new Date(calendar.createdAt).toLocaleDateString()}</Text>
+          <Text size="sm" tone="muted">{new Date(calendar.createdAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</Text>
+        </NavigationMenuItem>
+        <NavigationMenuItem to={`/dashboard/accounts/${accountId}`}>
+          <Text size="sm" tone="muted" className="shrink-0">Account</Text>
+          <Text size="sm" tone="muted">{account.displayName ?? account.email ?? account.provider}</Text>
         </NavigationMenuItem>
       </NavigationMenu>
     </div>

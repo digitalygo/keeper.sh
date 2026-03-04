@@ -11,7 +11,7 @@ export const Route = createFileRoute("/(dashboard)")({
 
 function RouteComponent() {
   return (
-    <div className="flex flex-col items-center min-h-dvh px-2 pb-12 pt-[min(6rem,25vh)]">
+    <div className="flex flex-col items-center min-h-dvh px-4 pb-12 pt-4 xs:pt-[min(6rem,25vh)]">
       <div className="flex flex-col gap-3 w-full max-w-sm">
         <Outlet />
       </div>

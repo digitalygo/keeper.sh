@@ -136,7 +136,7 @@ function RouteComponent() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <Text size="sm" tone="muted" className="shrink-0">Connected</Text>
-          <Text size="sm" tone="muted">{new Date(account.createdAt).toLocaleDateString()}</Text>
+          <Text size="sm" tone="muted">{new Date(account.createdAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</Text>
         </NavigationMenuItem>
       </NavigationMenu>
       <NavigationMenu>
