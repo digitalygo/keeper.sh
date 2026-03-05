@@ -152,4 +152,39 @@ const NavigationDropdownHeader: FC<PropsWithChildren> = ({ children }) => (
   </div>
 );
 
-export { NavigationMenu, NavigationItem, NavigationItemBase, NavigationItemLink, NavigationItemIcon, NavigationItemLabel, NavigationItemRightContent, NavigationDropdownItem, NavigationDropdownHeader };
+type NavigationPopoverItemProps = {
+  trigger: ReactNode;
+  expanded: boolean;
+  onToggle: () => void;
+};
+
+const NavigationPopoverItem: FC<PropsWithChildren<NavigationPopoverItemProps>> = ({ trigger, expanded, onToggle, children }) => {
+  return (
+    <li className="relative grid grid-cols-1 grid-rows-1 *:row-start-1 *:col-start-1">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={cn(navigationItemClassName, "relative z-10")}
+      >
+        {trigger}
+      </button>
+      <div className="absolute grid place-items-center inset-0 pointer-events-none z-20">
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              className="w-full overflow-hidden pointer-events-auto absolute rounded-[0.875rem] bg-surface-elevated border border-border shadow-lg"
+              initial={{ height: 0 }}
+              animate={{ height: "auto" }}
+              exit={{ height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {children}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </li>
+  );
+};
+
+export { NavigationMenu, NavigationItem, NavigationItemBase, NavigationItemLink, NavigationItemIcon, NavigationItemLabel, NavigationItemRightContent, NavigationDropdownItem, NavigationDropdownHeader, NavigationPopoverItem };

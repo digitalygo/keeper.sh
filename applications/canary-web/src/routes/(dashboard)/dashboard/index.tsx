@@ -14,9 +14,11 @@ import {
   NavigationMenuItemIcon,
   NavigationMenuItemLabel,
   NavigationMenuItemTrailing,
+  NavigationMenuPopover,
 } from "../../../components/ui/navigation-menu";
 import { Text } from "../../../components/ui/text";
 import { getAccountLabel } from "../../../utils/accounts";
+import { User } from "lucide-react";
 
 export const Route = createFileRoute("/(dashboard)/dashboard/")({
   component: DashboardPage,
@@ -36,6 +38,36 @@ function DashboardPage() {
     <div className="flex flex-col">
       <EventGraph />
       <div className="flex flex-col gap-1.5">
+        <NavigationMenu>
+          <NavigationMenuPopover
+            trigger={
+              <>
+                <NavigationMenuItemIcon>
+                  <User size={15} />
+                  <NavigationMenuItemLabel>Calendar Accounts</NavigationMenuItemLabel>
+                </NavigationMenuItemIcon>
+                <NavigationMenuItemTrailing />
+              </>
+            }
+          >
+            {calendars.map((calendar) => (
+              <NavigationMenuItem
+                key={calendar.id}
+                to={`/dashboard/accounts/${calendar.accountId}/${calendar.id}`}
+              >
+                <div className="flex items-center gap-2 shrink-0">
+                  <ProviderIcon provider={calendar.provider} calendarType={calendar.calendarType} />
+                  <Text size="sm" tone="muted">{calendar.name}</Text>
+                </div>
+                <div className="min-w-0">
+                  <Text size="sm" tone="muted" className="truncate">
+                    {getAccountLabel(calendar)}
+                  </Text>
+                </div>
+              </NavigationMenuItem>
+            ))}
+          </NavigationMenuPopover>
+        </NavigationMenu>
         <NavigationMenu>
           <NavigationMenuItem to="/dashboard/connect">
             <NavigationMenuItemIcon>

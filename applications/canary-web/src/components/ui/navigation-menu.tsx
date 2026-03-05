@@ -1,13 +1,16 @@
-import type { ComponentPropsWithoutRef, KeyboardEvent, PropsWithChildren } from "react";
-import { createContext, use, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent as ReactKeyboardEvent, PropsWithChildren, ReactNode } from "react";
+import { createContext, use, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useSetAtom } from "jotai";
+import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check, Pencil } from "lucide-react";
+import { popoverOverlayAtom } from "../../state/popover-overlay";
 import { tv, type VariantProps } from "tailwind-variants";
 import { cn } from "tailwind-variants/lite";
 import { Text } from "./text";
 
 const navigationMenuStyle = tv({
-  base: "flex flex-col rounded-2xl overflow-hidden p-0.5",
+  base: "flex flex-col rounded-2xl p-0.5",
   variants: {
     variant: {
       default: "bg-background-elevated border border-border-elevated shadow-xs",
@@ -300,6 +303,112 @@ export function NavigationMenuToggleItem({
   );
 }
 
+type PopoverContextValue = {
+  expanded: boolean;
+  toggle: () => void;
+  triggerContent: ReactNode;
+};
+
+const PopoverContext = createContext<PopoverContextValue | null>(null);
+
+function usePopover() {
+  const ctx = use(PopoverContext);
+  if (!ctx) throw new Error("NavigationMenuPopover subcomponents must be used within NavigationMenuPopover");
+  return ctx;
+}
+
+export function NavigationMenuPopover({ trigger, children }: { trigger: ReactNode; children: ReactNode }) {
+  const [expanded, setExpanded] = useState(false);
+  const containerRef = useRef<HTMLLIElement>(null);
+  const setOverlay = useSetAtom(popoverOverlayAtom);
+  const variant = use(MenuVariantContext);
+
+  useEffect(() => {
+    setOverlay(expanded);
+    return () => setOverlay(false);
+  }, [expanded, setOverlay]);
+
+  useEffect(() => {
+    if (!expanded) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (containerRef.current && event.target instanceof Node && !containerRef.current.contains(event.target)) {
+        setExpanded(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [expanded]);
+
+  return (
+    <PopoverContext value={{ expanded, toggle: () => setExpanded((prev) => !prev), triggerContent: trigger }}>
+      <li ref={containerRef} className="relative grid grid-cols-1 grid-rows-1 *:row-start-1 *:col-start-1">
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className={navigationMenuItemStyle({ variant, interactive: true, className: "relative z-10" })}
+        >
+          {trigger}
+        </button>
+        <AnimatePresence>
+          {expanded && (
+            <NavigationMenuPopoverPanel>
+              {children}
+            </NavigationMenuPopoverPanel>
+          )}
+        </AnimatePresence>
+      </li>
+    </PopoverContext>
+  );
+}
+
+function NavigationMenuPopoverPanel({ children }: PropsWithChildren) {
+  const { triggerContent } = usePopover();
+  const variant = use(MenuVariantContext);
+
+  return (
+    <motion.div
+      className="absolute grid place-items-center -inset-0.75 pointer-events-none z-20"
+      initial={{ opacity: 1 }}
+    >
+      <div
+        className={navigationMenuStyle({
+          variant,
+          className: "shadow-xl w-full overflow-hidden pointer-events-auto"
+        })}
+      >
+        <motion.div
+          className="flex flex-col justify-end"
+          initial={{ height: "fit-content", filter: "blur(4px)", opacity: 1 }}
+          animate={{ height: 0, filter: "blur(0)", opacity: 0 }}
+          exit={{ height: "fit-content", filter: "blur(0)", opacity: 1 }}
+        >
+          <div className={navigationMenuItemStyle({ variant, interactive: false })}>
+            {triggerContent}
+          </div>
+        </motion.div>
+        <motion.div
+          initial={{ height: 0, filter: "blur(0)", opacity: 0 }}
+          animate={{ height: "fit-content", filter: "blur(0)", opacity: 1 }}
+          exit={{ height: 0, filter: "blur(4px)", opacity: 0 }}
+        >
+          {children}
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}
+
 type NavigationMenuEditableItemProps = {
   value: string;
   onCommit: (value: string) => Promise<void> | void;
@@ -329,7 +438,7 @@ export function NavigationMenuEditableItem({
     setEditing(false);
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
       commit();
@@ -341,7 +450,7 @@ export function NavigationMenuEditableItem({
 
   if (editing) {
     return (
-      <li className="rounded-xl has-[:focus]:ring-2 has-[:focus]:ring-ring">
+      <li className="rounded-xl has-focus:ring-2 has-focus:ring-ring">
         <div className={navigationMenuItemStyle({ variant, interactive: false, className })}>
           <input
             ref={inputRef}
