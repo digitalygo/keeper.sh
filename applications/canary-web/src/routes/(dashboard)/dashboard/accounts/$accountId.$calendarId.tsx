@@ -23,11 +23,6 @@ function patchIfPresent<T>(current: T | undefined, patch: Partial<T>): T | undef
   return current;
 }
 
-function resolveOptimisticData<T>(current: T | undefined, patch: Partial<T>): T | undefined {
-  if (current) return { ...current, ...patch };
-  return undefined;
-}
-
 function CalendarDetailPage() {
   const { accountId, calendarId } = Route.useParams();
   const { data: account, isLoading: accountLoading, error: accountError, mutate: mutateAccount } = useSWR<CalendarAccount>(`/api/accounts/${accountId}`);
@@ -52,7 +47,7 @@ function CalendarDetailPage() {
         return patchIfPresent(current, { name });
       },
       {
-        optimisticData: resolveOptimisticData(calendar, { name }),
+        optimisticData: patchIfPresent(calendar, { name }),
         rollbackOnError: true,
         revalidate: false,
       },

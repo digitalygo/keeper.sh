@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import useSWR from "swr";
 import type { KeyedMutator } from "swr";
@@ -241,8 +241,6 @@ function NewProfileSlot({ name, calendars, onProfileCreated }: NewProfileSlotPro
   const [destinations, setDestinations] = useState<Set<string>>(new Set());
   const profileIdRef = useRef<string | null>(null);
   const creatingRef = useRef<Promise<string> | null>(null);
-  const nameRef = useRef(name);
-  useEffect(() => { nameRef.current = name; });
 
   const { pull: pullCalendars, push: pushCalendars } = partitionCalendars(calendars);
 
@@ -253,7 +251,7 @@ function NewProfileSlot({ name, calendars, onProfileCreated }: NewProfileSlotPro
     creatingRef.current = apiFetch("/api/profiles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nameRef.current }),
+      body: JSON.stringify({ name }),
     })
       .then((response) => response.json())
       .then(({ id }) => {

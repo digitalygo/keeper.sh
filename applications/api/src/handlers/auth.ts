@@ -5,6 +5,10 @@ import { auth } from "../context";
 const HTTP_INTERNAL_SERVER_ERROR = 500;
 const HTTP_ERROR_THRESHOLD = 400;
 
+const COMPANION_COOKIE_NAME = "keeper.has_session";
+const COMPANION_COOKIE_SET = `${COMPANION_COOKIE_NAME}=1; Path=/; SameSite=Lax`;
+const COMPANION_COOKIE_CLEAR = `${COMPANION_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+
 const isNullSession = (body: unknown): body is null | { session: null } => {
   if (body === null) {
     return true;
@@ -23,6 +27,7 @@ const clearSessionCookies = (response: Response): Response => {
   const expiredCookie = "Path=/; Max-Age=0; HttpOnly; SameSite=Lax";
   headers.append("Set-Cookie", `better-auth.session_token=; ${expiredCookie}`);
   headers.append("Set-Cookie", `better-auth.session_data=; ${expiredCookie}`);
+  headers.append("Set-Cookie", COMPANION_COOKIE_CLEAR);
   return new Response(response.body, {
     headers,
     status: response.status,
@@ -54,7 +59,28 @@ const handleAuthResponseStatus = (event: WideEvent, response: Response): void =>
   }
 };
 
+const hasSessionTokenCookie = (response: Response): boolean => {
+  const cookies = response.headers.getSetCookie();
+  return cookies.some(
+    (cookie) => cookie.includes("better-auth.session_token=") && !cookie.includes("Max-Age=0"),
+  );
+};
+
+const withCompanionCookie = (response: Response, cookie: string): Response => {
+  const headers = new Headers(response.headers);
+  headers.append("Set-Cookie", cookie);
+  return new Response(response.body, {
+    headers,
+    status: response.status,
+    statusText: response.statusText,
+  });
+};
+
 const processAuthResponse = async (pathname: string, response: Response): Promise<Response> => {
+  if (hasSessionTokenCookie(response)) {
+    return withCompanionCookie(response, COMPANION_COOKIE_SET);
+  }
+
   if (pathname !== "/api/auth/get-session") {
     return response;
   }

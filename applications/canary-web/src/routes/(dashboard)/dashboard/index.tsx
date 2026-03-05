@@ -50,9 +50,9 @@ function DashboardPage() {
           </NavigationMenuItem>
         </NavigationMenu>
         <NavigationMenu>
-          {error && (
+          {error ? (
             <ErrorState message="Failed to load calendars." onRetry={() => mutateCalendars()} />
-          )}
+          ) : null}
           {calendarsLoading && (
             <div className="flex justify-center py-4">
               <LoaderCircle size={16} className="animate-spin text-foreground-muted" />

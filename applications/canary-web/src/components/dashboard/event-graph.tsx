@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { tv } from "tailwind-variants/lite";
+import { eventGraphHoverIndexAtom } from "../../state/event-graph-hover";
 import { Text } from "../ui/text";
 
 interface EventBlock {
@@ -64,14 +65,12 @@ const graphBar = tv({
 
 type Period = "past" | "today" | "future";
 
-/** Determine whether a day offset relative to today is past, today, or future. */
 const resolvePeriod = (dayOffset: number): Period => {
   if (dayOffset < 0) return "past";
   if (dayOffset === 0) return "today";
   return "future";
 };
 
-/** Count events per day slot, returning an array indexed by slot position. */
 const countEventsByDay = (events: EventBlock[]): number[] => {
   const counts = new Array<number>(TOTAL_DAYS).fill(0);
   for (const event of events) {
@@ -105,7 +104,6 @@ function resolveBarHeight(count: number, maxCount: number): number {
   return (count / maxCount) * 100;
 }
 
-/** Transform raw event counts into display-ready day data with normalized bar heights. */
 const normalizeDayData = (counts: number[]): DayData[] => {
   const maxCount = Math.max(...counts, 1);
 
@@ -126,8 +124,6 @@ const buildDays = (events: EventBlock[]): DayData[] => {
   return normalizeDayData(counts);
 };
 
-const DAYS = buildDays(MOCK_EVENTS);
-
 function resolveActiveDay(hoverIndex: number | null, days: DayData[], today: DayData): DayData {
   if (hoverIndex !== null) return days[hoverIndex];
   return today;
@@ -140,10 +136,10 @@ function resolveEventCountLabel(count: number): string {
 
 interface EventGraphSummaryProps {
   days: DayData[];
-  hoverIndex: number | null;
 }
 
-function EventGraphSummary({ days, hoverIndex }: EventGraphSummaryProps) {
+function EventGraphSummary({ days }: EventGraphSummaryProps) {
+  const hoverIndex = useAtomValue(eventGraphHoverIndexAtom);
   const today = days[DAYS_BEFORE];
   const activeDay = resolveActiveDay(hoverIndex, days, today);
   const eventCountLabel = resolveEventCountLabel(activeDay.count);
@@ -161,12 +157,12 @@ function EventGraphSummary({ days, hoverIndex }: EventGraphSummaryProps) {
 }
 
 export function EventGraph() {
-  const days = DAYS;
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const days = buildDays(MOCK_EVENTS);
+  const setHoverIndex = useSetAtom(eventGraphHoverIndexAtom);
 
   return (
     <div className="flex flex-col gap-6">
-      <EventGraphSummary days={days} hoverIndex={hoverIndex} />
+      <EventGraphSummary days={days} />
 
       <div
         className="flex gap-0.5 [&:hover>*]:opacity-50 [&>*:hover]:opacity-100"

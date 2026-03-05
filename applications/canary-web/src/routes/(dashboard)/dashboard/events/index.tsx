@@ -86,43 +86,21 @@ function EventsContent() {
 
 function LoadMoreSentinel({ isValidating, hasMore, onLoadMore }: LoadMoreSentinelProps) {
   const nodeRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const isValidatingRef = useRef(isValidating);
-  const hasMoreRef = useRef(hasMore);
-  const onLoadMoreRef = useRef(onLoadMore);
 
   useEffect(() => {
-    isValidatingRef.current = isValidating;
-    hasMoreRef.current = hasMore;
-    onLoadMoreRef.current = onLoadMore;
-  });
-
-  const observe = () => {
     const node = nodeRef.current;
-    if (!node) return;
+    if (!node || isValidating || !hasMore) return;
 
-    if (observerRef.current) observerRef.current.disconnect();
-
-    observerRef.current = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting && !isValidatingRef.current && hasMoreRef.current) {
-          onLoadMoreRef.current();
-        }
+        if (entry?.isIntersecting) onLoadMore();
       },
       { rootMargin: "200px" },
     );
 
-    observerRef.current.observe(node);
-  };
-
-  useEffect(() => {
-    observe();
-    return () => observerRef.current?.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isValidating) observe();
-  }, [isValidating]);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isValidating, hasMore, onLoadMore]);
 
   return (
     <div ref={nodeRef} className="flex justify-center py-2">

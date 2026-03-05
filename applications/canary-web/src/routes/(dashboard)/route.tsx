@@ -1,10 +1,11 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { authClient } from "../../lib/auth-client";
+
+const hasSessionCookie = (): boolean =>
+  document.cookie.split("; ").some((cookie) => cookie.startsWith("keeper.has_session=1"));
 
 export const Route = createFileRoute("/(dashboard)")({
-  beforeLoad: async () => {
-    const { data } = await authClient.getSession();
-    if (!data?.session) throw redirect({ to: "/login" });
+  beforeLoad: () => {
+    if (!hasSessionCookie()) throw redirect({ to: "/login" });
   },
   component: DashboardLayout,
 });
