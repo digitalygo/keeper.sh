@@ -2,7 +2,7 @@ import { useState, useTransition } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import useSWR from "swr";
 import type { KeyedMutator } from "swr";
-import { CalendarSync, Check, Plus } from "lucide-react";
+import { Calendar, CalendarSync, Check, Clock, MapPin, MessageSquare, Plus, Tag, UserRoundX } from "lucide-react";
 import { BackButton } from "../../../../components/ui/back-button";
 import { RouteShell } from "../../../../components/ui/route-shell";
 import { Text } from "../../../../components/ui/text";
@@ -18,6 +18,7 @@ import {
   NavigationMenuItemIcon,
   NavigationMenuItemLabel,
   NavigationMenuPopover,
+  NavigationMenuToggleItem,
   usePopover,
 } from "../../../../components/ui/navigation-menu";
 import { DeleteConfirmation } from "../../../../components/ui/delete-confirmation";
@@ -245,6 +246,21 @@ function ProfileDetail({ profile, profiles, calendars, mutateProfiles, onDelete 
   const mutateProfile = useProfileMutatorFromList(profile, profiles, mutateProfiles);
   const { toggleSource, toggleDestination } = useProfileCalendarActions(profile.id, profile, mutateProfile);
 
+  const togglePreference = (key: keyof SyncProfile, value: boolean) => {
+    const updated = replaceProfileById(profiles, profile.id, { [key]: value });
+    mutateProfiles(
+      async () => {
+        await apiFetch(`/api/profiles/${profile.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [key]: value }),
+        });
+        return updated;
+      },
+      { optimisticData: updated, rollbackOnError: true, revalidate: false },
+    );
+  };
+
   return (
     <>
       <div className="flex flex-col px-0.5 pt-4">
@@ -267,6 +283,49 @@ function ProfileDetail({ profile, profiles, calendars, mutateProfiles, onDelete 
         onToggle={toggleDestination}
         emptyLabel="No destination calendars"
       />
+
+      <div className="flex flex-col px-0.5 pt-4">
+        <DashboardHeading2>Sync Types</DashboardHeading2>
+        <Text size="sm">Choose which event types to include when syncing.</Text>
+      </div>
+      <NavigationMenu>
+        <NavigationMenuToggleItem checked={profile.syncEvents} onCheckedChange={(v) => togglePreference("syncEvents", v)}>
+          <NavigationMenuItemIcon><Calendar size={15} /></NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>Events</NavigationMenuItemLabel>
+        </NavigationMenuToggleItem>
+        <NavigationMenuToggleItem checked={profile.syncFocusTime} onCheckedChange={(v) => togglePreference("syncFocusTime", v)}>
+          <NavigationMenuItemIcon><Clock size={15} /></NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>Focus Time</NavigationMenuItemLabel>
+        </NavigationMenuToggleItem>
+        <NavigationMenuToggleItem checked={profile.syncWorkingLocation} onCheckedChange={(v) => togglePreference("syncWorkingLocation", v)}>
+          <NavigationMenuItemIcon><MapPin size={15} /></NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>Working Location</NavigationMenuItemLabel>
+        </NavigationMenuToggleItem>
+        <NavigationMenuToggleItem checked={profile.syncOutOfOffice} onCheckedChange={(v) => togglePreference("syncOutOfOffice", v)}>
+          <NavigationMenuItemIcon><UserRoundX size={15} /></NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>Out of Office</NavigationMenuItemLabel>
+        </NavigationMenuToggleItem>
+      </NavigationMenu>
+
+      <div className="flex flex-col px-0.5 pt-4">
+        <DashboardHeading2>Synced Details</DashboardHeading2>
+        <Text size="sm">Choose which event details to copy to destinations.</Text>
+      </div>
+      <NavigationMenu>
+        <NavigationMenuToggleItem checked={profile.syncEventName} onCheckedChange={(v) => togglePreference("syncEventName", v)}>
+          <NavigationMenuItemIcon><Tag size={15} /></NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>Event Name</NavigationMenuItemLabel>
+        </NavigationMenuToggleItem>
+        <NavigationMenuToggleItem checked={profile.syncEventDescription} onCheckedChange={(v) => togglePreference("syncEventDescription", v)}>
+          <NavigationMenuItemIcon><MessageSquare size={15} /></NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>Event Description</NavigationMenuItemLabel>
+        </NavigationMenuToggleItem>
+        <NavigationMenuToggleItem checked={profile.syncEventLocation} onCheckedChange={(v) => togglePreference("syncEventLocation", v)}>
+          <NavigationMenuItemIcon><MapPin size={15} /></NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>Event Location</NavigationMenuItemLabel>
+        </NavigationMenuToggleItem>
+      </NavigationMenu>
+
       {onDelete && (
         <NavigationMenu>
           <NavigationMenuItem onClick={onDelete}>

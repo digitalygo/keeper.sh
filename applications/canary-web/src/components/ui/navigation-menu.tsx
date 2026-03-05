@@ -320,7 +320,7 @@ export function NavigationMenuToggleItem({
         className={navigationMenuItemStyle({ variant, className })}
       >
         {children}
-        <div className={navigationMenuToggleTrack({ variant, checked })}>
+        <div className={navigationMenuToggleTrack({ variant, checked, className: "ml-auto" })}>
           <div className={navigationMenuToggleThumb({ variant, checked })} />
         </div>
       </button>

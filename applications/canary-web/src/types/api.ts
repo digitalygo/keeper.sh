@@ -41,6 +41,13 @@ export interface SyncProfile {
   name: string;
   sources: string[];
   destinations: string[];
+  syncEvents: boolean;
+  syncFocusTime: boolean;
+  syncWorkingLocation: boolean;
+  syncOutOfOffice: boolean;
+  syncEventName: boolean;
+  syncEventDescription: boolean;
+  syncEventLocation: boolean;
   createdAt: string;
 }
 
