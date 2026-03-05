@@ -143,6 +143,7 @@ const LABEL_TONE: Record<NonNullable<MenuVariant>, "muted" | "inverse"> = {
 
 const MenuVariantContext = createContext<MenuVariant>("default");
 const ItemIsLinkContext = createContext(false);
+const InsidePopoverContext = createContext(false);
 
 type NavigationMenuProps = PropsWithChildren<
   VariantProps<typeof navigationMenuStyle> & { className?: string }
@@ -175,8 +176,10 @@ type NavigationMenuItemTrailingProps = PropsWithChildren<{
 
 export function NavigationMenuItem({ to, onClick, onMouseEnter, className, children }: NavigationMenuItemProps) {
   const variant = use(MenuVariantContext);
+  const insidePopover = use(InsidePopoverContext);
   const interactive = !!(to || onClick);
   const itemClass = navigationMenuItemStyle({ variant, interactive, className });
+  const Wrapper = insidePopover ? "div" : "li";
 
   const content = (
     <ItemIsLinkContext value={!!to}>
@@ -186,30 +189,30 @@ export function NavigationMenuItem({ to, onClick, onMouseEnter, className, child
 
   if (to) {
     return (
-      <li>
+      <Wrapper>
         <Link to={to} className={itemClass} onMouseEnter={onMouseEnter}>
           {content}
         </Link>
-      </li>
+      </Wrapper>
     );
   }
 
   if (onClick) {
     return (
-      <li>
+      <Wrapper>
         <button onClick={onClick} className={itemClass}>
           {content}
         </button>
-      </li>
+      </Wrapper>
     );
   }
 
   return (
-    <li>
+    <Wrapper>
       <div className={itemClass}>
         {content}
       </div>
-    </li>
+    </Wrapper>
   );
 }
 
@@ -416,9 +419,11 @@ function NavigationMenuPopoverPanel({ children }: PropsWithChildren) {
           animate={{ height: "fit-content", filter: "blur(0)", opacity: 1 }}
           exit={{ height: 0, filter: "blur(4px)", opacity: 0 }}
         >
-          <div className="overflow-y-auto" style={{ maxHeight: "16rem" }}>
-            {children}
-          </div>
+          <InsidePopoverContext value={true}>
+            <div className="overflow-y-auto" style={{ maxHeight: "16rem" }}>
+              {children}
+            </div>
+          </InsidePopoverContext>
         </motion.div>
       </motion.div>
     </motion.div>

@@ -118,9 +118,7 @@ function DashboardPage() {
               </NavigationMenuItem>
             ))}
           </NavigationMenuPopover>
-        </NavigationMenu>
-        {calendars.length > 0 && (
-          <NavigationMenu>
+          {calendars.length > 0 && (
             <NavigationMenuItem to="/dashboard/calendars">
               <NavigationMenuItemIcon>
                 <CalendarSync size={15} />
@@ -128,8 +126,8 @@ function DashboardPage() {
               <NavigationMenuItemLabel>Sync Settings</NavigationMenuItemLabel>
               <NavigationMenuItemTrailing />
             </NavigationMenuItem>
-          </NavigationMenu>
-        )}
+          )}
+        </NavigationMenu>
         <NavigationMenu>
           <NavigationMenuItem to="/dashboard/events">
             <NavigationMenuItemIcon>
