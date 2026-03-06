@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes, Ref } from "react";
 import { cn } from "../utils/cn";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 type RadioSize = "default" | "small";
 

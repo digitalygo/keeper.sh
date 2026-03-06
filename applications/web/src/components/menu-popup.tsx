@@ -1,6 +1,6 @@
 import type { ComponentProps, FC, PropsWithChildren } from "react";
 import { Menu } from "@base-ui/react/menu";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const menuPopupStyle = tv({
   base: "bg-surface-elevated border border-border rounded-md shadow-lg p-1",

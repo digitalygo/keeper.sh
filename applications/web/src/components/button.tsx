@@ -1,6 +1,6 @@
 import type { ComponentProps, FC, PropsWithChildren } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
-import { tv, type VariantProps } from "tailwind-variants";
+import { tv, type VariantProps } from "tailwind-variants/lite";
 import { Spinner } from "@/components/spinner";
 
 const buttonVariants = tv({

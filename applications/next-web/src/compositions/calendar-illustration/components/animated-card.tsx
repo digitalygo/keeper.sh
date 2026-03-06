@@ -2,7 +2,7 @@
 
 import type { FC, PropsWithChildren } from "react"
 import { useAtomValue } from "jotai"
-import { motion } from "motion/react"
+import * as m from "motion/react-m";
 import { cn } from "@/utils/cn"
 import { type SkewTuple, getTransitionConfig, selectSkewByState, getInitialSkew } from "../utils/transforms"
 import { calendarHoverAtom } from "../state/calendar-hover"
@@ -16,7 +16,7 @@ export const AnimatedCard: FC<AnimatedCardProps> = ({ skew, className, children 
   const emphasized = useAtomValue(calendarHoverAtom)
 
   return (
-    <motion.div
+    <m.div
       initial={getInitialSkew(skew)}
       animate={selectSkewByState(skew, emphasized)}
       transition={getTransitionConfig(1.2)}
@@ -26,6 +26,6 @@ export const AnimatedCard: FC<AnimatedCardProps> = ({ skew, className, children 
       )}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }

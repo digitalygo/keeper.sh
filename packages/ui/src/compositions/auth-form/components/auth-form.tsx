@@ -18,7 +18,8 @@ import { UsernameField } from "./username-field";
 import { SubmitButton } from "./submit-button";
 import { OAuthButton } from "./oauth-button";
 import { ArrowLeft } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 
 type AuthFormVariant = "login" | "register";
 type AuthFormStrategy = "commercial" | "non-commercial";
@@ -50,7 +51,7 @@ const AuthBackButton = () => {
   return (
     <AnimatePresence>
       {!isLoading && (
-        <motion.div
+        <m.div
           transition={{ duration: 0.12, width: { delay: 0.06 } }}
           initial={false}
           animate={{ width: "auto", opacity: 1 }}
@@ -59,7 +60,7 @@ const AuthBackButton = () => {
           <div className="size-fit mr-2">
             <IconButton size="large" icon={ArrowLeft} variant="outline" href="/playground" />
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   )

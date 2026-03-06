@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { AlertTriangle, AlertCircle, Info } from "lucide-react";
 import { Button, ButtonText } from "./button";
 

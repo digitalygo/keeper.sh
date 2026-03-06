@@ -1,4 +1,4 @@
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { parseTemplate } from "../../../utils/templates";
 
 const templateVariable = tv({

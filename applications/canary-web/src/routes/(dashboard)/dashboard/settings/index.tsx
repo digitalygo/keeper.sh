@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { KeyRound, Lock, Mail, Trash2 } from "lucide-react";
+import KeyRound from "lucide-react/dist/esm/icons/key-round";
+import Lock from "lucide-react/dist/esm/icons/lock";
+import Mail from "lucide-react/dist/esm/icons/mail";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import { pluralize } from "../../../../lib/pluralize";
 import { Button, ButtonText } from "../../../../components/ui/primitives/button";
 import { BackButton } from "../../../../components/ui/primitives/back-button";
@@ -17,7 +20,9 @@ import {
 } from "../../../../components/ui/primitives/modal";
 import {
   NavigationMenu,
+  NavigationMenuButtonItem,
   NavigationMenuItem,
+  NavigationMenuLinkItem,
   NavigationMenuItemIcon,
   NavigationMenuItemLabel,
   NavigationMenuItemTrailing,
@@ -70,14 +75,14 @@ function SettingsPage() {
         </NavigationMenuItem>
       </NavigationMenu>
       <NavigationMenu>
-        <NavigationMenuItem to="/dashboard/settings/change-password">
+        <NavigationMenuLinkItem to="/dashboard/settings/change-password">
           <NavigationMenuItemIcon>
             <Lock size={15} />
           </NavigationMenuItemIcon>
           <NavigationMenuItemLabel>Change Password</NavigationMenuItemLabel>
           <NavigationMenuItemTrailing />
-        </NavigationMenuItem>
-        <NavigationMenuItem to="/dashboard/settings/passkeys">
+        </NavigationMenuLinkItem>
+        <NavigationMenuLinkItem to="/dashboard/settings/passkeys">
           <NavigationMenuItemIcon>
             <KeyRound size={15} />
           </NavigationMenuItemIcon>
@@ -87,15 +92,15 @@ function SettingsPage() {
               {pluralize(passkeys.length, "passkey", "passkeys")}
             </Text>
           </NavigationMenuItemTrailing>
-        </NavigationMenuItem>
+        </NavigationMenuLinkItem>
       </NavigationMenu>
       <NavigationMenu>
-        <NavigationMenuItem onClick={() => setDeleteOpen(true)}>
+        <NavigationMenuButtonItem onClick={() => setDeleteOpen(true)}>
           <NavigationMenuItemIcon>
             <Trash2 size={15} className="text-destructive" />
           </NavigationMenuItemIcon>
           <Text size="sm" tone="danger">Delete Account</Text>
-        </NavigationMenuItem>
+        </NavigationMenuButtonItem>
       </NavigationMenu>
       <Modal open={deleteOpen} onOpenChange={setDeleteOpen}>
         <ModalContent>

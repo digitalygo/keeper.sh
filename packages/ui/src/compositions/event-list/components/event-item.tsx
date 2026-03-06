@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import type { PlaygroundEvent } from "../utils/mock-events";
 import { formatTimeUntil, isEventPast } from "../utils/time-utils";
 import { ListItem } from "../../../components/list";

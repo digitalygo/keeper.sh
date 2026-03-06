@@ -2,7 +2,7 @@
 
 import type { FC, PropsWithChildren } from "react";
 import { useEffect, useRef } from "react";
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
 import { cn } from "../../utils/cn";
 import { MODAL_ANIMATION } from "../../tokens/motion";
 
@@ -60,7 +60,7 @@ const DesktopModal: FC<PropsWithChildren<DesktopModalProps>> = ({ children, onCl
   }, [onClose]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -80,7 +80,7 @@ const DesktopModal: FC<PropsWithChildren<DesktopModalProps>> = ({ children, onCl
       >
         {children}
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

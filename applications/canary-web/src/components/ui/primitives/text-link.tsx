@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, PropsWithChildren } from "react";
 import { Link } from "@tanstack/react-router";
-import { tv, type VariantProps } from "tailwind-variants";
+import { tv, type VariantProps } from "tailwind-variants/lite";
 
 const textLink = tv({
   base: "tracking-tight underline underline-offset-2",

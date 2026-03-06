@@ -1,6 +1,6 @@
 import type { ComponentProps, FC, PropsWithChildren } from "react";
 import Link from "next/link";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const textLink = tv({
   base: "text-xs text-foreground-muted hover:text-foreground transition-colors",

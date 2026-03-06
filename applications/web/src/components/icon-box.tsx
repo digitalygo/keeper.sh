@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const iconBox = tv({
   base: "grid place-items-center rounded shrink-0",

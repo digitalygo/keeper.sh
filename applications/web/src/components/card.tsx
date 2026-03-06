@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const card = tv({
   base: "border rounded-md",

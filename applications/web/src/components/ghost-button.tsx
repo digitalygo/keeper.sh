@@ -1,6 +1,6 @@
 import type { ComponentProps, FC, PropsWithChildren } from "react";
 import { Button } from "@base-ui/react/button";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const ghostButton = tv({
   base: "text-xs px-2 py-1 rounded-md cursor-pointer transition-colors",

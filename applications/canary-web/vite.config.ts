@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react-swc'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tailwindcss from '@tailwindcss/vite'
 import svgr from "vite-plugin-svgr"
+import { visualizer } from "rollup-plugin-visualizer";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     tailwindcss(),
@@ -14,8 +14,27 @@ export default defineConfig({
       generatedRouteTree: 'src/generated/tanstack/route-tree.generated.ts'
     }),
     react(),
-    svgr()
+    svgr(),
+    visualizer({
+      filename: "./dist/report.md",
+      template: "markdown",
+      gzipSize: true,
+      brotliSize: true,
+      open: true,
+    })
   ],
+  build: {
+    sourcemap: process.env.NODE_ENV !== "production",
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("/react-dom/") || id.includes("/react/")) {
+            return "react-vendor";
+          }
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {

@@ -2,7 +2,7 @@
 
 import type { FC, PropsWithChildren } from "react";
 import { useEffect, useRef } from "react";
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
 import { cn } from "../../utils/cn";
 import { MODAL_ANIMATION } from "../../tokens/motion";
 
@@ -39,7 +39,7 @@ const MobileSheet: FC<PropsWithChildren<MobileSheetProps>> = ({ children, onClos
   }, [onClose]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
       exit={{ y: "100%" }}
@@ -58,7 +58,7 @@ const MobileSheet: FC<PropsWithChildren<MobileSheetProps>> = ({ children, onClos
       >
         <div className="flex-1 flex flex-col">{children}</div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client"
 
-import { motion, Variants } from "motion/react"
+import { Variants } from "motion/react"
+import * as m from "motion/react-m";
 import { ArrowLeft } from "lucide-react"
 import { AnimatePresence } from "motion/react"
 import { LinkButton } from "@/components/button"
@@ -26,7 +27,7 @@ export const EmailFormBackButton = () => {
   return (
     <AnimatePresence initial={false}>
       {formState !== 'loading' && (
-        <motion.div
+        <m.div
           className="flex flex-col items-end"
           variants={backButtonVariants}
           initial="hidden"
@@ -37,7 +38,7 @@ export const EmailFormBackButton = () => {
           <LinkButton href="/" className="h-full mr-2" variant="border">
             <ArrowLeft size={17} />
           </LinkButton>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   )

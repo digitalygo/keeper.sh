@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, PropsWithChildren } from "react";
 import { Link } from "@tanstack/react-router";
-import { tv, type VariantProps } from "tailwind-variants";
+import { tv, type VariantProps } from "tailwind-variants/lite";
 
 const button = tv({
   base: "flex items-center gap-1 rounded-xl tracking-tighter border hover:cursor-pointer w-fit font-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 disabled:pointer-events-none",

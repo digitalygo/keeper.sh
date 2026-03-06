@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Check, MinusIcon } from "lucide-react";
 import { Button } from "@base-ui/react/button";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import type { PlanConfig } from "@/config/plans";
 import { button } from "@/styles";
 

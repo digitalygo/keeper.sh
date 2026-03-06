@@ -1,5 +1,7 @@
 import { useAtomValue } from "jotai";
-import { motion } from "motion/react";
+import { LazyMotion } from "motion/react";
+import { loadMotionFeatures } from "../../../lib/motion-features";
+import * as m from "motion/react-m";
 import { memo, type PropsWithChildren } from "react";
 import { calendarEmphasizedAtom } from "../../../state/calendar-emphasized";
 
@@ -73,17 +75,19 @@ export function MarketingIllustrationCalendarCard({
   const emphasized = useAtomValue(calendarEmphasizedAtom);
 
   return (
-    <motion.div
-      initial={toMotionTarget(skew[0])}
-      animate={getAnimatedSkew(skew, emphasized)}
-      transition={{ type: "tween", duration: 1.2, ease: CALENDAR_ANIMATION_EASE }}
-      transformTemplate={transformTemplate}
-      layout={false}
-      style={{ transformOrigin: "center center" }}
-      className="bg-interactive-border p-0.5 rounded-2xl select-none shadow-xs"
-    >
-      <CalendarGrid />
-    </motion.div>
+    <LazyMotion features={loadMotionFeatures}>
+      <m.div
+        initial={toMotionTarget(skew[0])}
+        animate={getAnimatedSkew(skew, emphasized)}
+        transition={{ type: "tween", duration: 1.2, ease: CALENDAR_ANIMATION_EASE }}
+        transformTemplate={transformTemplate}
+        layout={false}
+        style={{ transformOrigin: "center center" }}
+        className="bg-interactive-border p-0.5 rounded-2xl select-none shadow-xs"
+      >
+        <CalendarGrid />
+      </m.div>
+    </LazyMotion>
   );
 }
 

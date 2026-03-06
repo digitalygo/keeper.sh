@@ -31,7 +31,7 @@ import type { SyncStatusDisplayProps } from "@/hooks/use-destinations-manager";
 import { BannerText, TextLabel, TextMeta, TextMuted } from "@/components/typography";
 import { button } from "@/styles";
 import { track } from "@/lib/analytics";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { ChevronDown, ChevronRight, Plus, Server } from "lucide-react";
 
 const syncStatusText = tv({

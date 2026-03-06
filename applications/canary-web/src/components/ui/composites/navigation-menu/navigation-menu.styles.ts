@@ -1,4 +1,4 @@
-import { tv, type VariantProps } from "tailwind-variants";
+import { tv, type VariantProps } from "tailwind-variants/lite";
 
 export const navigationMenuStyle = tv({
   base: "flex flex-col rounded-2xl p-0.5",

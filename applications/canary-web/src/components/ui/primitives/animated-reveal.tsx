@@ -1,4 +1,6 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LazyMotion } from "motion/react";
+import { loadMotionFeatures } from "../../../lib/motion-features";
+import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 
 const HIDDEN = { height: 0, opacity: 0, filter: "blur(4px)" };
@@ -13,17 +15,19 @@ interface AnimatedRevealProps {
 
 export function AnimatedReveal({ show, skipInitial, children }: AnimatedRevealProps) {
   return (
-    <AnimatePresence initial={!skipInitial}>
-      {show && (
-        <motion.div
-          style={CLIP_STYLE}
-          initial={HIDDEN}
-          animate={VISIBLE}
-          exit={HIDDEN}
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <LazyMotion features={loadMotionFeatures}>
+      <AnimatePresence initial={!skipInitial}>
+        {show && (
+          <m.div
+            style={CLIP_STYLE}
+            initial={HIDDEN}
+            animate={VISIBLE}
+            exit={HIDDEN}
+          >
+            {children}
+          </m.div>
+        )}
+      </AnimatePresence>
+    </LazyMotion>
   );
 }

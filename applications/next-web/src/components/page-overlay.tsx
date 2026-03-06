@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { useAtom } from "jotai";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { pageOverlayActiveAtom } from "@/atoms/page-overlay";
 
 export const PageOverlay = () => {
@@ -17,7 +18,7 @@ export const PageOverlay = () => {
   return (
     <AnimatePresence>
       {isActive && (
-        <motion.div
+        <m.div
           className="fixed inset-0 z-20"
           style={{ backdropFilter: "blur(2px)" }}
           onClick={() => setActive(false)}

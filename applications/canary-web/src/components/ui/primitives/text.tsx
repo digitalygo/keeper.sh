@@ -20,6 +20,7 @@ const text = tv({
     align: {
       center: "text-center",
       left: "text-left",
+      right: "text-right",
     },
   },
   defaultVariants: {
@@ -33,7 +34,7 @@ type TextProps = PropsWithChildren<{
   as?: "p" | "span";
   size?: "base" | "sm" | "xs";
   tone?: "muted" | "disabled" | "inverse" | "inverseMuted" | "default" | "danger";
-  align?: "center" | "left";
+  align?: "center" | "left" | "right";
   className?: string;
   style?: CSSProperties;
 }>;

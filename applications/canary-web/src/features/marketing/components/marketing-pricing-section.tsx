@@ -3,7 +3,9 @@ import { tv, type VariantProps } from "tailwind-variants/lite";
 import { Heading2, Heading3 } from "../../../components/ui/primitives/heading";
 import { Text } from "../../../components/ui/primitives/text";
 import { ButtonText, LinkButton } from "../../../components/ui/primitives/button";
-import { CheckIcon, InfinityIcon, MinusIcon } from "lucide-react";
+import CheckIcon from "lucide-react/dist/esm/icons/check";
+import InfinityIcon from "lucide-react/dist/esm/icons/infinity";
+import MinusIcon from "lucide-react/dist/esm/icons/minus";
 
 type ClassNameProps = PropsWithChildren<{ className?: string }>;
 type MarketingPricingCardProps = ClassNameProps & VariantProps<typeof marketingPricingCard>;

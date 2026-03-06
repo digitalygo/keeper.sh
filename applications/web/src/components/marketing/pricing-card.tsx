@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Check, MinusIcon } from "lucide-react";
 import { Button } from "@base-ui/react/button";
 import { Switch } from "@base-ui/react/switch";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import type { PlanConfig } from "@/config/plans";
 import { button } from "@/styles";
 

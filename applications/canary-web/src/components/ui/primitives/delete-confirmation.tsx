@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-react";
+import LoaderCircle from "lucide-react/dist/esm/icons/loader-circle";
 import { Button, ButtonText } from "./button";
 import {
   Modal,

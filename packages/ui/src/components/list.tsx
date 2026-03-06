@@ -3,9 +3,9 @@
 import type { FC, PropsWithChildren } from "react";
 import { createContext, useContext, useEffect, useId, useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
 import { ArrowRight, Check, Plus } from "lucide-react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { cn } from "../utils/cn";
 
 const checkboxIndicatorVariants = tv({
@@ -102,7 +102,7 @@ const useListItemHover = (id: string) => {
 const HoverIndicator: FC<{ isActive: boolean; layoutId: string }> = ({ isActive, layoutId }) => (
   <>
     {isActive && (
-      <motion.div
+      <m.div
         layoutId={layoutId}
         className="absolute inset-0 bg-surface-muted rounded-lg"
         transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
@@ -283,7 +283,7 @@ const ListItemButton: FC<PropsWithChildren<ListItemButtonProps>> = ({ id, childr
       onMouseLeave={() => setActiveId(null)}
     >
       {showIndicator && (
-        <motion.div
+        <m.div
           layoutId={indicatorLayoutId}
           className="absolute inset-0 bg-surface-muted rounded-lg"
           transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
@@ -320,7 +320,7 @@ const ListItemAdd: FC<ListItemAddProps> = ({ children, onClick }) => {
       className="relative -mx-4 px-4 py-2 flex items-center gap-2 text-foreground-subtle hover:text-foreground-muted cursor-pointer"
     >
       {isActive && (
-        <motion.div
+        <m.div
           layoutId={indicatorLayoutId}
           className="absolute inset-0 bg-surface-muted rounded-lg"
           transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}

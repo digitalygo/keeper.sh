@@ -1,5 +1,6 @@
 import type { ReactNode, SubmitEvent } from "react";
-import { ArrowLeftRight, Check } from "lucide-react";
+import ArrowLeftRight from "lucide-react/dist/esm/icons/arrow-left-right";
+import Check from "lucide-react/dist/esm/icons/check";
 import KeeperLogo from "../../../assets/keeper.svg?react";
 import { authClient } from "../../../lib/auth-client";
 import { BackButton } from "../../../components/ui/primitives/back-button";

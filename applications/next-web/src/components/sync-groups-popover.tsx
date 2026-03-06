@@ -4,7 +4,8 @@ import type { FC } from "react";
 import { useRef, useEffect, useCallback } from "react";
 import { useAtom } from "jotai";
 import { GitFork, Check } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { NavigationItemIcon, NavigationItemLabel, NavigationItemRightContent, NavigationMenu } from "./navigation-menu";
 import { NavigationItemLink } from "./navigation-menu";
 import { Copy } from "./copy";
@@ -94,10 +95,10 @@ const SyncGroupsPopover: FC<SyncGroupsPopoverProps> = ({ currentId, groups }) =>
 
   return (
     <div className="relative grid grid-cols-1 grid-rows-1 *:col-start-1 *:row-start-1">
-      <motion.div className="relative">
+      <m.div className="relative">
         <AnimatePresence mode="wait">
           {isOpen && (
-            <motion.div
+            <m.div
               ref={popoverRef}
               id="sync-groups-popover-content"
               role="dialog"
@@ -121,7 +122,7 @@ const SyncGroupsPopover: FC<SyncGroupsPopoverProps> = ({ currentId, groups }) =>
             >
               <div className="relative">
                 <NavigationMenu>
-                  <motion.li
+                  <m.li
                     transition={{ duration: 0.16 }}
                     initial={{ opacity: 1, filter: 'none', height: 'auto' }}
                     animate={{ opacity: 0, filter: 'blur(4px)', height: 0, translateY: -dummyPopoverHeightRef.current }}
@@ -130,8 +131,8 @@ const SyncGroupsPopover: FC<SyncGroupsPopoverProps> = ({ currentId, groups }) =>
                     <div className="w-full rounded-[0.875rem] flex items-center justify-between p-3">
                       <SyncGroupsPopoverTriggerContent name={displayName} />
                     </div>
-                  </motion.li>
-                  <motion.li
+                  </m.li>
+                  <m.li
                     className="rounded-2xl p-0.5 pointer-events-auto"
                     transition={{ duration: 0.16 }}
                     initial={{ opacity: 0, filter: 'blur(8px)' }}
@@ -153,13 +154,13 @@ const SyncGroupsPopover: FC<SyncGroupsPopoverProps> = ({ currentId, groups }) =>
                         )}
                       </NavigationItemLink>
                     ))}
-                  </motion.li>
+                  </m.li>
                 </NavigationMenu>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
       <div className="z-10" ref={dummyTriggerRef}>
         <button
           ref={triggerRef}

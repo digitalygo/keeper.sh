@@ -1,5 +1,5 @@
 import { useRouter, useCanGoBack, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import { Button, ButtonIcon, type ButtonProps } from "./button";
 
 interface BackButtonProps {

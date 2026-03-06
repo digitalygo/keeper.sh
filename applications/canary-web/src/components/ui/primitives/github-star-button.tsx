@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Star } from "lucide-react";
-import { AnimatePresence, useMotionValueEvent, useScroll } from "motion/react";
+import { useState, useEffect } from "react";
+import Star from "lucide-react/dist/esm/icons/star";
+import { AnimatePresence } from "motion/react";
 import { ButtonText, ExternalLinkButton } from "./button";
 import { FadeIn } from "./fade-in";
 
@@ -8,11 +8,12 @@ const SCROLL_THRESHOLD = 32;
 
 export function GithubStarButton() {
   const [visible, setVisible] = useState(true);
-  const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setVisible(latest <= SCROLL_THRESHOLD);
-  });
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY <= SCROLL_THRESHOLD);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <AnimatePresence initial={false}>

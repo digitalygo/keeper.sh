@@ -25,7 +25,8 @@ import {
   MarketingPricingSection,
 } from '../../features/marketing/components/marketing-pricing-section'
 import { calendarEmphasizedAtom } from '../../state/calendar-emphasized'
-import { ArrowRightIcon, ArrowUpRightIcon } from 'lucide-react'
+import ArrowRightIcon from "lucide-react/dist/esm/icons/arrow-right";
+import ArrowUpRightIcon from "lucide-react/dist/esm/icons/arrow-up-right";
 
 const createSkew = (rotate: number, x: number, y: number): Skew => ({ rotate, x, y });
 

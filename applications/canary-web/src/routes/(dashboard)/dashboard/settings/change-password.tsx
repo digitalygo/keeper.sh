@@ -1,6 +1,6 @@
 import { useState, useTransition, type SubmitEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LoaderCircle } from "lucide-react";
+import LoaderCircle from "lucide-react/dist/esm/icons/loader-circle";
 import { Button, ButtonText } from "../../../../components/ui/primitives/button";
 import { BackButton } from "../../../../components/ui/primitives/back-button";
 import { Text } from "../../../../components/ui/primitives/text";

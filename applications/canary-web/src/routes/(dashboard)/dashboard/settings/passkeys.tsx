@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, Plus } from "lucide-react";
+import KeyRound from "lucide-react/dist/esm/icons/key-round";
+import Plus from "lucide-react/dist/esm/icons/plus";
 import { Button, ButtonText } from "../../../../components/ui/primitives/button";
 import { BackButton } from "../../../../components/ui/primitives/back-button";
 import { usePasskeys, addPasskey, deletePasskey } from "../../../../hooks/use-passkeys";
@@ -15,7 +16,7 @@ import {
 } from "../../../../components/ui/primitives/modal";
 import {
   NavigationMenu,
-  NavigationMenuItem,
+  NavigationMenuButtonItem,
   NavigationMenuItemIcon,
   NavigationMenuItemLabel,
   NavigationMenuItemTrailing,
@@ -81,7 +82,7 @@ function PasskeysPage() {
       {mutationError && <Text size="sm" tone="danger">{mutationError}</Text>}
       <NavigationMenu>
         {passkeys.map((passkey) => (
-          <NavigationMenuItem key={passkey.id} onClick={() => setDeleteTarget(passkey)}>
+          <NavigationMenuButtonItem key={passkey.id} onClick={() => setDeleteTarget(passkey)}>
             <NavigationMenuItemIcon>
               <KeyRound size={15} />
             </NavigationMenuItemIcon>
@@ -89,14 +90,14 @@ function PasskeysPage() {
             <NavigationMenuItemTrailing>
               <Text size="sm" tone="muted">{formatDateShort(passkey.createdAt)}</Text>
             </NavigationMenuItemTrailing>
-          </NavigationMenuItem>
+          </NavigationMenuButtonItem>
         ))}
-        <NavigationMenuItem onClick={isMutating ? undefined : handleAdd}>
+        <NavigationMenuButtonItem onClick={isMutating ? undefined : handleAdd} disabled={isMutating}>
           <NavigationMenuItemIcon>
             <Plus size={15} />
           </NavigationMenuItemIcon>
           <NavigationMenuItemLabel>{isMutating ? "Working..." : "Add Passkey"}</NavigationMenuItemLabel>
-        </NavigationMenuItem>
+        </NavigationMenuButtonItem>
       </NavigationMenu>
       <Modal open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <ModalContent>

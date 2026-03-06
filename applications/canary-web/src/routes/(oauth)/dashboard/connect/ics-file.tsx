@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Calendar } from "lucide-react";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
 import { Heading2 } from "../../../../components/ui/primitives/heading";
 import { Text } from "../../../../components/ui/primitives/text";
 import { ProviderIconPair } from "../../../../features/auth/components/oauth-preamble";

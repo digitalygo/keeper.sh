@@ -4,7 +4,8 @@ import type { FC } from "react";
 import { useRef, useEffect } from "react";
 import { useAtom } from "jotai";
 import { User } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { AccountsPreview, AccountItem } from "@/compositions/connected-accounts/connected-accounts";
 import { NavigationItemIcon, NavigationItemLabel, NavigationItemRightContent, NavigationMenu } from "./navigation-menu";
 import { cn } from "@/utils/cn";
@@ -90,10 +91,10 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
 
   return (
     <div className="relative grid grid-cols-1 grid-rows-1 *:col-start-1 *:row-start-1">
-      <motion.div className="relative">
+      <m.div className="relative">
         <AnimatePresence mode="wait">
           {isOpen && (
-            <motion.div
+            <m.div
               ref={popoverRef}
               id="accounts-popover-content"
               role="dialog"
@@ -117,7 +118,7 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
             >
               <div className="relative">
                 <NavigationMenu>
-                  <motion.li
+                  <m.li
                     transition={{ duration: 0.16 }}
                     initial={{ opacity: 1, filter: 'none', height: 'auto' }}
                     animate={{ opacity: 0, filter: 'blur(4px)', height: 0, translateY: -dummyPopoverHeightRef.current }}
@@ -126,8 +127,8 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
                     <div className="w-full rounded-[0.875rem] flex items-center justify-between p-3">
                       <AccountsPopoverTriggerContent />
                     </div>
-                  </motion.li>
-                  <motion.li
+                  </m.li>
+                  <m.li
                     className="rounded-2xl p-0.5 pointer-events-auto"
                     transition={{ duration: 0.16 }}
                     initial={{ opacity: 0, filter: 'blur(8px)' }}
@@ -146,13 +147,13 @@ const AccountsPopover: FC<AccountsPopoverProps> = ({ accounts }) => {
                         status={account.status}
                       />
                     ))}
-                  </motion.li>
+                  </m.li>
                 </NavigationMenu>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
       <div className="z-10" ref={dummyTriggerRef}>
         <button
           ref={triggerRef}

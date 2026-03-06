@@ -1,7 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import useSWR, { preload } from "swr";
 import { AnimatedReveal } from "../../../components/ui/primitives/animated-reveal";
-import { Calendar, CalendarPlus, CalendarDays, Settings, Sparkles, LogOut, LoaderCircle, User } from "lucide-react";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import CalendarPlus from "lucide-react/dist/esm/icons/calendar-plus";
+import CalendarDays from "lucide-react/dist/esm/icons/calendar-days";
+import Settings from "lucide-react/dist/esm/icons/settings";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import LogOut from "lucide-react/dist/esm/icons/log-out";
+import LoaderCircle from "lucide-react/dist/esm/icons/loader-circle";
+import User from "lucide-react/dist/esm/icons/user";
 import { ErrorState } from "../../../components/ui/primitives/error-state";
 import { signOut } from "../../../lib/auth";
 import { fetcher } from "../../../lib/fetcher";
@@ -11,7 +18,8 @@ import { ProviderIcon } from "../../../components/ui/primitives/provider-icon";
 import type { CalendarAccount, CalendarSource } from "../../../types/api";
 import {
   NavigationMenu,
-  NavigationMenuItem,
+  NavigationMenuButtonItem,
+  NavigationMenuLinkItem,
   NavigationMenuItemIcon,
   NavigationMenuItemLabel,
   NavigationMenuItemTrailing,
@@ -39,39 +47,39 @@ function DashboardPage() {
       <EventGraph />
       <div className="flex flex-col gap-1.5">
         <NavigationMenu>
-          <NavigationMenuItem to="/dashboard/connect">
+          <NavigationMenuLinkItem to="/dashboard/connect">
             <NavigationMenuItemIcon>
               <CalendarPlus size={15} />
             </NavigationMenuItemIcon>
             <NavigationMenuItemLabel>Import Calendars</NavigationMenuItemLabel>
             <NavigationMenuItemTrailing />
-          </NavigationMenuItem>
+          </NavigationMenuLinkItem>
         </NavigationMenu>
         <CalendarsMenu />
         <NavigationMenu variant="highlight">
-          <NavigationMenuItem to="/dashboard/upgrade">
+          <NavigationMenuLinkItem to="/dashboard/upgrade">
             <NavigationMenuItemIcon>
               <Sparkles size={15} />
             </NavigationMenuItemIcon>
             <NavigationMenuItemLabel>Upgrade Account</NavigationMenuItemLabel>
             <NavigationMenuItemTrailing />
-          </NavigationMenuItem>
+          </NavigationMenuLinkItem>
         </NavigationMenu>
         <NavigationMenu>
           <AccountsPopover />
-          <NavigationMenuItem to="/dashboard/settings">
+          <NavigationMenuLinkItem to="/dashboard/settings">
             <NavigationMenuItemIcon>
               <Settings size={15} />
             </NavigationMenuItemIcon>
             <NavigationMenuItemLabel>Settings</NavigationMenuItemLabel>
             <NavigationMenuItemTrailing />
-          </NavigationMenuItem>
-          <NavigationMenuItem onClick={handleLogout}>
+          </NavigationMenuLinkItem>
+          <NavigationMenuButtonItem onClick={handleLogout}>
             <NavigationMenuItemIcon>
               <LogOut size={15} />
             </NavigationMenuItemIcon>
             <NavigationMenuItemLabel>Logout</NavigationMenuItemLabel>
-          </NavigationMenuItem>
+          </NavigationMenuButtonItem>
         </NavigationMenu>
       </div>
       <div className="pt-8 flex justify-center">
@@ -113,7 +121,7 @@ function CalendarsMenu() {
           </div>
         )}
         {calendars.map((calendar) => (
-          <NavigationMenuItem
+          <NavigationMenuLinkItem
             key={calendar.id}
             to={`/dashboard/accounts/${calendar.accountId}/${calendar.id}`}
             onMouseEnter={() => {
@@ -126,15 +134,15 @@ function CalendarsMenu() {
             </NavigationMenuItemIcon>
             <NavigationMenuItemLabel className="shrink-0">{calendar.name}</NavigationMenuItemLabel>
             <NavigationMenuItemTrailing className="overflow-hidden">
-              <Text size="sm" tone="muted" className="flex-1 min-w-0 truncate text-right">
+              <Text size="sm" tone="muted" align="right" className="flex-1 min-w-0 truncate">
                 {getAccountLabel(calendar)}
               </Text>
             </NavigationMenuItemTrailing>
-          </NavigationMenuItem>
+          </NavigationMenuLinkItem>
         ))}
       </NavigationMenuPopover>
       <AnimatedReveal show={calendars.length > 0} skipInitial={!animateCalendars}>
-        <NavigationMenuItem to="/dashboard/events">
+        <NavigationMenuLinkItem to="/dashboard/events">
           <NavigationMenuItemIcon>
             <CalendarDays size={15} />
           </NavigationMenuItemIcon>
@@ -142,7 +150,7 @@ function CalendarsMenu() {
           <NavigationMenuItemTrailing>
             {eventCount != null && <Text size="sm" tone="muted">{pluralize(eventCount, "event")}</Text>}
           </NavigationMenuItemTrailing>
-        </NavigationMenuItem>
+        </NavigationMenuLinkItem>
       </AnimatedReveal>
     </NavigationMenu>
   );
@@ -176,7 +184,7 @@ function AccountsPopover() {
         </div>
       )}
       {accounts.map((account) => (
-        <NavigationMenuItem
+        <NavigationMenuLinkItem
           key={account.id}
           to={`/dashboard/accounts/${account.id}`}
         >
@@ -185,7 +193,7 @@ function AccountsPopover() {
           </NavigationMenuItemIcon>
           <NavigationMenuItemLabel>{getAccountLabel(account)}</NavigationMenuItemLabel>
           <NavigationMenuItemTrailing />
-        </NavigationMenuItem>
+        </NavigationMenuLinkItem>
       ))}
     </NavigationMenuPopover>
   );

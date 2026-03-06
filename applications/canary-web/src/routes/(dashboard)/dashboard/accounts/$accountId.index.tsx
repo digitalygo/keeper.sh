@@ -1,7 +1,7 @@
 import { useState, useTransition } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import useSWR, { preload, useSWRConfig } from "swr";
-import { Calendar } from "lucide-react";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
 import { BackButton } from "../../../../components/ui/primitives/back-button";
 import { RouteShell } from "../../../../components/ui/shells/route-shell";
 import { Text } from "../../../../components/ui/primitives/text";
@@ -14,7 +14,8 @@ import type { CalendarAccount, CalendarSource } from "../../../../types/api";
 import {
   NavigationMenu,
   NavigationMenuEmptyItem,
-  NavigationMenuItem,
+  NavigationMenuButtonItem,
+  NavigationMenuLinkItem,
   NavigationMenuItemIcon,
   NavigationMenuItemLabel,
   NavigationMenuItemTrailing,
@@ -35,7 +36,7 @@ function CalendarList({ calendars, accountId }: { calendars: CalendarSource[]; a
     return <NavigationMenuEmptyItem>No calendars</NavigationMenuEmptyItem>;
   }
   return calendars.map((calendar) => (
-    <NavigationMenuItem
+    <NavigationMenuLinkItem
       key={calendar.id}
       to={`/dashboard/accounts/${accountId}/${calendar.id}`}
       onMouseEnter={() => preload(`/api/sources/${calendar.id}`, fetcher)}
@@ -47,7 +48,7 @@ function CalendarList({ calendars, accountId }: { calendars: CalendarSource[]; a
         {calendar.name}
       </NavigationMenuItemLabel>
       <NavigationMenuItemTrailing />
-    </NavigationMenuItem>
+    </NavigationMenuLinkItem>
   ));
 }
 
@@ -108,9 +109,9 @@ function AccountDetailPage() {
         <MetadataRow label="Connected" value={formatDate(account.createdAt)} />
       </NavigationMenu>
       <NavigationMenu>
-        <NavigationMenuItem onClick={() => setDeleteOpen(true)}>
+        <NavigationMenuButtonItem onClick={() => setDeleteOpen(true)}>
           <Text size="sm" tone="danger">Delete Account</Text>
-        </NavigationMenuItem>
+        </NavigationMenuButtonItem>
       </NavigationMenu>
       <div className="flex flex-col px-0.5 pt-4">
         <DashboardHeading2>Account Calendars</DashboardHeading2>

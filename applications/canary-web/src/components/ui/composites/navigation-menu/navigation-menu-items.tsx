@@ -1,7 +1,8 @@
 import type { ComponentPropsWithoutRef, PropsWithChildren } from "react";
 import { use } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Check } from "lucide-react";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Check from "lucide-react/dist/esm/icons/check";
 import { cn } from "../../../../utils/cn";
 import {
   InsidePopoverContext,
@@ -41,9 +42,18 @@ export function NavigationMenu({
 }
 
 type NavigationMenuItemProps = PropsWithChildren<{
-  to?: ComponentPropsWithoutRef<typeof Link>["to"];
-  onClick?: () => void;
+  className?: string;
+}>;
+
+type NavigationMenuLinkItemProps = PropsWithChildren<{
+  to: ComponentPropsWithoutRef<typeof Link>["to"];
   onMouseEnter?: () => void;
+  className?: string;
+}>;
+
+type NavigationMenuButtonItemProps = PropsWithChildren<{
+  onClick?: () => void;
+  disabled?: boolean;
   className?: string;
 }>;
 
@@ -56,48 +66,69 @@ type NavigationMenuItemTrailingProps = PropsWithChildren<{
 }>;
 
 export function NavigationMenuItem({
-  to,
-  onClick,
-  onMouseEnter,
   className,
   children,
 }: NavigationMenuItemProps) {
   const variant = use(MenuVariantContext);
   const insidePopover = use(InsidePopoverContext);
-  const interactive = Boolean(to || onClick);
-  const itemClass = navigationMenuItemStyle({ variant, interactive, className });
+  const itemClass = navigationMenuItemStyle({ variant, interactive: false, className });
   const Wrapper = insidePopover ? "div" : "li";
-
-  const content = <ItemIsLinkContext value={Boolean(to)}>{children}</ItemIsLinkContext>;
-
-  if (to) {
-    return (
-      <Wrapper>
-        <Link
-          draggable="false"
-          to={to}
-          className={itemClass}
-          onMouseEnter={onMouseEnter}
-        >
-          {content}
-        </Link>
-      </Wrapper>
-    );
-  }
-
-  if (onClick) {
-    return (
-      <Wrapper>
-        <button type="button" onClick={onClick} className={itemClass}>
-          {content}
-        </button>
-      </Wrapper>
-    );
-  }
+  const content = <ItemIsLinkContext value={false}>{children}</ItemIsLinkContext>;
 
   return (
     <Wrapper>
       <div className={itemClass}>{content}</div>
+    </Wrapper>
+  );
+}
+
+export function NavigationMenuLinkItem({
+  to,
+  onMouseEnter,
+  className,
+  children,
+}: NavigationMenuLinkItemProps) {
+  const variant = use(MenuVariantContext);
+  const insidePopover = use(InsidePopoverContext);
+  const itemClass = navigationMenuItemStyle({ variant, interactive: true, className });
+  const Wrapper = insidePopover ? "div" : "li";
+
+  const content = <ItemIsLinkContext value={Boolean(to)}>{children}</ItemIsLinkContext>;
+
+  return (
+    <Wrapper>
+      <Link
+        draggable="false"
+        to={to}
+        className={itemClass}
+        onMouseEnter={onMouseEnter}
+      >
+        {content}
+      </Link>
+    </Wrapper>
+  );
+}
+
+export function NavigationMenuButtonItem({
+  onClick,
+  disabled,
+  className,
+  children,
+}: NavigationMenuButtonItemProps) {
+  const variant = use(MenuVariantContext);
+  const insidePopover = use(InsidePopoverContext);
+  const interactive = Boolean(onClick) && !disabled;
+  const itemClass = navigationMenuItemStyle({ variant, interactive, className });
+  const Wrapper = insidePopover ? "div" : "li";
+  const content = <ItemIsLinkContext value={false}>{children}</ItemIsLinkContext>;
+
+  return (
+    <Wrapper>
+      <ItemDisabledContext value={Boolean(disabled)}>
+        <button type="button" onClick={onClick} disabled={disabled} className={itemClass}>
+          {content}
+        </button>
+      </ItemDisabledContext>
     </Wrapper>
   );
 }

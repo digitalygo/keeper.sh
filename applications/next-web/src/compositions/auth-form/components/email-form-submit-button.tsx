@@ -1,7 +1,8 @@
 "use client"
 
 import type { FC, PropsWithChildren } from "react"
-import { motion, Variants, AnimatePresence } from "motion/react"
+import { Variants, AnimatePresence } from "motion/react"
+import * as m from "motion/react-m";
 import { LoaderCircle } from "lucide-react"
 import { Button } from "@/components/button"
 import { formStateAtom, FormStateAtomValue } from "../atoms/form-state"
@@ -26,19 +27,19 @@ export const EmailFormSubmitButton: FC<PropsWithChildren> = ({ children }) => {
   const formState = useAtomValue(formStateAtom);
 
   return (
-    <motion.div className="grow">
+    <m.div className="grow">
       <Button disabled={formState === 'loading'} type="submit" className="relative w-full" variant="primary" size="normal">
-        <motion.span
+        <m.span
           className="origin-top"
           variants={submitTextVariants}
           animate={formState}
           transition={{ duration: 0.16 }}
         >
           {children}
-        </motion.span>
+        </m.span>
         <AnimatePresence>
           {formState === 'loading' && (
-            <motion.span
+            <m.span
               className="absolute inset-0 m-auto size-fit origin-bottom"
               initial={{ opacity: 0, filter: 'blur(0.125rem)', y: 2, scale: 0.25 }}
               animate={{ opacity: 1, filter: 'none', y: 0, scale: 1 }}
@@ -46,10 +47,10 @@ export const EmailFormSubmitButton: FC<PropsWithChildren> = ({ children }) => {
               transition={{ duration: 0.16 }}
             >
               <LoaderCircle className="animate-spin" size={17} />
-            </motion.span>
+            </m.span>
           )}
         </AnimatePresence>
       </Button>
-    </motion.div>
+    </m.div>
   )
 }

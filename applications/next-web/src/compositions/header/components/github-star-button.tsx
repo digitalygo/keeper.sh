@@ -2,8 +2,8 @@
 
 import { Star } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
-import { AnimatePresence, motion } from "motion/react"
-import Link from "next/link"
+import { AnimatePresence } from "motion/react"
+import * as m from "motion/react-m";
 import { cn } from "@/utils/cn"
 import { tv } from "tailwind-variants"
 
@@ -41,7 +41,7 @@ export const GithubStarButton = () => {
   return (
     <AnimatePresence>
       {showStarButton && (
-        <motion.a
+        <m.a
           href="https://github.com"
           className={cn(button({ variant: "ghost", size: "compact" }))}
           initial={{ opacity: 0, x: 10, filter: "blur(4px)" }}
@@ -51,7 +51,7 @@ export const GithubStarButton = () => {
         >
           <Star size={14} />
           <span>367</span>
-        </motion.a>
+        </m.a>
       )}
     </AnimatePresence>
   )

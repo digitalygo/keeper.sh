@@ -1,8 +1,11 @@
 import { useRef, type Ref, type SubmitEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { motion, AnimatePresence, type Variants } from "motion/react";
-import { ArrowLeft, LoaderCircle } from "lucide-react";
+import { AnimatePresence, LazyMotion, type Variants } from "motion/react";
+import { loadMotionFeatures } from "../../../lib/motion-features";
+import * as m from "motion/react-m";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import LoaderCircle from "lucide-react/dist/esm/icons/loader-circle";
 import {
   authFormStatusAtom,
   authFormErrorAtom,
@@ -161,18 +164,20 @@ function EmailForm({ submitLabel, action }: { submitLabel: string; action: "sign
     <form onSubmit={handleSubmit} className="contents">
       <div className="flex flex-col gap-1.5">
         <EmailInput readOnly={step === "password"} />
-        <AnimatePresence>
-          {step === "password" && (
-            <motion.div
-              initial={{ height: 0, opacity: 0, overflow: "hidden" }}
-              animate={{ height: "auto", opacity: 1, overflow: "visible" }}
-              exit={{ height: 0, opacity: 0, overflow: "hidden" }}
-              transition={{ duration: 0.2 }}
-            >
-              <PasswordInput ref={passwordRef} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <LazyMotion features={loadMotionFeatures}>
+          <AnimatePresence>
+            {step === "password" && (
+              <m.div
+                initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+                animate={{ height: "auto", opacity: 1, overflow: "visible" }}
+                exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+                transition={{ duration: 0.2 }}
+              >
+                <PasswordInput ref={passwordRef} />
+              </m.div>
+            )}
+          </AnimatePresence>
+        </LazyMotion>
       </div>
       <div className="flex items-stretch">
         <FormBackButton step={step} onBack={handleBack} />
@@ -192,16 +197,18 @@ function AuthError() {
   const active = error?.active;
 
   return (
-    <motion.div
-      className="overflow-hidden"
-      initial={false}
-      animate={resolveAuthErrorAnimation(active)}
-      transition={{ duration: 0.2 }}
-    >
-      <p className="text-sm tracking-tight text-destructive text-center">
-        {error?.message}
-      </p>
-    </motion.div>
+    <LazyMotion features={loadMotionFeatures}>
+      <m.div
+        className="overflow-hidden"
+        initial={false}
+        animate={resolveAuthErrorAnimation(active)}
+        transition={{ duration: 0.2 }}
+      >
+        <p className="text-sm tracking-tight text-destructive text-center">
+          {error?.message}
+        </p>
+      </m.div>
+    </LazyMotion>
   );
 }
 
@@ -253,20 +260,22 @@ function AnimatedBackWrapper({ children }: { children: React.ReactNode }) {
   const status = useAtomValue(authFormStatusAtom);
 
   return (
-    <AnimatePresence initial={false}>
-      {status !== "loading" && (
-        <motion.div
-          className="flex items-stretch"
-          variants={backButtonVariants}
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-          transition={{ width: { duration: 0.24 }, opacity: { duration: 0.12 } }}
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <LazyMotion features={loadMotionFeatures}>
+      <AnimatePresence initial={false}>
+        {status !== "loading" && (
+          <m.div
+            className="flex items-stretch"
+            variants={backButtonVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            transition={{ width: { duration: 0.24 }, opacity: { duration: 0.12 } }}
+          >
+            {children}
+          </m.div>
+        )}
+      </AnimatePresence>
+    </LazyMotion>
   );
 }
 
@@ -298,30 +307,32 @@ function SubmitButton({ children }: { children: string }) {
   const status = useAtomValue(authFormStatusAtom);
 
   return (
-    <motion.div className="grow" layout>
-      <Button disabled={status === "loading"} type="submit" className="relative w-full justify-center">
-        <motion.span
-          className="origin-top font-medium"
-          variants={submitTextVariants}
-          animate={status}
-          transition={{ duration: 0.16 }}
-        >
-          {children}
-        </motion.span>
-        <AnimatePresence>
-          {status === "loading" && (
-            <motion.span
-              className="absolute inset-0 m-auto size-fit origin-bottom"
-              initial={{ opacity: 0, filter: "blur(2px)", y: 2, scale: 0.25 }}
-              animate={{ opacity: 1, filter: "none", y: 0, scale: 1 }}
-              exit={{ opacity: 0, filter: "blur(2px)", y: 2, scale: 0.25 }}
-              transition={{ duration: 0.16 }}
-            >
-              <LoaderCircle className="animate-spin" size={16} />
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </Button>
-    </motion.div>
+    <LazyMotion features={loadMotionFeatures}>
+      <m.div className="grow" layout>
+        <Button disabled={status === "loading"} type="submit" className="relative w-full justify-center">
+          <m.span
+            className="origin-top font-medium"
+            variants={submitTextVariants}
+            animate={status}
+            transition={{ duration: 0.16 }}
+          >
+            {children}
+          </m.span>
+          <AnimatePresence>
+            {status === "loading" && (
+              <m.span
+                className="absolute inset-0 m-auto size-fit origin-bottom"
+                initial={{ opacity: 0, filter: "blur(2px)", y: 2, scale: 0.25 }}
+                animate={{ opacity: 1, filter: "none", y: 0, scale: 1 }}
+                exit={{ opacity: 0, filter: "blur(2px)", y: 2, scale: 0.25 }}
+                transition={{ duration: 0.16 }}
+              >
+                <LoaderCircle className="animate-spin" size={16} />
+              </m.span>
+            )}
+          </AnimatePresence>
+        </Button>
+      </m.div>
+    </LazyMotion>
   );
 }

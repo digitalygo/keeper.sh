@@ -1,5 +1,5 @@
 import { use, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { Pencil } from "lucide-react";
+import Pencil from "lucide-react/dist/esm/icons/pencil";
 import { cn } from "../../../../utils/cn";
 import { ItemDisabledContext, MenuVariantContext } from "./navigation-menu.contexts";
 import {

@@ -1,7 +1,7 @@
 import type { FC, PropsWithChildren, ButtonHTMLAttributes, AnchorHTMLAttributes, HTMLProps } from "react";
-import type { VariantProps } from "tailwind-variants";
+import type { VariantProps } from "tailwind-variants/lite";
 import type { LucideIcon } from "lucide-react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { cn } from "../utils/cn";
 import { BUTTON_SIZES } from "../utils/sizes";
 import Link from "next/link";

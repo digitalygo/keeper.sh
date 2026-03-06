@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC, PropsWithChildren } from "react";
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
 import { cn } from "../../../utils/cn";
 
 import {
@@ -21,7 +21,7 @@ const AnimatedCard: FC<PropsWithChildren<AnimatedCardProps>> = ({ skew, classNam
   const emphasized = useSyncHoverState();
 
   return (
-    <motion.div
+    <m.div
       initial={getInitialSkew(skew)}
       animate={selectSkewByState(skew, emphasized)}
       transition={getTransitionConfig(1.2)}
@@ -31,7 +31,7 @@ const AnimatedCard: FC<PropsWithChildren<AnimatedCardProps>> = ({ skew, classNam
       )}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 };
 

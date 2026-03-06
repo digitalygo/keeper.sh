@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const dashboardHeading = tv({
   base: "font-sans font-medium leading-tight tracking-tight text-foreground overflow-hidden truncate",

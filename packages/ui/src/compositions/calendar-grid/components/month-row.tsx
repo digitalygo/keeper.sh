@@ -1,7 +1,8 @@
 "use client";
 
 import type { FC } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { useFirstVisibleRowIndex, useScrollDirection } from "../contexts/calendar-grid-context";
 import { getStartDate, getRowDates, groupDatesByMonth } from "../utils/date-utils";
 import { MONTH_NAMES, COLUMN_COUNT } from "../utils/constants";
@@ -32,7 +33,7 @@ const MonthRow: FC = () => {
           const label = `${MONTH_NAMES[span.month]!.toUpperCase()}${span.year.toString().slice(-2)}`;
 
           return (
-            <motion.span
+            <m.span
               key={`${span.month}-${span.year}-${firstVisibleRowIndex}`}
               initial={{ y: yOffset, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -44,7 +45,7 @@ const MonthRow: FC = () => {
               <span className="block font-mono text-[0.625rem] text-foreground-subtle leading-none px-1 bg-surface rounded-xl whitespace-nowrap">
                 {label}
               </span>
-            </motion.span>
+            </m.span>
           );
         })}
       </AnimatePresence>

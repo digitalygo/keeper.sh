@@ -1,6 +1,6 @@
 import type { FC, PropsWithChildren, AnchorHTMLAttributes } from "react";
-import type { VariantProps } from "tailwind-variants";
-import { tv } from "tailwind-variants";
+import type { VariantProps } from "tailwind-variants/lite";
+import { tv } from "tailwind-variants/lite";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 

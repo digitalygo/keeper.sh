@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail } from "lucide-react";
+import Mail from "lucide-react/dist/esm/icons/mail";
 import { authClient } from "../../lib/auth-client";
 import { Button, ButtonText } from "../../components/ui/primitives/button";
 import { Heading2 } from "../../components/ui/primitives/heading";

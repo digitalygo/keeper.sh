@@ -3,14 +3,14 @@
 import { MicroCopy } from "@/components/micro-copy"
 import { formErrorAtom } from "../atoms/form-state"
 import { useAtomValue } from "jotai"
-import { motion } from "motion/react"
+import * as m from "motion/react-m";
 import type { FC } from "react"
 
 export const EmailFormError: FC = () => {
   const error = useAtomValue(formErrorAtom)
 
   return (
-    <motion.div
+    <m.div
       className="overflow-visible flex flex-col justify-end"
       initial={false}
       animate={{
@@ -21,6 +21,6 @@ export const EmailFormError: FC = () => {
       transition={{ duration: 0.2 }}
     >
       <MicroCopy className="text-red-500 dark:text-red-400 text-left w-full">{error?.message}</MicroCopy>
-    </motion.div>
+    </m.div>
   )
 }

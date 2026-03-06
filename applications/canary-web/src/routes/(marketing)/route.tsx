@@ -6,7 +6,7 @@ import KeeperLogo from "../../assets/keeper.svg?react";
 import { ButtonText, LinkButton } from '../../components/ui/primitives/button';
 import { GithubStarButton } from '../../components/ui/primitives/github-star-button';
 import { SessionSlot } from '../../components/ui/shells/session-slot';
-import { HeartIcon } from 'lucide-react';
+import HeartIcon from "lucide-react/dist/esm/icons/heart";
 
 export const Route = createFileRoute('/(marketing)')({
   component: MarketingLayout,

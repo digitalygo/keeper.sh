@@ -2,7 +2,7 @@
 
 import type { RefCallback } from "react";
 import type { CalendarEvent } from "@/hooks/use-events";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import {
   formatDayHeading,
   formatTime,

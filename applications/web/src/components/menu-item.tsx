@@ -1,6 +1,6 @@
 import type { ComponentProps, FC, PropsWithChildren } from "react";
 import { Menu } from "@base-ui/react/menu";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const menuItemStyle = tv({
   base: "flex items-center gap-2 px-2 py-1 text-xs rounded",

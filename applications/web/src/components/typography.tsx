@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 type TextElement = "span" | "p" | "div" | "h1" | "h2" | "h3" | "h4" | "label";
 

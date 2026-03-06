@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { TextBody } from "@/components/typography";
 
 const emptyState = tv({

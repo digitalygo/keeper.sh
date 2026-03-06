@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const spinner = tv({
   base: "animate-spin rounded-full border-2 border-current border-t-transparent",

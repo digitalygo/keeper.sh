@@ -1,4 +1,6 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LazyMotion } from "motion/react";
+import { loadMotionFeatures } from "../../../lib/motion-features";
+import * as m from "motion/react-m";
 import { Text } from "./text";
 import { ProviderIcon } from "./provider-icon";
 
@@ -30,11 +32,12 @@ function ProviderIconStack({ providers, max = 4, animate = false }: ProviderIcon
   const initial = resolveInitial(animate);
 
   return (
-    <div className="absolute flex items-center justify-end overflow-visible pr-1">
-      <div className="flex items-center">
-        <AnimatePresence mode="sync">
+    <LazyMotion features={loadMotionFeatures}>
+      <div className="absolute flex items-center justify-end overflow-visible pr-1">
+        <div className="flex items-center">
+          <AnimatePresence mode="sync">
             {visible.map((entry, index) => (
-              <motion.div
+              <m.div
                 key={`${entry.provider}-${index}`}
                 initial={initial}
                 animate={VISIBLE}
@@ -44,10 +47,10 @@ function ProviderIconStack({ providers, max = 4, animate = false }: ProviderIcon
                 <div className="size-6">
                   <ProviderIconStackItem provider={entry.provider} calendarType={entry.calendarType} />
                 </div>
-              </motion.div>
+              </m.div>
             ))}
             {overflow > 0 && (
-              <motion.div
+              <m.div
                 key="overflow"
                 initial={initial}
                 animate={VISIBLE}
@@ -57,11 +60,12 @@ function ProviderIconStack({ providers, max = 4, animate = false }: ProviderIcon
               <div className="size-6 min-w-6 grid place-items-center bg-background-elevated border border-border-elevated rounded-full">
                   <Text size="xs" tone="muted" className="tabular-nums text-[0.625rem]">+{overflow}</Text>
                 </div>
-              </motion.div>
+              </m.div>
             )}
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </LazyMotion>
   );
 }
 

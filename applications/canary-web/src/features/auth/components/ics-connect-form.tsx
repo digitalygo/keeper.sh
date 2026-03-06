@@ -1,5 +1,5 @@
 import { useState, useTransition, type SubmitEvent } from "react";
-import { LoaderCircle } from "lucide-react";
+import LoaderCircle from "lucide-react/dist/esm/icons/loader-circle";
 import { useNavigate } from "@tanstack/react-router";
 import { useSWRConfig } from "swr";
 import { apiFetch } from "../../../lib/fetcher";

@@ -4,7 +4,8 @@ import type { FC, PropsWithChildren, ReactNode, Ref } from "react";
 import { createContext, use, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { Copy } from "@/components/copy";
 import { cn } from "@/utils/cn";
 
@@ -121,17 +122,17 @@ const NavigationDropdownItem: FC<PropsWithChildren<NavigationDropdownItemProps>>
         {header}
         <div className="flex items-center gap-2">
           {rightContent}
-          <motion.div
+          <m.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
           >
             <ChevronDown className="text-foreground-muted" size={15} />
-          </motion.div>
+          </m.div>
         </div>
       </button>
       <AnimatePresence initial={false}>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -139,7 +140,7 @@ const NavigationDropdownItem: FC<PropsWithChildren<NavigationDropdownItemProps>>
             className="overflow-hidden"
           >
             {children}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </li>
@@ -171,7 +172,7 @@ const NavigationPopoverItem: FC<PropsWithChildren<NavigationPopoverItemProps>> =
       <div className="absolute grid place-items-center inset-0 pointer-events-none z-20">
         <AnimatePresence>
           {expanded && (
-            <motion.div
+            <m.div
               className="w-full overflow-hidden pointer-events-auto absolute rounded-[0.875rem] bg-surface-elevated border border-border shadow-lg"
               initial={{ height: 0 }}
               animate={{ height: "auto" }}
@@ -179,7 +180,7 @@ const NavigationPopoverItem: FC<PropsWithChildren<NavigationPopoverItemProps>> =
               transition={{ duration: 0.2 }}
             >
               {children}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

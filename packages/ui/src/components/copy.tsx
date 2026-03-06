@@ -1,5 +1,5 @@
 import type { ElementType, ComponentPropsWithoutRef } from "react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { cn } from "../utils/cn";
 
 const copyVariants = tv({

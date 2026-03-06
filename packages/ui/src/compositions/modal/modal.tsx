@@ -1,7 +1,8 @@
 "use client";
 
 import type { FC, PropsWithChildren } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { X } from "lucide-react";
 import { DesktopModal } from "./desktop-modal";
 import { MobileSheet } from "./mobile-sheet";
@@ -22,7 +23,7 @@ const Modal: FC<PropsWithChildren<ModalProps>> = ({ open, onClose, className, ch
     <>
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

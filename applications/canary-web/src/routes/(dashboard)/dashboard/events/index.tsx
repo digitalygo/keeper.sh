@@ -1,6 +1,6 @@
 import { useEffect, useRef, memo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { LoaderCircle } from "lucide-react";
+import LoaderCircle from "lucide-react/dist/esm/icons/loader-circle";
 import { BackButton } from "../../../../components/ui/primitives/back-button";
 import { ErrorState } from "../../../../components/ui/primitives/error-state";
 import { DashboardHeading1, DashboardHeading2 } from "../../../../components/ui/primitives/dashboard-heading";

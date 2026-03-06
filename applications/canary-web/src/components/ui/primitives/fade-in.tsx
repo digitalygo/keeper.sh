@@ -1,5 +1,7 @@
 import type { PropsWithChildren } from "react";
-import { motion, type HTMLMotionProps, type TargetAndTransition } from "motion/react";
+import { LazyMotion, type HTMLMotionProps, type TargetAndTransition } from "motion/react";
+import { loadMotionFeatures } from "../../../lib/motion-features";
+import * as m from "motion/react-m";
 
 type Direction = "from-right" | "from-top";
 
@@ -24,14 +26,16 @@ export function FadeIn({ direction, children, ...props }: PropsWithChildren<Fade
   const { hidden, visible } = variants[direction];
 
   return (
-    <motion.div
-      initial={hidden}
-      animate={visible}
-      exit={hidden}
-      transition={TRANSITION}
-      {...props}
-    >
-      {children}
-    </motion.div>
+    <LazyMotion features={loadMotionFeatures}>
+      <m.div
+        initial={hidden}
+        animate={visible}
+        exit={hidden}
+        transition={TRANSITION}
+        {...props}
+      >
+        {children}
+      </m.div>
+    </LazyMotion>
   );
 }

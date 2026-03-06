@@ -1,5 +1,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
+import { LazyMotion } from "motion/react";
+import { loadMotionFeatures } from "../../../lib/motion-features";
 import { tv } from "tailwind-variants/lite";
 import { eventGraphHoverIndexAtom } from "../../../state/event-graph-hover";
 import { fetcher } from "../../../lib/fetcher";
@@ -119,10 +121,10 @@ function EventGraphSummary({ days }: EventGraphSummaryProps) {
 
   return (
     <div className="flex items-center justify-between">
-      <Text size="sm" tone="muted" className="tabular-nums text-right">
+      <Text size="sm" tone="muted" align="right" className="tabular-nums">
         {eventCountLabel}
       </Text>
-      <Text size="sm" tone="muted" className="tabular-nums text-right">
+      <Text size="sm" tone="muted" align="right" className="tabular-nums">
         {activeDay.fullLabel}
       </Text>
     </div>
@@ -162,15 +164,17 @@ export function EventGraph() {
               className="flex items-end"
               style={{ height: GRAPH_HEIGHT }}
             >
-              <motion.div
-                className={graphBar({
-                  period: day.period,
-                  className: "w-full",
-                })}
-                initial={{ height: MIN_BAR_HEIGHT }}
-                animate={{ height: day.height }}
-                transition={resolveBarTransition(shouldAnimate, dayIndex)}
-              />
+              <LazyMotion features={loadMotionFeatures}>
+                <m.div
+                  className={graphBar({
+                    period: day.period,
+                    className: "w-full",
+                  })}
+                  initial={{ height: MIN_BAR_HEIGHT }}
+                  animate={{ height: day.height }}
+                  transition={resolveBarTransition(shouldAnimate, dayIndex)}
+                />
+              </LazyMotion>
             </div>
             <Text
               size="xs"

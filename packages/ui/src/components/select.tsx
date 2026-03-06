@@ -1,7 +1,7 @@
 import type { SelectHTMLAttributes, Ref } from "react";
 import { cn } from "../utils/cn";
 import { ChevronDown } from "lucide-react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 type SelectSize = "default" | "small";
 

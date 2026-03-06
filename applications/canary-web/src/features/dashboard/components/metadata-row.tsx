@@ -2,6 +2,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import type { Link } from "@tanstack/react-router";
 import {
   NavigationMenuItem,
+  NavigationMenuLinkItem,
   NavigationMenuItemIcon,
 } from "../../../components/ui/composites/navigation-menu/navigation-menu-items";
 import { Text } from "../../../components/ui/primitives/text";
@@ -16,8 +17,8 @@ interface MetadataRowProps {
 }
 
 export function MetadataRow({ label, value, icon, truncate = false, to }: MetadataRowProps) {
-  return (
-    <NavigationMenuItem to={to}>
+  const content = (
+    <>
       <Text size="sm" tone="muted" className="shrink-0">{label}</Text>
       {value && (
         <div className={cn("ml-auto overflow-hidden", truncate && "min-w-0")}>
@@ -25,6 +26,9 @@ export function MetadataRow({ label, value, icon, truncate = false, to }: Metada
         </div>
       )}
       {icon && <div className="ml-auto shrink-0"><NavigationMenuItemIcon>{icon}</NavigationMenuItemIcon></div>}
-    </NavigationMenuItem>
+    </>
   );
+
+  if (to) return <NavigationMenuLinkItem to={to}>{content}</NavigationMenuLinkItem>;
+  return <NavigationMenuItem>{content}</NavigationMenuItem>;
 }

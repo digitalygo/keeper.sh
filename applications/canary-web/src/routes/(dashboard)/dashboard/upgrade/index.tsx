@@ -17,7 +17,9 @@ import {
   MarketingPricingCardBody,
   MarketingPricingCardCopy,
 } from "../../../../features/marketing/components/marketing-pricing-section";
-import { CalendarClock, Check, Infinity } from "lucide-react";
+import CalendarClock from "lucide-react/dist/esm/icons/calendar-clock";
+import Check from "lucide-react/dist/esm/icons/check";
+import Infinity from "lucide-react/dist/esm/icons/infinity";
 import { MetadataRow } from "../../../../features/dashboard/components/metadata-row";
 import { useSubscription } from "../../../../hooks/use-subscription";
 import { openCheckout, openCustomerPortal } from "../../../../utils/checkout";
@@ -71,6 +73,17 @@ function UpgradePage() {
         </Text>
       </div>
 
+      <NavigationMenu>
+        <NavigationMenuCheckboxItem checked={yearly} onCheckedChange={setYearly}>
+          <NavigationMenuItemIcon>
+            <CalendarClock size={15} />
+          </NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>
+            Annual billing
+          </NavigationMenuItemLabel>
+        </NavigationMenuCheckboxItem>
+      </NavigationMenu>
+
       <MarketingPricingCard tone="inverse">
         <MarketingPricingCardBody>
           <Heading3 className="text-foreground-inverse">{pro.name}</Heading3>
@@ -102,17 +115,6 @@ function UpgradePage() {
         <MetadataRow label="Calendars per Account" icon={<Infinity size={15} />} />
         <MetadataRow label="Aggregated iCal Link" icon={<Check size={15} />} />
         <MetadataRow label="Priority Support" icon={<Check size={15} />} />
-      </NavigationMenu>
-
-      <NavigationMenu>
-        <NavigationMenuCheckboxItem checked={yearly} onCheckedChange={setYearly}>
-          <NavigationMenuItemIcon>
-            <CalendarClock size={15} />
-          </NavigationMenuItemIcon>
-          <NavigationMenuItemLabel>
-            Annual billing
-          </NavigationMenuItemLabel>
-        </NavigationMenuCheckboxItem>
       </NavigationMenu>
     </div>
   );

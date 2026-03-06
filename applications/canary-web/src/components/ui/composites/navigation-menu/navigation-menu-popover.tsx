@@ -1,7 +1,9 @@
 import { use, useCallback, useEffect, useRef, useState, type PropsWithChildren, type ReactNode } from "react";
 import { useSetAtom } from "jotai";
-import { AnimatePresence, motion } from "motion/react";
-import { ChevronsUpDown } from "lucide-react";
+import { AnimatePresence, LazyMotion } from "motion/react";
+import { loadMotionFeatures } from "../../../../lib/motion-features";
+import * as m from "motion/react-m";
+import ChevronsUpDown from "lucide-react/dist/esm/icons/chevrons-up-down";
 import { cn } from "../../../../utils/cn";
 import { popoverOverlayAtom } from "../../../../state/popover-overlay";
 import {
@@ -127,9 +129,11 @@ export function NavigationMenuPopover({
             />
           </button>
         </ItemDisabledContext>
-        <AnimatePresence onExitComplete={() => setPresent(false)}>
-          {expanded && <NavigationMenuPopoverPanel>{children}</NavigationMenuPopoverPanel>}
-        </AnimatePresence>
+        <LazyMotion features={loadMotionFeatures}>
+          <AnimatePresence onExitComplete={() => setPresent(false)}>
+            {expanded && <NavigationMenuPopoverPanel>{children}</NavigationMenuPopoverPanel>}
+          </AnimatePresence>
+        </LazyMotion>
       </li>
     </PopoverContext>
   );
@@ -140,11 +144,11 @@ function NavigationMenuPopoverPanel({ children }: PropsWithChildren) {
   const variant = use(MenuVariantContext);
 
   return (
-    <motion.div
+    <m.div
       className="absolute grid place-items-center -inset-0.75 pointer-events-none z-20"
       initial={POPOVER_INITIAL}
     >
-      <motion.div
+      <m.div
         className={navigationMenuStyle({
           variant,
           className: "w-full overflow-hidden pointer-events-auto",
@@ -153,7 +157,7 @@ function NavigationMenuPopoverPanel({ children }: PropsWithChildren) {
         animate={SHADOW_VISIBLE}
         exit={SHADOW_HIDDEN}
       >
-        <motion.div
+        <m.div
           className="flex flex-col justify-end"
           initial={TRIGGER_INITIAL}
           animate={TRIGGER_ANIMATE}
@@ -166,8 +170,8 @@ function NavigationMenuPopoverPanel({ children }: PropsWithChildren) {
               className={navigationMenuItemIconStyle({ variant, className: "ml-auto shrink-0" })}
             />
           </div>
-        </motion.div>
-        <motion.div
+        </m.div>
+        <m.div
           className="overflow-hidden"
           initial={CONTENT_INITIAL}
           animate={CONTENT_ANIMATE}
@@ -178,8 +182,8 @@ function NavigationMenuPopoverPanel({ children }: PropsWithChildren) {
               {children}
             </div>
           </InsidePopoverContext>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+        </m.div>
+      </m.div>
+    </m.div>
   );
 }

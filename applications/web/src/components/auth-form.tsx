@@ -5,7 +5,7 @@ import type { FC, PropsWithChildren } from "react";
 import { Form } from "@base-ui/react/form";
 import { Field } from "@base-ui/react/field";
 import { Input } from "@base-ui/react/input";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { Button } from "@/components/button";
 import { CardTitle, DangerText, TextBody } from "@/components/typography";
 

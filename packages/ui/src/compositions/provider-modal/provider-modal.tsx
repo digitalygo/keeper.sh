@@ -8,7 +8,7 @@ import { ProviderDetails } from "../../components/provider-details";
 import { Copy } from "../../components/copy";
 import { List, ListItemButton, ListItemLabel } from "../../components/list";
 import { Modal, ModalHeader } from "../modal/modal";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 
 const layoutVariants = tv({
   slots: {

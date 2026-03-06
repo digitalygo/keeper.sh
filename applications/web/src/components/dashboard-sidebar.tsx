@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, CreditCard, Puzzle, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { tv } from "tailwind-variants";
+import { tv } from "tailwind-variants/lite";
 import { isCommercialMode } from "@/config/mode";
 
 const sidebarLink = tv({

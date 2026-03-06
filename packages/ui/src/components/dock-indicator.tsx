@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
 import { useSelectedLayoutSegment } from "next/navigation";
 import type { FC } from "react";
 
@@ -16,7 +16,7 @@ const DockIndicator: FC<DockIndicatorProps> = ({ segment }) => {
   }
 
   return (
-    <motion.div
+    <m.div
       layout
       layoutId="indicator"
       style={{ originY: "top" }}
