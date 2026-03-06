@@ -30,7 +30,7 @@ export const Route = createFileRoute(
   component: AccountDetailPage,
 });
 
-function renderCalendarList(calendars: CalendarSource[], accountId: string) {
+function CalendarList({ calendars, accountId }: { calendars: CalendarSource[]; accountId: string }) {
   if (calendars.length === 0) {
     return <NavigationMenuEmptyItem>No calendars</NavigationMenuEmptyItem>;
   }
@@ -84,7 +84,8 @@ function AccountDetailPage() {
   };
 
   if (error || isLoading || !account) {
-    return <RouteShell isLoading={isLoading || !account} error={error} onRetry={async () => { await invalidateAccountsAndSources(globalMutate, `/api/accounts/${accountId}`); }}>{null}</RouteShell>;
+    if (error) return <RouteShell status="error" onRetry={async () => { await invalidateAccountsAndSources(globalMutate, `/api/accounts/${accountId}`); }} />;
+    return <RouteShell status="loading" />;
   }
 
   const calendars = (allCalendars ?? []).filter(
@@ -116,7 +117,7 @@ function AccountDetailPage() {
         <Text size="sm">This account has {pluralize(calendars.length, "calendar")} attached to it, choose a calendar below to view more details and configure it.</Text>
       </div>
       <NavigationMenu>
-        {renderCalendarList(calendars, accountId)}
+        <CalendarList calendars={calendars} accountId={accountId} />
       </NavigationMenu>
       {deleteError && <Text size="sm" tone="danger">{deleteError}</Text>}
       <DeleteConfirmation

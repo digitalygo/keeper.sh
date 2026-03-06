@@ -13,31 +13,36 @@ import { resolveErrorMessage } from "../../utils/errors";
 
 export type CalDAVProvider = "fastmail" | "icloud" | "caldav";
 
-function resolveUsernameInputType(provider: CalDAVProvider): string {
-  if (provider === "caldav") return "text";
-  return "email";
+interface ProviderConfig {
+  serverUrl: string;
+  showServerUrlInput: boolean;
+  usernamePlaceholder: string;
+  usernameInputType: string;
+  passwordPlaceholder: string;
 }
 
-function resolvePasswordPlaceholder(provider: CalDAVProvider): string {
-  if (provider === "caldav") return "CalDAV Server Password";
-  return "App-Specific Password";
-}
-
-function resolveSubmitLabel(pending: boolean): string {
-  if (pending) return "Connecting...";
-  return "Connect";
-}
-
-const SERVER_URLS: Record<CalDAVProvider, string> = {
-  fastmail: "https://caldav.fastmail.com/",
-  icloud: "https://caldav.icloud.com/",
-  caldav: "",
-};
-
-const EMAIL_PLACEHOLDERS: Record<CalDAVProvider, string> = {
-  fastmail: "Fastmail Email Address",
-  icloud: "Apple ID",
-  caldav: "CalDAV Server Username",
+const PROVIDER_CONFIGS: Record<CalDAVProvider, ProviderConfig> = {
+  fastmail: {
+    serverUrl: "https://caldav.fastmail.com/",
+    showServerUrlInput: false,
+    usernamePlaceholder: "Fastmail Email Address",
+    usernameInputType: "email",
+    passwordPlaceholder: "App-Specific Password",
+  },
+  icloud: {
+    serverUrl: "https://caldav.icloud.com/",
+    showServerUrlInput: false,
+    usernamePlaceholder: "Apple ID",
+    usernameInputType: "email",
+    passwordPlaceholder: "App-Specific Password",
+  },
+  caldav: {
+    serverUrl: "",
+    showServerUrlInput: true,
+    usernamePlaceholder: "CalDAV Server Username",
+    usernameInputType: "text",
+    passwordPlaceholder: "CalDAV Server Password",
+  },
 };
 
 interface CalendarOption {
@@ -50,6 +55,7 @@ interface CalDAVConnectFormProps {
 }
 
 export function CalDAVConnectForm({ provider }: CalDAVConnectFormProps) {
+  const config = PROVIDER_CONFIGS[provider];
   const navigate = useNavigate();
   const { mutate: globalMutate } = useSWRConfig();
   const formRef = useRef<HTMLFormElement>(null);
@@ -89,22 +95,22 @@ export function CalDAVConnectForm({ provider }: CalDAVConnectFormProps) {
       let accountId: string | undefined;
 
       try {
-        const responses: Response[] = [];
-        for (const calendar of calendars) {
-          const response = await apiFetch("/api/sources/caldav", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              calendarUrl: calendar.url,
-              name: calendar.displayName,
-              password,
-              provider,
-              serverUrl,
-              username,
+        const responses = await Promise.all(
+          calendars.map((calendar) =>
+            apiFetch("/api/sources/caldav", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                calendarUrl: calendar.url,
+                name: calendar.displayName,
+                password,
+                provider,
+                serverUrl,
+                username,
+              }),
             }),
-          });
-          responses.push(response);
-        }
+          ),
+        );
 
         const first = await responses[0]?.json();
         accountId = first?.accountId;
@@ -126,28 +132,27 @@ export function CalDAVConnectForm({ provider }: CalDAVConnectFormProps) {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
-        {provider === "caldav" && (
+        {config.showServerUrlInput ? (
           <Input
             name="serverUrl"
-            defaultValue={SERVER_URLS[provider]}
+            defaultValue={config.serverUrl}
             type="url"
             placeholder="CalDAV Server URL"
             required
           />
-        )}
-        {provider !== "caldav" && (
-          <Input type="hidden" name="serverUrl" defaultValue={SERVER_URLS[provider]} />
+        ) : (
+          <Input type="hidden" name="serverUrl" defaultValue={config.serverUrl} />
         )}
         <Input
           name="username"
-          type={resolveUsernameInputType(provider)}
-          placeholder={EMAIL_PLACEHOLDERS[provider]}
+          type={config.usernameInputType}
+          placeholder={config.usernamePlaceholder}
           required
         />
         <Input
           name="password"
           type="password"
-          placeholder={resolvePasswordPlaceholder(provider)}
+          placeholder={config.passwordPlaceholder}
           required
         />
       </div>
@@ -157,7 +162,7 @@ export function CalDAVConnectForm({ provider }: CalDAVConnectFormProps) {
         <BackButton variant="border" size="standard" className="self-stretch justify-center px-3.5" />
         <Button type="submit" className="grow justify-center" disabled={isPending}>
           {isPending && <LoaderCircle size={16} className="animate-spin" />}
-          <ButtonText>{resolveSubmitLabel(isPending)}</ButtonText>
+          <ButtonText>{isPending ? "Connecting..." : "Connect"}</ButtonText>
         </Button>
       </div>
     </form>

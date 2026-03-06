@@ -209,7 +209,7 @@ export function NavigationMenuItem({ to, onClick, onMouseEnter, className, child
   if (onClick) {
     return (
       <Wrapper>
-        <button onClick={onClick} className={itemClass}>
+        <button type="button" onClick={onClick} className={itemClass}>
           {content}
         </button>
       </Wrapper>
@@ -479,9 +479,7 @@ type NavigationMenuEditableItemProps = {
   value: string;
   onCommit: (value: string) => Promise<void> | void;
   label?: string;
-  valueContent?: ReactNode;
-  renderInput?: (value: string) => ReactNode;
-  autoEdit?: boolean;
+  defaultEditing?: boolean;
   disabled?: boolean;
   className?: string;
 };
@@ -490,34 +488,103 @@ export function NavigationMenuEditableItem({
   value,
   onCommit,
   label,
-  valueContent,
-  renderInput,
-  autoEdit,
+  defaultEditing,
   disabled,
   className,
 }: NavigationMenuEditableItemProps) {
-  const variant = use(MenuVariantContext);
-  const [editing, setEditing] = useState(autoEdit ?? false);
-  const [liveValue, setLiveValue] = useState(value);
+  const [editing, setEditing] = useState(defaultEditing ?? false);
+
+  const startEditing = () => setEditing(true);
+  const stopEditing = () => setEditing(false);
+
+  if (editing) {
+    return (
+      <EditableItemInput
+        value={value}
+        label={label}
+        className={className}
+        onCommit={async (trimmed) => {
+          await onCommit(trimmed);
+          stopEditing();
+        }}
+        onCancel={stopEditing}
+      />
+    );
+  }
+
+  return (
+    <EditableItemDisplay
+      value={value}
+      label={label}
+      disabled={disabled}
+      className={className}
+      onStartEditing={startEditing}
+    />
+  );
+}
+
+type NavigationMenuEditableTemplateItemProps = NavigationMenuEditableItemProps & {
+  valueContent: ReactNode;
+  renderInput: (value: string) => ReactNode;
+};
+
+export function NavigationMenuEditableTemplateItem({
+  value,
+  onCommit,
+  label,
+  valueContent,
+  renderInput,
+  defaultEditing,
+  disabled,
+  className,
+}: NavigationMenuEditableTemplateItemProps) {
+  const [editing, setEditing] = useState(defaultEditing ?? false);
+
+  const startEditing = () => setEditing(true);
+  const stopEditing = () => setEditing(false);
+
+  if (editing) {
+    return (
+      <EditableTemplateItemInput
+        value={value}
+        label={label}
+        renderInput={renderInput}
+        className={className}
+        onCommit={async (trimmed) => {
+          await onCommit(trimmed);
+          stopEditing();
+        }}
+        onCancel={stopEditing}
+      />
+    );
+  }
+
+  return (
+    <EditableItemDisplay
+      value={value}
+      label={label}
+      valueContent={valueContent}
+      disabled={disabled}
+      className={className}
+      onStartEditing={startEditing}
+    />
+  );
+}
+
+function useEditableCommit(value: string, onCommit: (value: string) => Promise<void> | void, onCancel: () => void) {
   const inputRef = useRef<HTMLInputElement>(null);
   const committingRef = useRef(false);
-
-  const startEditing = () => {
-    setLiveValue(value);
-    setEditing(true);
-  };
 
   const commit = async () => {
     if (committingRef.current) return;
     const trimmed = inputRef.current?.value.trim();
     if (!trimmed || trimmed === value) {
-      setEditing(false);
+      onCancel();
       return;
     }
     committingRef.current = true;
     try {
       await onCommit(trimmed);
-      setEditing(false);
     } finally {
       committingRef.current = false;
     }
@@ -529,57 +596,102 @@ export function NavigationMenuEditableItem({
       void commit();
     }
     if (event.key === "Escape") {
-      setEditing(false);
+      onCancel();
     }
   };
 
-  if (editing) {
-    const inputClass = cn("min-w-0 text-sm tracking-tight bg-transparent cursor-text outline-none", label ? "flex-1 text-right" : "flex-1");
+  const inputProps = {
+    ref: inputRef,
+    type: "text" as const,
+    defaultValue: value,
+    autoComplete: "off",
+    onBlur: () => { void commit(); },
+    onKeyDown: handleKeyDown,
+    autoFocus: true,
+  };
 
-    const sharedInputProps = {
-      ref: inputRef,
-      type: "text" as const,
-      defaultValue: value,
-      autoComplete: "off",
-      onBlur: () => {
-        void commit();
-      },
-      onKeyDown: handleKeyDown,
-      autoFocus: true,
-    };
+  return { inputRef, inputProps };
+}
 
-    return (
-      <li className="relative z-10 rounded-xl has-focus:ring-2 has-focus:ring-ring">
-        <div className={navigationMenuItemStyle({ variant, interactive: false, className })}>
-          {label && <NavigationMenuItemLabel className="shrink-0">{label}</NavigationMenuItemLabel>}
-          {renderInput ? (
-            <div className={cn(inputClass(), "grid items-center")()}>
-              <input
-                {...sharedInputProps}
-                onChange={(e) => setLiveValue(e.target.value)}
-                className={cn("col-start-1 row-start-1 w-full text-sm tracking-tight bg-transparent text-transparent caret-foreground-muted cursor-text outline-none", label && "text-right")()}
-              />
-              <span className={cn("col-start-1 row-start-1 pointer-events-none text-sm tracking-tight truncate whitespace-pre", label && "text-right")()}>
-                {renderInput(liveValue)}
-              </span>
-            </div>
-          ) : (
-            <input
-              {...sharedInputProps}
-              className={cn(inputClass(), "text-foreground-muted")()}
-            />
-          )}
+function EditableItemInput({ value, label, className, onCommit, onCancel }: {
+  value: string;
+  label?: string;
+  className?: string;
+  onCommit: (value: string) => Promise<void> | void;
+  onCancel: () => void;
+}) {
+  const variant = use(MenuVariantContext);
+  const { inputProps } = useEditableCommit(value, onCommit, onCancel);
+  const inputClass = cn("min-w-0 text-sm tracking-tight bg-transparent cursor-text outline-none", label ? "flex-1 text-right" : "flex-1");
+
+  return (
+    <li className="relative z-10 rounded-xl has-focus:ring-2 has-focus:ring-ring">
+      <div className={navigationMenuItemStyle({ variant, interactive: false, className })}>
+        {label && <NavigationMenuItemLabel className="shrink-0">{label}</NavigationMenuItemLabel>}
+        <input
+          {...inputProps}
+          className={cn(inputClass(), "text-foreground-muted")()}
+        />
+      </div>
+    </li>
+  );
+}
+
+function EditableTemplateItemInput({ value, label, className, renderInput, onCommit, onCancel }: {
+  value: string;
+  label?: string;
+  className?: string;
+  renderInput: (value: string) => ReactNode;
+  onCommit: (value: string) => Promise<void> | void;
+  onCancel: () => void;
+}) {
+  const variant = use(MenuVariantContext);
+  const [liveValue, setLiveValue] = useState(value);
+  const { inputProps } = useEditableCommit(value, onCommit, onCancel);
+  const inputClass = cn("min-w-0 text-sm tracking-tight bg-transparent cursor-text outline-none", label ? "flex-1 text-right" : "flex-1");
+
+  return (
+    <li className="relative z-10 rounded-xl has-focus:ring-2 has-focus:ring-ring">
+      <div className={navigationMenuItemStyle({ variant, interactive: false, className })}>
+        {label && <NavigationMenuItemLabel className="shrink-0">{label}</NavigationMenuItemLabel>}
+        <div className={cn(inputClass(), "grid items-center")()}>
+          <input
+            {...inputProps}
+            onChange={(e) => setLiveValue(e.target.value)}
+            className={cn("col-start-1 row-start-1 w-full text-sm tracking-tight bg-transparent text-transparent caret-foreground-muted cursor-text outline-none", label && "text-right")()}
+          />
+          <span className={cn("col-start-1 row-start-1 pointer-events-none text-sm tracking-tight truncate whitespace-pre", label && "text-right")()}>
+            {renderInput(liveValue)}
+          </span>
         </div>
-      </li>
-    );
-  }
+      </div>
+    </li>
+  );
+}
+
+function EditableItemDisplay({
+  value,
+  label,
+  valueContent,
+  disabled,
+  className,
+  onStartEditing,
+}: {
+  value: string;
+  label?: string;
+  valueContent?: ReactNode;
+  disabled?: boolean;
+  className?: string;
+  onStartEditing: () => void;
+}) {
+  const variant = use(MenuVariantContext);
 
   return (
     <li>
       <ItemDisabledContext value={!!disabled}>
         <button
           type="button"
-          onClick={() => !disabled && startEditing()}
+          onClick={() => !disabled && onStartEditing()}
           disabled={disabled}
           className={navigationMenuItemStyle({ variant, interactive: !disabled, className })}
         >

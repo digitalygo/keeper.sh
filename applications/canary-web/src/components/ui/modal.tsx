@@ -11,10 +11,13 @@ interface ModalContextValue {
   setOpen: (open: boolean) => void;
 }
 
-const ModalContext = createContext<ModalContextValue>({
-  open: false,
-  setOpen: () => {},
-});
+const ModalContext = createContext<ModalContextValue | null>(null);
+
+function useModal() {
+  const ctx = use(ModalContext);
+  if (!ctx) throw new Error("Modal subcomponents must be used within <Modal>");
+  return ctx;
+}
 
 interface ModalProps extends PropsWithChildren {
   open?: boolean;
@@ -37,7 +40,7 @@ export function Modal({ children, open: controlledOpen, onOpenChange }: ModalPro
 }
 
 export function ModalTrigger({ children, ...props }: PropsWithChildren<{ className?: string }>) {
-  const { setOpen } = use(ModalContext);
+  const { setOpen } = useModal();
 
   return (
     <button type="button" onClick={() => setOpen(true)} {...props}>
@@ -47,7 +50,7 @@ export function ModalTrigger({ children, ...props }: PropsWithChildren<{ classNa
 }
 
 export function ModalContent({ children }: PropsWithChildren) {
-  const { open, setOpen } = use(ModalContext);
+  const { open, setOpen } = useModal();
   const contentRef = useRef<HTMLDivElement>(null);
   const setOverlay = useSetAtom(popoverOverlayAtom);
 

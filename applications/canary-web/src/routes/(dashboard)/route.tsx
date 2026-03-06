@@ -2,9 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
 import { popoverOverlayAtom } from "../../state/popover-overlay";
-
-const hasSessionCookie = (): boolean =>
-  document.cookie.split("; ").some((cookie) => cookie.startsWith("keeper.has_session=1"));
+import { hasSessionCookie } from "../../lib/session-cookie";
 
 export const Route = createFileRoute("/(dashboard)")({
   beforeLoad: () => {

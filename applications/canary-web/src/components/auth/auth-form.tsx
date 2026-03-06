@@ -98,7 +98,7 @@ function SocialAuthButtons({ oauthActionLabel }: { oauthActionLabel: string }) {
   );
 }
 
-function renderBackButton(step: "email" | "password", onBack: () => void) {
+function FormBackButton({ step, onBack }: { step: "email" | "password"; onBack: () => void }) {
   if (step === "password") return <StepBackButton onBack={onBack} />;
   return <BackButton />;
 }
@@ -175,7 +175,7 @@ function EmailForm({ submitLabel, action }: { submitLabel: string; action: "sign
         </AnimatePresence>
       </div>
       <div className="flex items-stretch">
-        {renderBackButton(step, handleBack)}
+        <FormBackButton step={step} onBack={handleBack} />
         <SubmitButton>{submitLabel}</SubmitButton>
       </div>
     </form>

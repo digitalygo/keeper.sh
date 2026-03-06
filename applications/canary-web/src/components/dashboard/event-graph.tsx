@@ -6,11 +6,8 @@ import { fetcher } from "../../lib/fetcher";
 import { useAnimatedSWR } from "../../hooks/use-animated-swr";
 import { pluralize } from "../../lib/pluralize";
 import { Text } from "../ui/text";
-
-interface ApiEvent {
-  id: string;
-  startTime: string;
-}
+import { useStartOfToday } from "../../hooks/use-start-of-today";
+import type { ApiEventSummary } from "../../types/api";
 
 const DAYS_BEFORE = 7;
 const DAYS_AFTER = 7;
@@ -40,25 +37,17 @@ const resolvePeriod = (dayOffset: number): Period => {
 
 const MS_PER_DAY = 86_400_000;
 
-const startOfToday = (): Date => {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date;
-};
-
-const buildGraphUrl = (): string => {
-  const today = startOfToday();
-  const from = new Date(today.getTime() - DAYS_BEFORE * MS_PER_DAY);
-  const to = new Date(today.getTime() + DAYS_AFTER * MS_PER_DAY + MS_PER_DAY - 1);
+const buildGraphUrl = (todayStart: Date): string => {
+  const from = new Date(todayStart.getTime() - DAYS_BEFORE * MS_PER_DAY);
+  const to = new Date(todayStart.getTime() + DAYS_AFTER * MS_PER_DAY + MS_PER_DAY - 1);
   return `/api/events?from=${from.toISOString()}&to=${to.toISOString()}`;
 };
 
-const countEventsByDay = (events: ApiEvent[]): number[] => {
+const countEventsByDay = (events: ApiEventSummary[], todayTimestamp: number): number[] => {
   const counts = new Array<number>(TOTAL_DAYS).fill(0);
-  const todayStart = startOfToday().getTime();
   for (const event of events) {
     const eventDate = new Date(event.startTime);
-    const dayOffset = Math.floor((eventDate.getTime() - todayStart) / MS_PER_DAY);
+    const dayOffset = Math.floor((eventDate.getTime() - todayTimestamp) / MS_PER_DAY);
     const slotIndex = dayOffset + DAYS_BEFORE;
     if (slotIndex >= 0 && slotIndex < TOTAL_DAYS) counts[slotIndex]++;
   }
@@ -73,8 +62,8 @@ interface DayData {
   period: Period;
 }
 
-const formatDayLabel = (dayOffset: number): string => {
-  const date = new Date();
+const formatDayLabel = (todayStart: Date, dayOffset: number): string => {
+  const date = new Date(todayStart);
   date.setDate(date.getDate() + dayOffset);
   return date.toLocaleDateString("en-US", {
     weekday: "long",
@@ -89,7 +78,7 @@ function resolveBarHeight(count: number, maxCount: number): number {
   return MIN_BAR_HEIGHT + (count / maxCount) * GROWTH_SPACE;
 }
 
-const normalizeDayData = (counts: number[]): DayData[] => {
+const normalizeDayData = (counts: number[], todayStart: Date): DayData[] => {
   const maxCount = Math.max(...counts, 1);
 
   return counts.map((count, slotIndex) => {
@@ -98,15 +87,15 @@ const normalizeDayData = (counts: number[]): DayData[] => {
       count,
       dayOffset,
       height: resolveBarHeight(count, maxCount),
-      fullLabel: formatDayLabel(dayOffset),
+      fullLabel: formatDayLabel(todayStart, dayOffset),
       period: resolvePeriod(dayOffset),
     };
   });
 };
 
-const buildDays = (events: ApiEvent[]): DayData[] => {
-  const counts = countEventsByDay(events);
-  return normalizeDayData(counts);
+const buildDays = (events: ApiEventSummary[], todayStart: Date): DayData[] => {
+  const counts = countEventsByDay(events, todayStart.getTime());
+  return normalizeDayData(counts, todayStart);
 };
 
 function resolveActiveDay(hoverIndex: number | null, days: DayData[], today: DayData): DayData {
@@ -140,7 +129,6 @@ function EventGraphSummary({ days }: EventGraphSummaryProps) {
   );
 }
 
-const GRAPH_URL = buildGraphUrl();
 const ANIMATED_TRANSITION = { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const };
 const INSTANT_TRANSITION = { duration: 0 };
 
@@ -150,8 +138,10 @@ function resolveBarTransition(shouldAnimate: boolean, dayIndex: number) {
 }
 
 export function EventGraph() {
-  const { data: events, shouldAnimate } = useAnimatedSWR<ApiEvent[]>(GRAPH_URL, { fetcher });
-  const days = buildDays(events ?? []);
+  const todayStart = useStartOfToday();
+  const graphUrl = buildGraphUrl(todayStart);
+  const { data: events, shouldAnimate } = useAnimatedSWR<ApiEventSummary[]>(graphUrl, { fetcher });
+  const days = buildDays(events ?? [], todayStart);
   const setHoverIndex = useSetAtom(eventGraphHoverIndexAtom);
 
   return (

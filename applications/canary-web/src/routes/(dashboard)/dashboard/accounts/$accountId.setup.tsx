@@ -18,6 +18,7 @@ import {
 import { ProviderIcon } from "../../../../components/ui/provider-icon";
 import { RouteShell } from "../../../../components/ui/route-shell";
 import { canPull, canPush, getCalendarProvider } from "../../../../utils/calendars";
+import { resolveUpdatedIds } from "../../../../utils/collections";
 
 const VALID_STEPS = ["select", "rename", "destinations", "sources"] as const;
 type SetupStep = (typeof VALID_STEPS)[number];
@@ -59,15 +60,150 @@ function parseSelectedIds(commaIds: string | undefined): Set<string> {
   return new Set(commaIds.split(",").filter(Boolean));
 }
 
-function resolveStepCalendarIndex(index: number, length: number): number {
-  if (length === 0) return 0;
-  if (index >= length) return length - 1;
+function resolveStepCalendarIndex(index: number, count: number): number {
+  if (count === 0) return 0;
+  if (index >= count) return count - 1;
   return index;
 }
 
-function resolveUpdatedIds(currentIds: string[], calendarId: string, checked: boolean): string[] {
-  if (checked) return currentIds.includes(calendarId) ? currentIds : [...currentIds, calendarId];
-  return currentIds.filter((existingId) => existingId !== calendarId);
+interface SetupWorkflowData {
+  accountCalendars: CalendarSource[];
+  selectedCalendars: CalendarSource[];
+  destinationCalendars: CalendarSource[];
+  sourceCalendars: CalendarSource[];
+  destinationCalendarIndex: number;
+  sourceCalendarIndex: number;
+}
+
+function resolveSetupWorkflowData({
+  allCalendars,
+  accountId,
+  selectedIds,
+  requestedCalendarIndex,
+}: {
+  allCalendars: CalendarSource[];
+  accountId: string;
+  selectedIds: Set<string>;
+  requestedCalendarIndex: number;
+}): SetupWorkflowData {
+  const accountCalendars = allCalendars.filter((calendar) => calendar.accountId === accountId);
+  const selectedCalendars = accountCalendars.filter((calendar) => selectedIds.has(calendar.id));
+  const destinationCalendars = selectedCalendars.filter(canPull);
+  const sourceCalendars = selectedCalendars.filter(canPush);
+
+  return {
+    accountCalendars,
+    selectedCalendars,
+    destinationCalendars,
+    sourceCalendars,
+    destinationCalendarIndex: resolveStepCalendarIndex(requestedCalendarIndex, destinationCalendars.length),
+    sourceCalendarIndex: resolveStepCalendarIndex(requestedCalendarIndex, sourceCalendars.length),
+  };
+}
+
+function resolveNextIndex(currentIndex: number, totalCount: number): number | undefined {
+  const nextIndex = currentIndex + 1;
+  if (nextIndex < totalCount) return nextIndex;
+  return undefined;
+}
+
+interface SetupStepActions {
+  advanceFromRename: () => void;
+  advanceFromDestinations: (currentIndex: number) => void;
+  advanceFromSources: (currentIndex: number) => void;
+}
+
+function createSetupStepActions({
+  destinationCount,
+  sourceCount,
+  navigateToStep,
+  navigateToDashboard,
+}: {
+  destinationCount: number;
+  sourceCount: number;
+  navigateToStep: (step: SetupStep, index?: number) => void;
+  navigateToDashboard: () => void;
+}): SetupStepActions {
+  const advanceToSources = () => {
+    if (sourceCount > 0) {
+      navigateToStep("sources", 0);
+      return;
+    }
+    navigateToDashboard();
+  };
+
+  return {
+    advanceFromRename: () => {
+      if (destinationCount > 0) {
+        navigateToStep("destinations", 0);
+        return;
+      }
+      advanceToSources();
+    },
+    advanceFromDestinations: (currentIndex: number) => {
+      const nextIndex = resolveNextIndex(currentIndex, destinationCount);
+      if (nextIndex !== undefined) {
+        navigateToStep("destinations", nextIndex);
+        return;
+      }
+      advanceToSources();
+    },
+    advanceFromSources: (currentIndex: number) => {
+      const nextIndex = resolveNextIndex(currentIndex, sourceCount);
+      if (nextIndex !== undefined) {
+        navigateToStep("sources", nextIndex);
+        return;
+      }
+      navigateToDashboard();
+    },
+  };
+}
+
+function SetupStepContent({
+  step,
+  accountId,
+  allCalendars,
+  workflow,
+  mutateCalendars,
+  actions,
+}: {
+  step: SetupStep;
+  accountId: string;
+  allCalendars: CalendarSource[];
+  workflow: SetupWorkflowData;
+  mutateCalendars: ReturnType<typeof useSWR<CalendarSource[]>>["mutate"];
+  actions: SetupStepActions;
+}) {
+  if (step === "select") {
+    return (
+      <SelectSection
+        accountId={accountId}
+        calendars={workflow.accountCalendars}
+      />
+    );
+  }
+
+  if (step === "rename") {
+    return (
+      <RenameSection
+        calendars={workflow.selectedCalendars}
+        mutateCalendars={mutateCalendars}
+        onNext={actions.advanceFromRename}
+      />
+    );
+  }
+
+  if (step === "destinations") {
+    const calendar = workflow.destinationCalendars[workflow.destinationCalendarIndex];
+    const onNext = () => actions.advanceFromDestinations(workflow.destinationCalendarIndex);
+    if (!calendar) return <EmptyStepSection heading="No destination setup needed" message="None of the selected calendars can send events right now." buttonLabel="Continue" onNext={onNext} />;
+    return <DestinationsSection calendar={calendar} allCalendars={allCalendars} onNext={onNext} />;
+  }
+
+  const calendar = workflow.sourceCalendars[workflow.sourceCalendarIndex];
+  const onNext = () => actions.advanceFromSources(workflow.sourceCalendarIndex);
+  if (!calendar) return <EmptyStepSection heading="No source setup needed" message="None of the selected calendars can pull events right now." buttonLabel="Finish" onNext={onNext} />;
+  return <SourcesSection calendar={calendar} allCalendars={allCalendars} onNext={onNext} />;
 }
 
 function buildMappingData(responseKey: MappingResponseKey, ids: string[]): Record<MappingResponseKey, string[]> {
@@ -123,19 +259,14 @@ function AccountSetupPage() {
   const selectedIds = parseSelectedIds(search.id);
   const requestedCalendarIndex = search.index ?? 0;
 
-  const { data: allCalendars, isLoading, error, mutate: mutateCalendars } = useSWR<CalendarSource[]>(
-    "/api/sources",
-  );
-
-  const accountCalendars = (allCalendars ?? []).filter(
-    (calendar) => calendar.accountId === accountId,
-  );
-
-  const selectedCalendars = accountCalendars.filter((calendar) => selectedIds.has(calendar.id));
-  const pullCapableSelected = selectedCalendars.filter(canPull);
-  const pushCapableSelected = selectedCalendars.filter(canPush);
-  const destinationCalendarIndex = resolveStepCalendarIndex(requestedCalendarIndex, pullCapableSelected.length);
-  const sourceCalendarIndex = resolveStepCalendarIndex(requestedCalendarIndex, pushCapableSelected.length);
+  const { data, isLoading, error, mutate: mutateCalendars } = useSWR<CalendarSource[]>("/api/sources");
+  const allCalendars = data ?? [];
+  const workflow = resolveSetupWorkflowData({
+    allCalendars,
+    accountId,
+    selectedIds,
+    requestedCalendarIndex,
+  });
 
   const navigateToStep = (nextStep: SetupStep, nextIndex?: number) => {
     navigate({
@@ -145,78 +276,29 @@ function AccountSetupPage() {
     });
   };
 
-  const advanceToSources = () => {
-    if (pushCapableSelected.length > 0) {
-      navigateToStep("sources", 0);
-      return;
-    }
-
-    navigate({ to: "/dashboard" });
-  };
-
-  const advanceFromRename = () => {
-    if (pullCapableSelected.length > 0) {
-      navigateToStep("destinations", 0);
-      return;
-    }
-
-    advanceToSources();
-  };
-
-  const advanceFromDestinations = (currentIndex: number) => {
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < pullCapableSelected.length) {
-      navigateToStep("destinations", nextIndex);
-      return;
-    }
-
-    advanceToSources();
-  };
-
-  const advanceFromSources = (currentIndex: number) => {
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < pushCapableSelected.length) {
-      navigateToStep("sources", nextIndex);
-      return;
-    }
-
-    navigate({ to: "/dashboard" });
-  };
+  const actions = createSetupStepActions({
+    destinationCount: workflow.destinationCalendars.length,
+    sourceCount: workflow.sourceCalendars.length,
+    navigateToStep,
+    navigateToDashboard: () => navigate({ to: "/dashboard" }),
+  });
 
   if (error || isLoading) {
-    return <RouteShell backFallback="/dashboard" isLoading={isLoading} error={error} onRetry={() => mutateCalendars()}>{null}</RouteShell>;
+    if (error) return <RouteShell backFallback="/dashboard" status="error" onRetry={() => mutateCalendars()} />;
+    return <RouteShell backFallback="/dashboard" status="loading" />;
   }
 
   return (
     <div className="flex flex-col gap-1.5">
       <BackButton fallback="/dashboard" />
-      {step === "select" && (
-        <SelectSection
-          accountId={accountId}
-          calendars={accountCalendars}
-        />
-      )}
-      {step === "rename" && (
-        <RenameSection
-          calendars={selectedCalendars}
-          mutateCalendars={mutateCalendars}
-          onNext={advanceFromRename}
-        />
-      )}
-      {step === "destinations" && (
-        <DestinationsSection
-          calendar={pullCapableSelected[destinationCalendarIndex]}
-          allCalendars={allCalendars ?? []}
-          onNext={() => advanceFromDestinations(destinationCalendarIndex)}
-        />
-      )}
-      {step === "sources" && (
-        <SourcesSection
-          calendar={pushCapableSelected[sourceCalendarIndex]}
-          allCalendars={allCalendars ?? []}
-          onNext={() => advanceFromSources(sourceCalendarIndex)}
-        />
-      )}
+      <SetupStepContent
+        step={step}
+        accountId={accountId}
+        allCalendars={allCalendars}
+        workflow={workflow}
+        mutateCalendars={mutateCalendars}
+        actions={actions}
+      />
     </div>
   );
 }
@@ -340,7 +422,7 @@ function RenameSection({
           <NavigationMenuEditableItem
             key={calendar.id}
             value={calendar.name}
-            autoEdit={index === 0}
+            defaultEditing={index === 0}
             onCommit={(name) => handleRename(calendar.id, name)}
           />
         ))}
@@ -355,34 +437,39 @@ function RenameSection({
   );
 }
 
+function EmptyStepSection({ heading, message, buttonLabel, onNext }: {
+  heading: string;
+  message: string;
+  buttonLabel: string;
+  onNext: () => void;
+}) {
+  return (
+    <>
+      <div className="flex flex-col px-0.5 pt-4">
+        <DashboardHeading2>{heading}</DashboardHeading2>
+        <Text size="sm">{message}</Text>
+      </div>
+      <Button className="w-full justify-center" onClick={onNext}>
+        <ButtonText>{buttonLabel}</ButtonText>
+      </Button>
+    </>
+  );
+}
+
 function DestinationsSection({
   calendar,
   allCalendars,
   onNext,
 }: {
-  calendar?: CalendarSource;
+  calendar: CalendarSource;
   allCalendars: CalendarSource[];
   onNext: () => void;
 }) {
   const { selectedIds, handleToggle } = useCalendarMapping({
-    calendarId: calendar?.id,
+    calendarId: calendar.id,
     route: "destinations",
     responseKey: "destinationIds",
   });
-
-  if (!calendar) {
-    return (
-      <>
-        <div className="flex flex-col px-0.5 pt-4">
-          <DashboardHeading2>No destination setup needed</DashboardHeading2>
-          <Text size="sm">None of the selected calendars can send events right now.</Text>
-        </div>
-        <Button className="w-full justify-center" onClick={onNext}>
-          <ButtonText>Continue</ButtonText>
-        </Button>
-      </>
-    );
-  }
 
   const pushCalendars = allCalendars.filter(
     (candidate) => canPush(candidate) && candidate.id !== calendar.id,
@@ -429,29 +516,15 @@ function SourcesSection({
   allCalendars,
   onNext,
 }: {
-  calendar?: CalendarSource;
+  calendar: CalendarSource;
   allCalendars: CalendarSource[];
   onNext: () => void;
 }) {
   const { selectedIds, handleToggle } = useCalendarMapping({
-    calendarId: calendar?.id,
+    calendarId: calendar.id,
     route: "sources",
     responseKey: "sourceIds",
   });
-
-  if (!calendar) {
-    return (
-      <>
-        <div className="flex flex-col px-0.5 pt-4">
-          <DashboardHeading2>No source setup needed</DashboardHeading2>
-          <Text size="sm">None of the selected calendars can pull events right now.</Text>
-        </div>
-        <Button className="w-full justify-center" onClick={onNext}>
-          <ButtonText>Finish</ButtonText>
-        </Button>
-      </>
-    );
-  }
 
   const pullCalendars = allCalendars.filter(
     (candidate) => canPull(candidate) && candidate.id !== calendar.id,

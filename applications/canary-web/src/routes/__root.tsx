@@ -4,17 +4,29 @@ import { SWRConfig } from "swr";
 import { Heading2 } from "../components/ui/heading";
 import { Text } from "../components/ui/text";
 import { LinkButton, ButtonText } from "../components/ui/button";
-import { fetcher } from "../lib/fetcher";
+import { fetcher, HttpError } from "../lib/fetcher";
 import { resolveErrorMessage } from "../utils/errors";
+
+const NON_RETRYABLE_STATUSES = new Set([401, 403, 404]);
 
 const SWR_CONFIG = {
   fetcher,
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
   dedupingInterval: 2000,
-  errorRetryCount: 3,
   onError: (error: unknown, key: string) => {
     console.error(`[SWR] ${key}:`, error);
+  },
+  onErrorRetry: (
+    error: unknown,
+    _key: string,
+    _config: unknown,
+    revalidate: (opts: { retryCount: number }) => void,
+    { retryCount }: { retryCount: number },
+  ) => {
+    if (error instanceof HttpError && NON_RETRYABLE_STATUSES.has(error.status)) return;
+    if (retryCount >= 3) return;
+    setTimeout(() => revalidate({ retryCount }), 5000 * (retryCount + 1));
   },
 } as const;
 

@@ -1,14 +1,22 @@
-import useSWR, { type SWRResponse } from "swr";
-import { authClient } from "../lib/auth-client";
+import useSWR from "swr";
+import { fetcher } from "../lib/fetcher";
 
 export interface SubscriptionState {
   plan: "free" | "pro";
   interval: "month" | "year" | null;
 }
 
+interface ActiveSubscription {
+  recurringInterval?: "month" | "year" | null;
+}
+
+interface CustomerStateResponse {
+  activeSubscriptions?: ActiveSubscription[] | null;
+}
+
 async function fetchSubscriptionState(): Promise<SubscriptionState> {
-  const { data } = await authClient.customer.state();
-  const [active] = data?.activeSubscriptions ?? [];
+  const data = await fetcher<CustomerStateResponse>("/api/auth/customer/state");
+  const [active] = data.activeSubscriptions ?? [];
 
   if (!active) return { plan: "free", interval: null };
 
@@ -18,6 +26,7 @@ async function fetchSubscriptionState(): Promise<SubscriptionState> {
   };
 }
 
-export function useSubscription(): SWRResponse<SubscriptionState> {
-  return useSWR("customer-state", fetchSubscriptionState);
+export function useSubscription() {
+  const { data, error, isLoading, mutate } = useSWR("customer-state", fetchSubscriptionState);
+  return { data, error, isLoading, mutate };
 }

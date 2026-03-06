@@ -1,16 +1,7 @@
-import { useRef } from "react";
 import useSWRInfinite from "swr/infinite";
 import { fetcher } from "../lib/fetcher";
-
-interface ApiEvent {
-  id: string;
-  startTime: string;
-  endTime: string;
-  calendarId: string;
-  calendarName: string;
-  calendarProvider: string;
-  calendarUrl: string;
-}
+import { useStartOfToday } from "./use-start-of-today";
+import type { ApiEvent } from "../types/api";
 
 export interface CalendarEvent {
   id: string;
@@ -23,12 +14,6 @@ export interface CalendarEvent {
 }
 
 const DAYS_PER_PAGE = 7;
-
-const startOfToday = (): Date => {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date;
-};
 
 const buildEventsUrl = (from: Date, to: Date): string => {
   const url = new URL("/api/events", globalThis.location.origin);
@@ -51,10 +36,10 @@ const fetchEvents = async (url: string): Promise<CalendarEvent[]> => {
 };
 
 export function useEvents() {
-  const baseDateRef = useRef(startOfToday());
+  const todayStart = useStartOfToday();
 
   const getKey = (pageIndex: number): string => {
-    const from = new Date(baseDateRef.current);
+    const from = new Date(todayStart);
     from.setDate(from.getDate() + pageIndex * DAYS_PER_PAGE);
 
     const to = new Date(from);
@@ -67,7 +52,7 @@ export function useEvents() {
   const { data, error, setSize, isLoading, isValidating } = useSWRInfinite(
     getKey,
     fetchEvents,
-    { revalidateFirstPage: false },
+    { revalidateFirstPage: false, keepPreviousData: true },
   );
 
   const events = resolveEvents(data);

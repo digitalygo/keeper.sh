@@ -1,30 +1,29 @@
-import type { ReactNode } from "react";
 import { LoaderCircle } from "lucide-react";
 import { BackButton } from "./back-button";
 import { ErrorState } from "./error-state";
 
-interface RouteShellProps {
+type RouteShellProps = {
   backFallback?: string;
-  isLoading: boolean;
-  error: unknown;
-  onRetry: () => void;
-  children: ReactNode;
-}
+} & (
+  | { status: "loading" }
+  | { status: "error"; onRetry: () => void }
+  | { status: "ready" }
+);
 
-export function RouteShell({ backFallback, isLoading, error, onRetry, children }: RouteShellProps) {
-  if (error) {
+export function RouteShell(props: RouteShellProps) {
+  if (props.status === "error") {
     return (
       <div className="flex flex-col gap-1.5">
-        <BackButton fallback={backFallback} />
-        <ErrorState onRetry={onRetry} />
+        <BackButton fallback={props.backFallback} />
+        <ErrorState onRetry={props.onRetry} />
       </div>
     );
   }
 
-  if (isLoading) {
+  if (props.status === "loading") {
     return (
       <div className="flex flex-col gap-1.5">
-        <BackButton fallback={backFallback} />
+        <BackButton fallback={props.backFallback} />
         <div className="flex justify-center py-6">
           <LoaderCircle size={20} className="animate-spin text-foreground-muted" />
         </div>
@@ -32,5 +31,5 @@ export function RouteShell({ backFallback, isLoading, error, onRetry, children }
     );
   }
 
-  return <>{children}</>;
+  return null;
 }

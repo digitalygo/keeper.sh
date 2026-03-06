@@ -88,8 +88,7 @@ function UpgradePage() {
         </MarketingPricingCardBody>
         <MarketingPricingCardAction>
           <UpgradeAction
-            isCurrent={isCurrent}
-            isCurrentInterval={isCurrentInterval}
+            mode={!isCurrent ? "upgrade" : isCurrentInterval ? "manage" : "switch-interval"}
             isLoading={busy}
             onUpgrade={handleUpgrade}
             onManage={handleManage}
@@ -119,18 +118,17 @@ function UpgradePage() {
   );
 }
 
-interface UpgradeActionProps {
-  isCurrent: boolean;
-  isCurrentInterval: boolean;
+type UpgradeActionProps = {
   isLoading: boolean;
   onUpgrade: () => void;
   onManage: () => void;
-}
+  mode: "upgrade" | "manage" | "switch-interval";
+};
 
-function UpgradeAction({ isCurrent, isCurrentInterval, isLoading, onUpgrade, onManage }: UpgradeActionProps) {
+function UpgradeAction({ mode, isLoading, onUpgrade, onManage }: UpgradeActionProps) {
   const base = "w-full justify-center border-transparent";
 
-  if (isCurrent && isCurrentInterval) {
+  if (mode === "manage") {
     return (
       <Button variant="border" className={base} onClick={onManage} disabled={isLoading}>
         <ButtonText>Manage Subscription</ButtonText>
@@ -138,7 +136,7 @@ function UpgradeAction({ isCurrent, isCurrentInterval, isLoading, onUpgrade, onM
     );
   }
 
-  if (isCurrent) {
+  if (mode === "switch-interval") {
     return (
       <Button variant="border" className={base} onClick={onManage} disabled={isLoading}>
         <ButtonText>Switch Billing Period</ButtonText>

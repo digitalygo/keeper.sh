@@ -50,3 +50,18 @@ export interface CalendarEntry {
   capabilities: string[];
   provider?: string;
 }
+
+export interface ApiEvent {
+  id: string;
+  startTime: string;
+  endTime: string;
+  calendarId: string;
+  calendarName: string;
+  calendarProvider: string;
+  calendarUrl: string;
+}
+
+export interface ApiEventSummary {
+  id: string;
+  startTime: string;
+}
