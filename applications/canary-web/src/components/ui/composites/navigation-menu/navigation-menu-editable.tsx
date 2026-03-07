@@ -1,4 +1,4 @@
-import { use, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PropsWithChildren, type ReactNode } from "react";
+import { use, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PropsWithChildren, type ReactNode } from "react";
 import Pencil from "lucide-react/dist/esm/icons/pencil";
 import { cn } from "../../../../utils/cn";
 import { ItemDisabledContext, MenuVariantContext } from "./navigation-menu.contexts";
@@ -65,7 +65,6 @@ export function NavigationMenuEditableItem(props: NavigationMenuEditableItemProp
 }
 
 type NavigationMenuEditableTemplateItemProps = {
-  value: string;
   onCommit: (value: string) => Promise<void> | void;
   label?: string;
   valueContent?: ReactNode;
@@ -74,19 +73,22 @@ type NavigationMenuEditableTemplateItemProps = {
   defaultEditing?: boolean;
   disabled?: boolean;
   className?: string;
-};
+} & ({ value: string } | { getValue: () => string });
 
-export function NavigationMenuEditableTemplateItem({
-  value,
-  onCommit,
-  label,
-  valueContent,
-  children,
-  renderInput,
-  defaultEditing,
-  disabled,
-  className,
-}: NavigationMenuEditableTemplateItemProps) {
+export function NavigationMenuEditableTemplateItem(props: NavigationMenuEditableTemplateItemProps) {
+  const {
+    onCommit,
+    label,
+    valueContent,
+    children,
+    renderInput,
+    defaultEditing,
+    disabled,
+    className,
+  } = props;
+
+  const resolveValue = () => "getValue" in props ? props.getValue() : props.value;
+
   const [editing, setEditing] = useState(defaultEditing ?? false);
 
   const startEditing = () => setEditing(true);
@@ -95,7 +97,7 @@ export function NavigationMenuEditableTemplateItem({
   if (editing) {
     return (
       <EditableTemplateItemInput
-        value={value}
+        value={resolveValue()}
         label={label}
         renderInput={renderInput}
         className={className}
@@ -115,7 +117,7 @@ export function NavigationMenuEditableTemplateItem({
       className={className}
       onStartEditing={startEditing}
     >
-      {children ?? <EditableItemDefaultValue value={valueContent ?? value} label={label} />}
+      {children ?? <EditableItemDefaultValue value={valueContent ?? resolveValue()} label={label} />}
     </EditableItemDisplay>
   );
 }
@@ -221,7 +223,6 @@ function EditableTemplateItemInput({
   onCancel: () => void;
 }) {
   const variant = use(MenuVariantContext);
-  const [liveValue, setLiveValue] = useState(value);
   const { inputProps } = useEditableCommit(value, onCommit, onCancel);
   const inputClass = cn(
     "min-w-0 text-sm tracking-tight bg-transparent cursor-text outline-none",
@@ -235,23 +236,53 @@ function EditableTemplateItemInput({
         <div className={cn(inputClass, "grid items-center")}>
           <input
             {...inputProps}
-            onChange={(event) => setLiveValue(event.target.value)}
             className={cn(
               "col-start-1 row-start-1 w-full text-sm tracking-tight bg-transparent text-transparent caret-foreground-muted cursor-text outline-none",
               label && "text-right",
             )}
           />
-          <span
-            className={cn(
-              "col-start-1 row-start-1 pointer-events-none text-sm tracking-tight truncate whitespace-pre",
-              label && "text-right",
-            )}
-          >
-            {renderInput(liveValue)}
-          </span>
+          <TemplateInputOverlay
+            inputRef={inputProps.ref}
+            defaultValue={value}
+            renderInput={renderInput}
+            label={label}
+          />
         </div>
       </div>
     </li>
+  );
+}
+
+function TemplateInputOverlay({
+  inputRef,
+  defaultValue,
+  renderInput,
+  label,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  defaultValue: string;
+  renderInput: (value: string) => ReactNode;
+  label?: string;
+}) {
+  const [liveValue, setLiveValue] = useState(defaultValue);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    const handler = () => setLiveValue(input.value);
+    input.addEventListener("input", handler);
+    return () => input.removeEventListener("input", handler);
+  }, [inputRef]);
+
+  return (
+    <span
+      className={cn(
+        "col-start-1 row-start-1 pointer-events-none text-sm tracking-tight truncate whitespace-pre",
+        label && "text-right",
+      )}
+    >
+      {renderInput(liveValue)}
+    </span>
   );
 }
 

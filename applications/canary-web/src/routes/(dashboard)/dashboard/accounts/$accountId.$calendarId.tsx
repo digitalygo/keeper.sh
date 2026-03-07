@@ -394,7 +394,7 @@ function SyncEventNameTemplateItem({ calendarId }: { calendarId: string }) {
     <SyncEventNameDisabledProvider>
       <NavigationMenuEditableTemplateItem
         label="Event Name"
-        value={store.get(calendarDetailAtom)?.customEventName || "{{event_name}}"}
+        getValue={() => store.get(calendarDetailAtom)?.customEventName || "{{event_name}}"}
         renderInput={(live) => (
           <SyncEventNameTemplateInput template={live} />
         )}

@@ -172,7 +172,7 @@ function EventNameTemplateItem() {
     <EventNameDisabledProvider>
       <NavigationMenuEditableTemplateItem
         label="Event Name"
-        value={store.get(feedSettingsAtom).customEventName || "{{event_name}}"}
+        getValue={() => store.get(feedSettingsAtom).customEventName || "{{event_name}}"}
         renderInput={(live) => (
           <TemplateText template={live} variables={TEMPLATE_VARIABLES} />
         )}
