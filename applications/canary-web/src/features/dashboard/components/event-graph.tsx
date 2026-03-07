@@ -254,7 +254,7 @@ function EventGraphBars({ days, shouldAnimate }: EventGraphBarsProps) {
   return (
     <div
       ref={containerRef}
-      className="flex gap-0.5 pointer-hover:[&:hover>*]:opacity-50 pointer-hover:[&>*:hover]:opacity-100 data-[dragging]:*:opacity-50 data-[dragging]:*:data-[active]:opacity-100"
+      className="flex gap-0.5 pointer-hover:[&:hover>*]:opacity-50 pointer-hover:[&>*:hover]:opacity-100 data-dragging:*:opacity-50 data-dragging:*:data-active:opacity-100"
       data-dragging={resolveDataAttr(isDragging)}
       onPointerLeave={() => setHoverIndex(null)}
       onTouchStart={handleTouchStart}
