@@ -4,6 +4,7 @@ import { AnimatedReveal } from "../../../components/ui/primitives/animated-revea
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import CalendarPlus from "lucide-react/dist/esm/icons/calendar-plus";
 import CalendarDays from "lucide-react/dist/esm/icons/calendar-days";
+import Link2 from "lucide-react/dist/esm/icons/link-2";
 import Settings from "lucide-react/dist/esm/icons/settings";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import LogOut from "lucide-react/dist/esm/icons/log-out";
@@ -150,6 +151,15 @@ function CalendarsMenu() {
           <NavigationMenuItemTrailing>
             {eventCount != null && <Text size="sm" tone="muted">{pluralize(eventCount, "event")}</Text>}
           </NavigationMenuItemTrailing>
+        </NavigationMenuLinkItem>
+      </AnimatedReveal>
+      <AnimatedReveal show={calendars.length > 0} skipInitial={!animateCalendars}>
+        <NavigationMenuLinkItem to="/dashboard/ical">
+          <NavigationMenuItemIcon>
+            <Link2 size={15} />
+          </NavigationMenuItemIcon>
+          <NavigationMenuItemLabel>iCal Link</NavigationMenuItemLabel>
+          <NavigationMenuItemTrailing />
         </NavigationMenuLinkItem>
       </AnimatedReveal>
     </NavigationMenu>

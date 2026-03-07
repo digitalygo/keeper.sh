@@ -21,7 +21,7 @@ import {
   NavigationMenuItemTrailing,
 } from "../../../../components/ui/composites/navigation-menu/navigation-menu-items";
 import { DeleteConfirmation } from "../../../../components/ui/primitives/delete-confirmation";
-import { DashboardHeading2 } from "../../../../components/ui/primitives/dashboard-heading";
+import { DashboardSection } from "../../../../components/ui/primitives/dashboard-heading";
 import { pluralize } from "../../../../lib/pluralize";
 import { resolveErrorMessage } from "../../../../utils/errors";
 
@@ -96,10 +96,10 @@ function AccountDetailPage() {
   return (
     <div className="flex flex-col gap-1.5">
       <BackButton />
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Account Information</DashboardHeading2>
-        <Text size="sm">View details about the account and its calendars.</Text>
-      </div>
+      <DashboardSection
+        title="Account Information"
+        description="View details about the account and its calendars."
+      />
       <NavigationMenu>
         <MetadataRow label="Resource Type" value="Account" />
         <MetadataRow label="Calendar Count" value={String(calendars.length)} />
@@ -113,10 +113,10 @@ function AccountDetailPage() {
           <Text size="sm" tone="danger">Delete Account</Text>
         </NavigationMenuButtonItem>
       </NavigationMenu>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Account Calendars</DashboardHeading2>
-        <Text size="sm">This account has {pluralize(calendars.length, "calendar")} attached to it, choose a calendar below to view more details and configure it.</Text>
-      </div>
+      <DashboardSection
+        title="Account Calendars"
+        description={<>This account has {pluralize(calendars.length, "calendar")} attached to it, choose a calendar below to view more details and configure it.</>}
+      />
       <NavigationMenu>
         <CalendarList calendars={calendars} accountId={accountId} />
       </NavigationMenu>

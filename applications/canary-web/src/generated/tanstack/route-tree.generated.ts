@@ -27,6 +27,7 @@ import { Route as oauthAuthRouteRouteImport } from './../../routes/(oauth)/auth/
 import { Route as dashboardDashboardIndexRouteImport } from './../../routes/(dashboard)/dashboard/index'
 import { Route as oauthAuthOutlookRouteImport } from './../../routes/(oauth)/auth/outlook'
 import { Route as oauthAuthGoogleRouteImport } from './../../routes/(oauth)/auth/google'
+import { Route as dashboardDashboardIcalRouteImport } from './../../routes/(dashboard)/dashboard/ical'
 import { Route as oauthDashboardConnectRouteRouteImport } from './../../routes/(oauth)/dashboard/connect/route'
 import { Route as dashboardDashboardSettingsRouteRouteImport } from './../../routes/(dashboard)/dashboard/settings/route'
 import { Route as dashboardDashboardConnectRouteRouteImport } from './../../routes/(dashboard)/dashboard/connect/route'
@@ -136,6 +137,11 @@ const oauthAuthGoogleRoute = oauthAuthGoogleRouteImport.update({
   id: '/google',
   path: '/google',
   getParentRoute: () => oauthAuthRouteRoute,
+} as any)
+const dashboardDashboardIcalRoute = dashboardDashboardIcalRouteImport.update({
+  id: '/dashboard/ical',
+  path: '/dashboard/ical',
+  getParentRoute: () => dashboardRouteRoute,
 } as any)
 const oauthDashboardConnectRouteRoute =
   oauthDashboardConnectRouteRouteImport.update({
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/accounts': typeof dashboardDashboardAccountsRouteRouteWithChildren
   '/dashboard/connect': typeof oauthDashboardConnectRouteRouteWithChildren
   '/dashboard/settings': typeof dashboardDashboardSettingsRouteRouteWithChildren
+  '/dashboard/ical': typeof dashboardDashboardIcalRoute
   '/auth/google': typeof oauthAuthGoogleRoute
   '/auth/outlook': typeof oauthAuthOutlookRoute
   '/dashboard/': typeof dashboardDashboardIndexRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/': typeof marketingIndexRoute
   '/dashboard/accounts': typeof dashboardDashboardAccountsRouteRouteWithChildren
   '/dashboard/connect': typeof dashboardDashboardConnectIndexRoute
+  '/dashboard/ical': typeof dashboardDashboardIcalRoute
   '/auth/google': typeof oauthAuthGoogleRoute
   '/auth/outlook': typeof oauthAuthOutlookRoute
   '/dashboard/settings/change-password': typeof dashboardDashboardSettingsChangePasswordRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/(dashboard)/dashboard/connect': typeof dashboardDashboardConnectRouteRouteWithChildren
   '/(dashboard)/dashboard/settings': typeof dashboardDashboardSettingsRouteRouteWithChildren
   '/(oauth)/dashboard/connect': typeof oauthDashboardConnectRouteRouteWithChildren
+  '/(dashboard)/dashboard/ical': typeof dashboardDashboardIcalRoute
   '/(oauth)/auth/google': typeof oauthAuthGoogleRoute
   '/(oauth)/auth/outlook': typeof oauthAuthOutlookRoute
   '/(dashboard)/dashboard/': typeof dashboardDashboardIndexRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/dashboard/accounts'
     | '/dashboard/connect'
     | '/dashboard/settings'
+    | '/dashboard/ical'
     | '/auth/google'
     | '/auth/outlook'
     | '/dashboard/'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard/accounts'
     | '/dashboard/connect'
+    | '/dashboard/ical'
     | '/auth/google'
     | '/auth/outlook'
     | '/dashboard/settings/change-password'
@@ -477,6 +488,7 @@ export interface FileRouteTypes {
     | '/(dashboard)/dashboard/connect'
     | '/(dashboard)/dashboard/settings'
     | '/(oauth)/dashboard/connect'
+    | '/(dashboard)/dashboard/ical'
     | '/(oauth)/auth/google'
     | '/(oauth)/auth/outlook'
     | '/(dashboard)/dashboard/'
@@ -634,6 +646,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/google'
       preLoaderRoute: typeof oauthAuthGoogleRouteImport
       parentRoute: typeof oauthAuthRouteRoute
+    }
+    '/(dashboard)/dashboard/ical': {
+      id: '/(dashboard)/dashboard/ical'
+      path: '/dashboard/ical'
+      fullPath: '/dashboard/ical'
+      preLoaderRoute: typeof dashboardDashboardIcalRouteImport
+      parentRoute: typeof dashboardRouteRoute
     }
     '/(oauth)/dashboard/connect': {
       id: '/(oauth)/dashboard/connect'
@@ -873,6 +892,7 @@ interface dashboardRouteRouteChildren {
   dashboardDashboardAccountsRouteRoute: typeof dashboardDashboardAccountsRouteRouteWithChildren
   dashboardDashboardConnectRouteRoute: typeof dashboardDashboardConnectRouteRouteWithChildren
   dashboardDashboardSettingsRouteRoute: typeof dashboardDashboardSettingsRouteRouteWithChildren
+  dashboardDashboardIcalRoute: typeof dashboardDashboardIcalRoute
   dashboardDashboardIndexRoute: typeof dashboardDashboardIndexRoute
   dashboardDashboardEventsIndexRoute: typeof dashboardDashboardEventsIndexRoute
   dashboardDashboardIntegrationsIndexRoute: typeof dashboardDashboardIntegrationsIndexRoute
@@ -886,6 +906,7 @@ const dashboardRouteRouteChildren: dashboardRouteRouteChildren = {
     dashboardDashboardConnectRouteRouteWithChildren,
   dashboardDashboardSettingsRouteRoute:
     dashboardDashboardSettingsRouteRouteWithChildren,
+  dashboardDashboardIcalRoute: dashboardDashboardIcalRoute,
   dashboardDashboardIndexRoute: dashboardDashboardIndexRoute,
   dashboardDashboardEventsIndexRoute: dashboardDashboardEventsIndexRoute,
   dashboardDashboardIntegrationsIndexRoute:

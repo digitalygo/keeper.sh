@@ -80,6 +80,7 @@ export const PATCH = withWideEvent(
       excludeFocusTime?: boolean;
       excludeOutOfOffice?: boolean;
       excludeWorkingLocation?: boolean;
+      includeInIcalFeed?: boolean;
     };
 
     const booleanFields = [
@@ -90,6 +91,7 @@ export const PATCH = withWideEvent(
       "excludeFocusTime",
       "excludeOutOfOffice",
       "excludeWorkingLocation",
+      "includeInIcalFeed",
     ] as const;
 
     const updates: Record<string, string | boolean> = {};

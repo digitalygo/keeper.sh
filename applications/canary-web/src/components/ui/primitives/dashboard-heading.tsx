@@ -1,5 +1,6 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import { tv } from "tailwind-variants/lite";
+import { Text } from "./text";
 
 const dashboardHeading = tv({
   base: "font-sans font-medium leading-tight tracking-tight text-foreground overflow-hidden truncate",
@@ -33,4 +34,20 @@ export function DashboardHeading2({ children, as, className }: Omit<DashboardHea
 
 export function DashboardHeading3({ children, as, className }: Omit<DashboardHeadingProps, "level">) {
   return <DashboardHeadingBase level={3} as={as} className={className}>{children}</DashboardHeadingBase>;
+}
+
+type DashboardSectionProps = {
+  title: ReactNode;
+  description: ReactNode;
+  level?: HeadingLevel;
+  headingClassName?: string;
+};
+
+export function DashboardSection({ title, description, level = 2, headingClassName }: DashboardSectionProps) {
+  return (
+    <div className="flex flex-col px-0.5 pt-4">
+      <DashboardHeadingBase level={level} className={headingClassName}>{title}</DashboardHeadingBase>
+      <Text size="sm">{description}</Text>
+    </div>
+  );
 }

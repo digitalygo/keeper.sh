@@ -5,7 +5,7 @@ import { RouteShell } from "../../../../components/ui/shells/route-shell";
 import { MetadataRow } from "../../../../features/dashboard/components/metadata-row";
 import { CalendarCheckboxList } from "../../../../features/dashboard/components/calendar-checkbox-list";
 import { ProviderIcon } from "../../../../components/ui/primitives/provider-icon";
-import { DashboardHeading1 } from "../../../../components/ui/primitives/dashboard-heading";
+import { DashboardHeading1, DashboardSection } from "../../../../components/ui/primitives/dashboard-heading";
 import { apiFetch } from "../../../../lib/fetcher";
 import { formatDate } from "../../../../lib/time";
 import { getAccountLabel } from "../../../../utils/accounts";
@@ -21,7 +21,6 @@ import {
   NavigationMenuEditableItem,
   NavigationMenuEditableTemplateItem,
 } from "../../../../components/ui/composites/navigation-menu/navigation-menu-editable";
-import { DashboardHeading2 } from "../../../../components/ui/primitives/dashboard-heading";
 import { Text } from "../../../../components/ui/primitives/text";
 import { TemplateText } from "../../../../components/ui/primitives/template-text";
 
@@ -139,10 +138,10 @@ function RenameSection({ calendarId, calendar }: { calendarId: string; calendar:
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Calendar Name</DashboardHeading2>
-        <Text size="sm">Click below to rename the calendar within Keeper. This does not affect the calendar outside of the Keeper ecosystem.</Text>
-      </div>
+      <DashboardSection
+        title="Calendar Name"
+        description="Click below to rename the calendar within Keeper. This does not affect the calendar outside of the Keeper ecosystem."
+      />
       <NavigationMenu>
         <NavigationMenuEditableItem
           value={calendar.name}
@@ -185,10 +184,10 @@ function DestinationsSection({ calendarId }: { calendarId: string }) {
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Send Events to Calendars</DashboardHeading2>
-        <Text size="sm">Select which calendars should receive events from this calendar.</Text>
-      </div>
+      <DashboardSection
+        title="Send Events to Calendars"
+        description="Select which calendars should receive events from this calendar."
+      />
       <CalendarCheckboxList
         calendars={pushCalendars}
         selectedIds={selectedDestinationIds}
@@ -204,10 +203,10 @@ function SyncSettingsSection({ calendarId, calendar }: { calendarId: string; cal
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Sync Settings</DashboardHeading2>
-        <Text size="sm">Choose which event details are synced to destination calendars. Use <Text as="span" size="sm" className="text-template inline">{"{{calendar_name}}"}</Text> or <Text as="span" size="sm" className="text-template inline">{"{{event_name}}"}</Text> in text fields for dynamic values.</Text>
-      </div>
+      <DashboardSection
+        title="Sync Settings"
+        description={<>Choose which event details are synced to destination calendars. Use <Text as="span" size="sm" className="text-template inline">{"{{calendar_name}}"}</Text> or <Text as="span" size="sm" className="text-template inline">{"{{event_name}}"}</Text> in text fields for dynamic values.</>}
+      />
       <NavigationMenu>
         <NavigationMenuEditableTemplateItem
           label="Event Name"
@@ -264,10 +263,10 @@ function ExclusionsSection({ calendarId, calendar }: { calendarId: string; calen
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Exclusions</DashboardHeading2>
-        <Text size="sm">Choose which event types to exclude from syncing.</Text>
-      </div>
+      <DashboardSection
+        title="Exclusions"
+        description="Choose which event types to exclude from syncing."
+      />
       <NavigationMenu>
         {exclusionSettings.map((pref) => (
           <NavigationMenuToggleItem
@@ -286,10 +285,10 @@ function ExclusionsSection({ calendarId, calendar }: { calendarId: string; calen
 function CalendarInfoSection({ calendar, account, accountId }: { calendar: CalendarDetail; account: CalendarAccount; accountId: string }) {
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Calendar Information</DashboardHeading2>
-        <Text size="sm">View details about the calendar.</Text>
-      </div>
+      <DashboardSection
+        title="Calendar Information"
+        description="View details about the calendar."
+      />
       <NavigationMenu>
         <MetadataRow label="Resource Type" value="Calendar" />
         <MetadataRow label="Type" value={calendar.calendarType} />

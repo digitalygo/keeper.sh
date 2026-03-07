@@ -330,6 +330,20 @@
       "when": 1772763457068,
       "tag": "0046_rainy_steve_rogers",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1772845661125,
+      "tag": "0047_soft_ravenous",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1772847974972,
+      "tag": "0048_gigantic_kid_colt",
+      "breakpoints": true
     }
   ]
 }

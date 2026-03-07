@@ -227,7 +227,7 @@ function EventGraphBars({ days, shouldAnimate }: EventGraphBarsProps) {
   const setDragging = useSetAtom(eventGraphDraggingAtom);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const resolveIndexFromTouch = useCallback((touch: Touch) => {
+  const resolveIndexFromTouch = useCallback((touch: React.Touch) => {
     const container = containerRef.current;
     if (!container) return null;
     const rect = container.getBoundingClientRect();
@@ -237,19 +237,24 @@ function EventGraphBars({ days, shouldAnimate }: EventGraphBarsProps) {
     return index;
   }, []);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = useCallback(({ touches }: React.TouchEvent) => {
     setDragging(true);
-    setHoverIndex(resolveIndexFromTouch(e.touches[0]));
+
+    const touch = touches[0];
+    if (!touch) return;
+    setHoverIndex(resolveIndexFromTouch(touch));
   }, [resolveIndexFromTouch, setHoverIndex, setDragging]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    setHoverIndex(resolveIndexFromTouch(e.touches[0]));
+  const handleTouchMove = useCallback(({ touches }: React.TouchEvent) => {
+    const touch = touches[0];
+    if (!touch) return;
+    setHoverIndex(resolveIndexFromTouch(touch));
   }, [resolveIndexFromTouch, setHoverIndex]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = () => {
     setDragging(false);
     setHoverIndex(null);
-  }, [setHoverIndex, setDragging]);
+  };
 
   return (
     <div

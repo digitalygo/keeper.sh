@@ -2,8 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import useSWR from "swr";
 import { BackButton } from "../../../../components/ui/primitives/back-button";
-import { Text } from "../../../../components/ui/primitives/text";
-import { DashboardHeading2 } from "../../../../components/ui/primitives/dashboard-heading";
+import { DashboardSection } from "../../../../components/ui/primitives/dashboard-heading";
 import { Button, LinkButton, ButtonText } from "../../../../components/ui/primitives/button";
 import { apiFetch } from "../../../../lib/fetcher";
 import type { CalendarSource } from "../../../../types/api";
@@ -335,10 +334,10 @@ function SelectSection({
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Which calendars would you like to configure?</DashboardHeading2>
-        <Text size="sm">Select the calendars you want to rename and set up.</Text>
-      </div>
+      <DashboardSection
+        title="Which calendars would you like to configure?"
+        description="Select the calendars you want to rename and set up."
+      />
       <NavigationMenu>
         {calendars.map((calendar) => (
           <NavigationMenuCheckboxItem
@@ -410,13 +409,10 @@ function RenameSection({
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>Rename Your Calendars</DashboardHeading2>
-        <Text size="sm">
-          Provider names are often generic. Click a calendar to give it a more
-          meaningful name.
-        </Text>
-      </div>
+      <DashboardSection
+        title="Rename Your Calendars"
+        description="Provider names are often generic. Click a calendar to give it a more meaningful name."
+      />
       <NavigationMenu>
         {calendars.map((calendar, index) => (
           <NavigationMenuEditableItem
@@ -445,10 +441,7 @@ function EmptyStepSection({ heading, message, buttonLabel, onNext }: {
 }) {
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2>{heading}</DashboardHeading2>
-        <Text size="sm">{message}</Text>
-      </div>
+      <DashboardSection title={heading} description={message} />
       <Button className="w-full justify-center" onClick={onNext}>
         <ButtonText>{buttonLabel}</ButtonText>
       </Button>
@@ -477,10 +470,11 @@ function DestinationsSection({
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2 className="overflow-visible text-wrap whitespace-normal">Where should &apos;{calendar.name}&apos; send events?</DashboardHeading2>
-        <Text size="sm">Select which calendars should receive events from this calendar.</Text>
-      </div>
+      <DashboardSection
+        title={<>Where should &apos;{calendar.name}&apos; send events?</>}
+        description="Select which calendars should receive events from this calendar."
+        headingClassName="overflow-visible text-wrap whitespace-normal"
+      />
       <NavigationMenu>
         {pushCalendars.length === 0 && (
           <NavigationMenuEmptyItem>No destination calendars available</NavigationMenuEmptyItem>
@@ -532,10 +526,11 @@ function SourcesSection({
 
   return (
     <>
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading2 className="overflow-visible text-wrap whitespace-normal">Where should &apos;{calendar.name}&apos; pull events from?</DashboardHeading2>
-        <Text size="sm">Select which calendars should send events to this calendar.</Text>
-      </div>
+      <DashboardSection
+        title={<>Where should &apos;{calendar.name}&apos; pull events from?</>}
+        description="Select which calendars should send events to this calendar."
+        headingClassName="overflow-visible text-wrap whitespace-normal"
+      />
       <NavigationMenu>
         {pullCalendars.length === 0 && (
           <NavigationMenuEmptyItem>No source calendars available</NavigationMenuEmptyItem>

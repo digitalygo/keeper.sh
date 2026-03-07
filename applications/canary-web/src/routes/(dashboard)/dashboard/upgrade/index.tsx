@@ -1,7 +1,7 @@
 import { useState, useTransition } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { BackButton } from "../../../../components/ui/primitives/back-button";
-import { DashboardHeading1 } from "../../../../components/ui/primitives/dashboard-heading";
+import { DashboardSection } from "../../../../components/ui/primitives/dashboard-heading";
 import { Heading2, Heading3 } from "../../../../components/ui/primitives/heading";
 import { Text } from "../../../../components/ui/primitives/text";
 import { Button, ButtonText } from "../../../../components/ui/primitives/button";
@@ -66,12 +66,11 @@ function UpgradePage() {
     <div className="flex flex-col gap-1.5">
       <BackButton />
 
-      <div className="flex flex-col px-0.5 pt-4">
-        <DashboardHeading1>Upgrade to Pro</DashboardHeading1>
-        <Text size="sm">
-          Thank you for supporting the project. I maintain Keeper on my own time and dime so all support is appreciated.
-        </Text>
-      </div>
+      <DashboardSection
+        title="Upgrade to Pro"
+        description="Thank you for supporting the project. I maintain Keeper on my own time and dime so all support is appreciated."
+        level={1}
+      />
 
       <NavigationMenu>
         <NavigationMenuCheckboxItem checked={yearly} onCheckedChange={setYearly}>

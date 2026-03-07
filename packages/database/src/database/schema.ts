@@ -102,6 +102,7 @@ const calendarsTable = pgTable(
     excludeFocusTime: boolean().notNull().default(false),
     excludeOutOfOffice: boolean().notNull().default(false),
     excludeWorkingLocation: boolean().notNull().default(false),
+    includeInIcalFeed: boolean().notNull().default(false),
     customEventName: text().notNull().default(""),
     externalCalendarId: text(),
     id: uuid().notNull().primaryKey().defaultRandom(),
@@ -250,6 +251,24 @@ const sourceDestinationMappingsTable = pgTable(
   ],
 );
 
+// --- iCal feed settings ---
+
+const icalFeedSettingsTable = pgTable("ical_feed_settings", {
+  userId: text()
+    .notNull()
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  includeEventName: boolean().notNull().default(false),
+  includeEventDescription: boolean().notNull().default(false),
+  includeEventLocation: boolean().notNull().default(false),
+  excludeAllDayEvents: boolean().notNull().default(false),
+  customEventName: text().notNull().default("Busy"),
+  updatedAt: timestamp()
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
 export {
   caldavCredentialsTable,
   calendarAccountsTable,
@@ -257,6 +276,7 @@ export {
   calendarsTable,
   eventMappingsTable,
   eventStatesTable,
+  icalFeedSettingsTable,
   oauthCredentialsTable,
   sourceDestinationMappingsTable,
   syncStatusTable,

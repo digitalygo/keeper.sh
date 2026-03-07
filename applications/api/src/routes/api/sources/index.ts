@@ -16,6 +16,7 @@ const GET = withWideEvent(
         displayName: calendarAccountsTable.displayName,
         email: calendarAccountsTable.email,
         needsReauthentication: calendarAccountsTable.needsReauthentication,
+        includeInIcalFeed: calendarsTable.includeInIcalFeed,
       })
       .from(calendarsTable)
       .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))

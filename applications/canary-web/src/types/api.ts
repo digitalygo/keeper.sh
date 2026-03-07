@@ -19,6 +19,7 @@ export interface CalendarSource {
   displayName: string | null;
   email: string | null;
   needsReauthentication: boolean;
+  includeInIcalFeed: boolean;
 }
 
 export interface CalendarDetail {
