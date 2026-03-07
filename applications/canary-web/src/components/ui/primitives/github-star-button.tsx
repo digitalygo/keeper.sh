@@ -19,7 +19,7 @@ export function GithubStarButton() {
     <AnimatePresence initial={false}>
       {visible && (
         <FadeIn direction="from-right">
-          <ExternalLinkButton size="compact" variant="ghost" href="https://github.com" target="_blank" rel="noreferrer">
+          <ExternalLinkButton size="compact" variant="ghost" href="https://github.com/ridafkih/keeper.sh" target="_blank" rel="noreferrer">
             <Star size={14} />
             <ButtonText>403</ButtonText>
           </ExternalLinkButton>

@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from "react";
+import { Link } from "@tanstack/react-router";
 
 export function MarketingFooter({ children }: PropsWithChildren) {
   return (
@@ -40,9 +41,32 @@ export function MarketingFooterNavGroupLabel({ children }: PropsWithChildren) {
   );
 }
 
-export function MarketingFooterNavItem({ children }: PropsWithChildren) {
+type MarketingFooterNavItemProps = PropsWithChildren<{
+  to?: string;
+  href?: string;
+}>;
+
+export function MarketingFooterNavItem({ children, to, href }: MarketingFooterNavItemProps) {
+  const className = "text-foreground-muted hover:text-foreground-hover";
+
+  if (to) {
+    return (
+      <li>
+        <Link to={to} className={className}>{children}</Link>
+      </li>
+    );
+  }
+
+  if (href) {
+    return (
+      <li>
+        <a href={href} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>
+      </li>
+    );
+  }
+
   return (
-    <li className="text-foreground-muted hover:text-foreground-hover cursor-pointer">
+    <li className={className}>
       {children}
     </li>
   );

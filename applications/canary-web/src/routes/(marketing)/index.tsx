@@ -159,7 +159,7 @@ function MarketingPage() {
             </ButtonIcon>
           </LinkButton>
           <ExternalLinkButton
-            href="https://github.com"
+            href="https://github.com/ridafkih/keeper.sh"
             target="_blank"
             rel="noreferrer"
             size="compact"

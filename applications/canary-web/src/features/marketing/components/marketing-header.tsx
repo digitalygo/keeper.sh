@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from "react";
+import { Link } from "@tanstack/react-router";
 import { LayoutRow } from "../../../components/ui/shells/layout";
 import { StaggeredBackdropBlur } from "../../../components/ui/primitives/staggered-backdrop-blur";
 
@@ -16,7 +17,7 @@ export function MarketingHeader({ children }: PropsWithChildren) {
 }
 
 export function MarketingHeaderBranding({ children }: PropsWithChildren) {
-  return <>{children}</>;
+  return <Link to="/" className="flex items-center text-foreground hover:text-foreground-hover">{children}</Link>;
 }
 
 export function MarketingHeaderActions({ children }: PropsWithChildren) {

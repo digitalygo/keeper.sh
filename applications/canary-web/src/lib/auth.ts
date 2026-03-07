@@ -46,6 +46,11 @@ export const forgotPassword = async (email: string): Promise<void> => {
   if (error) throw new Error(error.message ?? "Failed to send reset email");
 };
 
+export const resetPassword = async (token: string, newPassword: string): Promise<void> => {
+  const { error } = await authClient.resetPassword({ newPassword, token });
+  if (error) throw new Error(error.message ?? "Failed to reset password");
+};
+
 export const changePassword = (currentPassword: string, newPassword: string) =>
   authPost("/api/auth/change-password", { currentPassword, newPassword });
 

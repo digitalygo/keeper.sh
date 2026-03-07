@@ -14,7 +14,11 @@ import { Route as marketingRouteRouteImport } from './../../routes/(marketing)/r
 import { Route as dashboardRouteRouteImport } from './../../routes/(dashboard)/route'
 import { Route as authRouteRouteImport } from './../../routes/(auth)/route'
 import { Route as marketingIndexRouteImport } from './../../routes/(marketing)/index'
+import { Route as marketingTermsRouteImport } from './../../routes/(marketing)/terms'
+import { Route as marketingPrivacyRouteImport } from './../../routes/(marketing)/privacy'
 import { Route as authVerifyEmailRouteImport } from './../../routes/(auth)/verify-email'
+import { Route as authVerifyAuthenticationRouteImport } from './../../routes/(auth)/verify-authentication'
+import { Route as authResetPasswordRouteImport } from './../../routes/(auth)/reset-password'
 import { Route as authRegisterRouteImport } from './../../routes/(auth)/register'
 import { Route as authLoginRouteImport } from './../../routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './../../routes/(auth)/forgot-password'
@@ -67,9 +71,30 @@ const marketingIndexRoute = marketingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => marketingRouteRoute,
 } as any)
+const marketingTermsRoute = marketingTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => marketingRouteRoute,
+} as any)
+const marketingPrivacyRoute = marketingPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => marketingRouteRoute,
+} as any)
 const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authVerifyAuthenticationRoute =
+  authVerifyAuthenticationRouteImport.update({
+    id: '/verify-authentication',
+    path: '/verify-authentication',
+    getParentRoute: () => authRouteRoute,
+  } as any)
+const authResetPasswordRoute = authResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => authRouteRoute,
 } as any)
 const authRegisterRoute = authRegisterRouteImport.update({
@@ -251,7 +276,11 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/reset-password': typeof authResetPasswordRoute
+  '/verify-authentication': typeof authVerifyAuthenticationRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/privacy': typeof marketingPrivacyRoute
+  '/terms': typeof marketingTermsRoute
   '/': typeof marketingIndexRoute
   '/dashboard/accounts': typeof dashboardDashboardAccountsRouteRouteWithChildren
   '/dashboard/connect': typeof oauthDashboardConnectRouteRouteWithChildren
@@ -284,7 +313,11 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/reset-password': typeof authResetPasswordRoute
+  '/verify-authentication': typeof authVerifyAuthenticationRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/privacy': typeof marketingPrivacyRoute
+  '/terms': typeof marketingTermsRoute
   '/': typeof marketingIndexRoute
   '/dashboard/accounts': typeof dashboardDashboardAccountsRouteRouteWithChildren
   '/dashboard/connect': typeof dashboardDashboardConnectIndexRoute
@@ -319,7 +352,11 @@ export interface FileRoutesById {
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/register': typeof authRegisterRoute
+  '/(auth)/reset-password': typeof authResetPasswordRoute
+  '/(auth)/verify-authentication': typeof authVerifyAuthenticationRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
+  '/(marketing)/privacy': typeof marketingPrivacyRoute
+  '/(marketing)/terms': typeof marketingTermsRoute
   '/(marketing)/': typeof marketingIndexRoute
   '/(dashboard)/dashboard/accounts': typeof dashboardDashboardAccountsRouteRouteWithChildren
   '/(dashboard)/dashboard/connect': typeof dashboardDashboardConnectRouteRouteWithChildren
@@ -355,7 +392,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reset-password'
+    | '/verify-authentication'
     | '/verify-email'
+    | '/privacy'
+    | '/terms'
     | '/'
     | '/dashboard/accounts'
     | '/dashboard/connect'
@@ -388,7 +429,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reset-password'
+    | '/verify-authentication'
     | '/verify-email'
+    | '/privacy'
+    | '/terms'
     | '/'
     | '/dashboard/accounts'
     | '/dashboard/connect'
@@ -422,7 +467,11 @@ export interface FileRouteTypes {
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/register'
+    | '/(auth)/reset-password'
+    | '/(auth)/verify-authentication'
     | '/(auth)/verify-email'
+    | '/(marketing)/privacy'
+    | '/(marketing)/terms'
     | '/(marketing)/'
     | '/(dashboard)/dashboard/accounts'
     | '/(dashboard)/dashboard/connect'
@@ -495,11 +544,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(marketing)/terms': {
+      id: '/(marketing)/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof marketingTermsRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/privacy': {
+      id: '/(marketing)/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof marketingPrivacyRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(auth)/verify-email': {
       id: '/(auth)/verify-email'
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof authVerifyEmailRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/verify-authentication': {
+      id: '/(auth)/verify-authentication'
+      path: '/verify-authentication'
+      fullPath: '/verify-authentication'
+      preLoaderRoute: typeof authVerifyAuthenticationRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/reset-password': {
+      id: '/(auth)/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof authResetPasswordRouteImport
       parentRoute: typeof authRouteRoute
     }
     '/(auth)/register': {
@@ -719,6 +796,8 @@ interface authRouteRouteChildren {
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authLoginRoute: typeof authLoginRoute
   authRegisterRoute: typeof authRegisterRoute
+  authResetPasswordRoute: typeof authResetPasswordRoute
+  authVerifyAuthenticationRoute: typeof authVerifyAuthenticationRoute
   authVerifyEmailRoute: typeof authVerifyEmailRoute
 }
 
@@ -726,6 +805,8 @@ const authRouteRouteChildren: authRouteRouteChildren = {
   authForgotPasswordRoute: authForgotPasswordRoute,
   authLoginRoute: authLoginRoute,
   authRegisterRoute: authRegisterRoute,
+  authResetPasswordRoute: authResetPasswordRoute,
+  authVerifyAuthenticationRoute: authVerifyAuthenticationRoute,
   authVerifyEmailRoute: authVerifyEmailRoute,
 }
 
@@ -817,10 +898,14 @@ const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
 )
 
 interface marketingRouteRouteChildren {
+  marketingPrivacyRoute: typeof marketingPrivacyRoute
+  marketingTermsRoute: typeof marketingTermsRoute
   marketingIndexRoute: typeof marketingIndexRoute
 }
 
 const marketingRouteRouteChildren: marketingRouteRouteChildren = {
+  marketingPrivacyRoute: marketingPrivacyRoute,
+  marketingTermsRoute: marketingTermsRoute,
   marketingIndexRoute: marketingIndexRoute,
 }
 

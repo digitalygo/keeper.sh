@@ -17,7 +17,7 @@ function MarketingLayout() {
     <>
       <MarketingHeader>
         <MarketingHeaderBranding>
-          <KeeperLogo className="max-w-6" />
+          <KeeperLogo className="w-full max-w-6" />
         </MarketingHeaderBranding>
         <SessionSlot
           authenticated={
@@ -55,20 +55,18 @@ function MarketingLayout() {
           <MarketingFooterNav>
             <MarketingFooterNavGroup>
               <MarketingFooterNavGroupLabel>Product</MarketingFooterNavGroupLabel>
-              <MarketingFooterNavItem>Get Started</MarketingFooterNavItem>
-              <MarketingFooterNavItem>Features</MarketingFooterNavItem>
-              <MarketingFooterNavItem>Pricing</MarketingFooterNavItem>
+              <MarketingFooterNavItem to="/register">Get Started</MarketingFooterNavItem>
+              <MarketingFooterNavItem to="/#features">Features</MarketingFooterNavItem>
+              <MarketingFooterNavItem to="/#pricing">Pricing</MarketingFooterNavItem>
             </MarketingFooterNavGroup>
             <MarketingFooterNavGroup>
               <MarketingFooterNavGroupLabel>Resources</MarketingFooterNavGroupLabel>
-              <MarketingFooterNavItem>Documentation</MarketingFooterNavItem>
-              <MarketingFooterNavItem>Changelog</MarketingFooterNavItem>
-              <MarketingFooterNavItem>GitHub</MarketingFooterNavItem>
+              <MarketingFooterNavItem href="https://github.com/ridafkih/keeper.sh">GitHub</MarketingFooterNavItem>
             </MarketingFooterNavGroup>
             <MarketingFooterNavGroup>
               <MarketingFooterNavGroupLabel>Legal</MarketingFooterNavGroupLabel>
-              <MarketingFooterNavItem>Privacy Policy</MarketingFooterNavItem>
-              <MarketingFooterNavItem>Terms of Service</MarketingFooterNavItem>
+              <MarketingFooterNavItem to="/privacy">Privacy Policy</MarketingFooterNavItem>
+              <MarketingFooterNavItem to="/terms">Terms of Service</MarketingFooterNavItem>
             </MarketingFooterNavGroup>
           </MarketingFooterNav>
         </MarketingFooter>
