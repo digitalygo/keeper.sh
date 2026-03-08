@@ -71,7 +71,7 @@ class CalDAVClient {
       iCalString: params.iCalString,
     });
 
-    await response.body?.cancel();
+    await response.body?.cancel?.();
   }
 
   async deleteCalendarObject(params: { calendarUrl: string; filename: string }): Promise<void> {
@@ -82,7 +82,7 @@ class CalDAVClient {
       calendarObject: { url: objectUrl },
     });
 
-    await response.body?.cancel();
+    await response.body?.cancel?.();
   }
 
   async fetchCalendarObjects(params: {

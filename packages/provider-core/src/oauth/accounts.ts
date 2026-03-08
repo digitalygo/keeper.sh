@@ -139,7 +139,6 @@ const getUserEventsForSync = async (
     .select({
       calendarId: eventStatesTable.calendarId,
       calendarName: calendarsTable.name,
-      calendarType: calendarsTable.calendarType,
       calendarUrl: calendarsTable.url,
       endTime: eventStatesTable.endTime,
       id: eventStatesTable.id,
@@ -161,7 +160,7 @@ const getUserEventsForSync = async (
     events.push({
       calendarId: result.calendarId,
       calendarName: result.calendarName,
-      calendarUrl: result.calendarUrl ?? result.calendarType,
+      calendarUrl: result.calendarUrl,
       endTime: result.endTime,
       id: result.id,
       sourceEventUid: result.sourceEventUid,

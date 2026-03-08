@@ -8,6 +8,8 @@ import Link2 from "lucide-react/dist/esm/icons/link-2";
 import Settings from "lucide-react/dist/esm/icons/settings";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import LogOut from "lucide-react/dist/esm/icons/log-out";
+import MessageSquare from "lucide-react/dist/esm/icons/message-square";
+import Bug from "lucide-react/dist/esm/icons/bug";
 import LoaderCircle from "lucide-react/dist/esm/icons/loader-circle";
 import User from "lucide-react/dist/esm/icons/user";
 import { ErrorState } from "../../../components/ui/primitives/error-state";
@@ -65,6 +67,22 @@ function DashboardPage() {
               <Sparkles size={15} />
             </NavigationMenuItemIcon>
             <NavigationMenuItemLabel>Upgrade Account</NavigationMenuItemLabel>
+            <NavigationMenuItemTrailing />
+          </NavigationMenuLinkItem>
+        </NavigationMenu>
+        <NavigationMenu>
+          <NavigationMenuLinkItem to="/dashboard/feedback">
+            <NavigationMenuItemIcon>
+              <MessageSquare size={15} />
+            </NavigationMenuItemIcon>
+            <NavigationMenuItemLabel>Submit Feedback</NavigationMenuItemLabel>
+            <NavigationMenuItemTrailing />
+          </NavigationMenuLinkItem>
+          <NavigationMenuLinkItem to="/dashboard/report">
+            <NavigationMenuItemIcon>
+              <Bug size={15} />
+            </NavigationMenuItemIcon>
+            <NavigationMenuItemLabel>Report a Problem</NavigationMenuItemLabel>
             <NavigationMenuItemTrailing />
           </NavigationMenuLinkItem>
         </NavigationMenu>
@@ -154,8 +172,6 @@ function CalendarsMenu() {
             {eventCount != null && <Text size="sm" tone="muted">{pluralize(eventCount, "event")}</Text>}
           </NavigationMenuItemTrailing>
         </NavigationMenuLinkItem>
-      </AnimatedReveal>
-      <AnimatedReveal show={calendars.length > 0} skipInitial={!animateCalendars}>
         <NavigationMenuLinkItem to="/dashboard/ical">
           <NavigationMenuItemIcon>
             <Link2 size={15} />

@@ -9,6 +9,9 @@ import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import type { SyncableEvent } from "../types";
 
 const EMPTY_SOURCES_COUNT = 0;
+const TEMPLATE_TOKEN_PATTERN = /\{\{(\w+)\}\}/g;
+const DEFAULT_EVENT_NAME = "Busy";
+const DEFAULT_EVENT_NAME_TEMPLATE = "{{calendar_name}}";
 
 const getMappedSourceCalendarIds = async (
   database: BunSQLDatabase,
@@ -36,8 +39,11 @@ const fetchEventsForCalendars = async (
     .select({
       calendarId: eventStatesTable.calendarId,
       calendarName: calendarsTable.name,
-      calendarType: calendarsTable.calendarType,
       calendarUrl: calendarsTable.url,
+      customEventName: calendarsTable.customEventName,
+      excludeEventDescription: calendarsTable.excludeEventDescription,
+      excludeEventLocation: calendarsTable.excludeEventLocation,
+      excludeEventName: calendarsTable.excludeEventName,
       description: eventStatesTable.description,
       endTime: eventStatesTable.endTime,
       id: eventStatesTable.id,
@@ -63,20 +69,44 @@ const fetchEventsForCalendars = async (
       continue;
     }
 
+    const eventName = result.title ?? DEFAULT_EVENT_NAME;
+    const calendarName = result.calendarName;
+    const template = result.customEventName || DEFAULT_EVENT_NAME_TEMPLATE;
+
+    const summary = result.excludeEventName
+      ? resolveEventNameTemplate(template, {
+        calendar_name: calendarName,
+        event_name: eventName,
+      })
+      : eventName;
+
     syncableEvents.push({
       calendarId: result.calendarId,
       calendarName: result.calendarName,
-      calendarUrl: result.calendarUrl ?? result.calendarType,
-      description: result.description ?? undefined,
+      calendarUrl: result.calendarUrl,
+      description: result.excludeEventDescription ? undefined : result.description ?? undefined,
       endTime: result.endTime,
       id: result.id,
+      location: result.excludeEventLocation ? undefined : result.location ?? undefined,
       sourceEventUid: result.sourceEventUid,
       startTime: result.startTime,
-      summary: result.title ?? result.calendarName ?? "Busy",
+      summary,
     });
   }
 
   return syncableEvents;
+};
+
+const resolveEventNameTemplate = (
+  template: string,
+  variables: Record<string, string>,
+): string => {
+  const resolved = template.replace(
+    TEMPLATE_TOKEN_PATTERN,
+    (token, variableName) => variables[variableName] ?? token,
+  ).trim();
+
+  return resolved || variables.calendar_name || DEFAULT_EVENT_NAME;
 };
 
 const getEventsForDestination = async (

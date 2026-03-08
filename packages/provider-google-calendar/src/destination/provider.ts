@@ -272,6 +272,7 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
       description: event.description,
       end: { dateTime: event.endTime.toISOString() },
       iCalUID: uid,
+      location: event.location,
       start: { dateTime: event.startTime.toISOString() },
       summary: event.summary,
     };

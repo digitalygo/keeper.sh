@@ -8,6 +8,7 @@ const eventToICalString = (event: SyncableEvent, uid: string): string => {
   const icsEvent: IcsEvent = {
     description: event.description,
     end: { date: event.endTime },
+    location: event.location,
     stamp: { date: new Date() },
     start: { date: event.startTime },
     summary: event.summary,

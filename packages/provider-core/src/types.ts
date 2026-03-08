@@ -47,6 +47,7 @@ interface SyncableEvent {
   endTime: Date;
   summary: string;
   description?: string;
+  location?: string;
   calendarId: string;
   calendarName: string | null;
   calendarUrl: string | null;

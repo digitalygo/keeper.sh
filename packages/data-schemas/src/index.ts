@@ -10,6 +10,13 @@ type Plan = typeof planSchema.infer;
 const billingPeriodSchema = type("'monthly' | 'yearly'");
 type BillingPeriod = typeof billingPeriodSchema.infer;
 
+const feedbackRequestSchema = type({
+  message: "string",
+  type: "'feedback' | 'report'",
+  "wantsFollowUp?": "boolean",
+});
+type FeedbackRequest = typeof feedbackRequestSchema.infer;
+
 const createSourceSchema = type({
   name: "string",
   url: "string",
@@ -24,6 +31,7 @@ const googleEventSchema = type({
   "end?": { "dateTime?": "string", "timeZone?": "string" },
   "iCalUID?": "string",
   "id?": "string",
+  "location?": "string",
   "start?": { "dateTime?": "string", "timeZone?": "string" },
   "summary?": "string",
 });
@@ -83,6 +91,7 @@ const outlookEventSchema = type({
   "end?": { "dateTime?": "string", "timeZone?": "string" },
   "iCalUId?": "string",
   "id?": "string",
+  "location?": { "displayName?": "string" },
   "start?": { "dateTime?": "string", "timeZone?": "string" },
   "subject?": "string",
 });
@@ -254,6 +263,7 @@ export {
   proxyableMethods,
   planSchema,
   billingPeriodSchema,
+  feedbackRequestSchema,
   createSourceSchema,
   stringSchema,
   googleEventSchema,
@@ -290,6 +300,7 @@ export type {
   ProxyableMethods,
   Plan,
   BillingPeriod,
+  FeedbackRequest,
   CreateSource,
   GoogleEvent,
   GoogleEventList,

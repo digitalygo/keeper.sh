@@ -20,6 +20,10 @@ function resolveSyncPercent(composite: CompositeSyncState): number | null {
     return clampPercent(composite.progressPercent);
   }
 
+  if (composite.connected && composite.syncEventsRemaining === 0) {
+    return 100;
+  }
+
   return null;
 }
 
@@ -92,9 +96,9 @@ function SyncTooltipContent() {
 export function SyncStatus() {
   return (
     <Tooltip content={<SyncTooltipContent />}>
-      <div className="self-end flex items-center gap-1.5 w-fit">
-        <SyncProgressIndicator />
+      <div className="self-start flex items-center gap-1.5 w-fit pb-2">
         <SyncStatusLabel />
+        <SyncProgressIndicator />
       </div>
     </Tooltip>
   );

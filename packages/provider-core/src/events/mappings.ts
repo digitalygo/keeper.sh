@@ -10,6 +10,7 @@ interface EventMapping {
   calendarId: string;
   destinationEventUid: string;
   deleteIdentifier: string;
+  syncEventHash: string | null;
   startTime: Date;
   endTime: Date;
 }
@@ -26,6 +27,7 @@ const getEventMappingsForDestination = async (
       endTime: eventMappingsTable.endTime,
       eventStateId: eventMappingsTable.eventStateId,
       id: eventMappingsTable.id,
+      syncEventHash: eventMappingsTable.syncEventHash,
       startTime: eventMappingsTable.startTime,
     })
     .from(eventMappingsTable)
@@ -44,6 +46,7 @@ const createEventMapping = async (
     calendarId: string;
     destinationEventUid: string;
     deleteIdentifier?: string;
+    syncEventHash?: string;
     startTime: Date;
     endTime: Date;
   },
@@ -56,6 +59,7 @@ const createEventMapping = async (
       destinationEventUid: params.destinationEventUid,
       endTime: params.endTime,
       eventStateId: params.eventStateId,
+      syncEventHash: params.syncEventHash,
       startTime: params.startTime,
     })
     .onConflictDoNothing();

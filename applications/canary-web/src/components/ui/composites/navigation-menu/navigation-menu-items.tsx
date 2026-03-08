@@ -2,7 +2,6 @@ import type { ComponentPropsWithoutRef, PropsWithChildren } from "react";
 import { use } from "react";
 import { Link } from "@tanstack/react-router";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
-import Check from "lucide-react/dist/esm/icons/check";
 import { cn } from "../../../../utils/cn";
 import {
   InsidePopoverContext,
@@ -13,8 +12,6 @@ import {
 import {
   DISABLED_LABEL_TONE,
   LABEL_TONE,
-  navigationMenuCheckbox,
-  navigationMenuCheckboxIcon,
   navigationMenuItemIconStyle,
   navigationMenuItemStyle,
   navigationMenuStyle,
@@ -22,6 +19,7 @@ import {
   navigationMenuToggleTrack,
   type MenuVariant,
 } from "./navigation-menu.styles";
+import { CheckboxIndicator } from "../../primitives/checkbox";
 import { Text } from "../../primitives/text";
 
 type NavigationMenuProps = PropsWithChildren<{
@@ -223,9 +221,7 @@ export function NavigationMenuCheckboxItem({
         className={navigationMenuItemStyle({ variant, className })}
       >
         {children}
-        <div className={navigationMenuCheckbox({ variant, checked, className: "ml-auto" })}>
-          {checked && <Check size={12} className={navigationMenuCheckboxIcon({ variant })} />}
-        </div>
+        <CheckboxIndicator checked={checked} variant={variant} className="ml-auto" />
       </button>
     </li>
   );

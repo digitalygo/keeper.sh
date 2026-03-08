@@ -6,6 +6,7 @@ import { database } from "../../../context";
 import { deleteSource as deleteIcsSource } from "../../../utils/sources";
 import { deleteOAuthSource } from "../../../utils/oauth-sources";
 import { deleteCalDAVSource } from "../../../utils/caldav-sources";
+import { triggerDestinationSync } from "../../../utils/sync";
 import {
   getDestinationsForSource,
   getSourcesForDestination,
@@ -119,6 +120,8 @@ export const PATCH = withWideEvent(
     if (!updated) {
       return ErrorResponse.notFound().toResponse();
     }
+
+    triggerDestinationSync(userId);
 
     return Response.json(updated);
   }),

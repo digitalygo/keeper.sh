@@ -344,6 +344,20 @@
       "when": 1772847974972,
       "tag": "0048_gigantic_kid_colt",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1772937997653,
+      "tag": "0049_handy_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1772939018483,
+      "tag": "0050_purple_patch",
+      "breakpoints": true
     }
   ]
 }

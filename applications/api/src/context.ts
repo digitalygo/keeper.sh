@@ -1,3 +1,4 @@
+import { Resend } from "resend";
 import env from "@keeper.sh/env/api";
 import { createDatabase } from "@keeper.sh/database";
 import { syncStatusTable } from "@keeper.sh/database/schema";
@@ -177,6 +178,9 @@ const syncCoordinator = createSyncCoordinator({
   redis,
 });
 
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
+const feedbackEmail = env.FEEDBACK_EMAIL ?? null;
+
 const baseUrl = env.BETTER_AUTH_URL;
 const encryptionKey = env.ENCRYPTION_KEY;
 
@@ -191,6 +195,8 @@ export {
   oauthProviders,
   destinationProviders,
   syncCoordinator,
+  resend,
+  feedbackEmail,
   baseUrl,
   encryptionKey,
   getCurrentSyncAggregate,

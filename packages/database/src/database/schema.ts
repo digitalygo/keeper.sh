@@ -203,6 +203,7 @@ const eventMappingsTable = pgTable(
       .notNull()
       .references(() => eventStatesTable.id, { onDelete: "cascade" }),
     id: uuid().notNull().primaryKey().defaultRandom(),
+    syncEventHash: text(),
     startTime: timestamp().notNull(),
   },
   (table) => [
@@ -233,6 +234,21 @@ const sourceDestinationMappingsTable = pgTable(
   ],
 );
 
+const feedbackTable = pgTable(
+  "feedback",
+  {
+    createdAt: timestamp().notNull().defaultNow(),
+    id: uuid().notNull().primaryKey().defaultRandom(),
+    message: text().notNull(),
+    type: text().notNull(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    wantsFollowUp: boolean().notNull().default(false),
+  },
+  (table) => [index("feedback_user_idx").on(table.userId)],
+);
+
 const icalFeedSettingsTable = pgTable("ical_feed_settings", {
   userId: text()
     .notNull()
@@ -256,6 +272,7 @@ export {
   calendarsTable,
   eventMappingsTable,
   eventStatesTable,
+  feedbackTable,
   icalFeedSettingsTable,
   oauthCredentialsTable,
   sourceDestinationMappingsTable,

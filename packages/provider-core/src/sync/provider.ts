@@ -16,6 +16,7 @@ import {
   getEventMappingsForDestination,
 } from "../events/mappings";
 import type { EventMapping } from "../events/mappings";
+import { createSyncEventContentHash } from "../events/content-hash";
 import type { SyncContext, SyncStage } from "./coordinator";
 import { WideEvent } from "@keeper.sh/log";
 
@@ -61,6 +62,10 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
         stage: "comparing",
       });
 
+      if (!(await context.isCurrent())) {
+        return CalendarProvider.emptySyncResult();
+      }
+
       const { operations, staleMappingIds } = CalendarProvider.computeSyncOperations(
         localEvents,
         existingMappings,
@@ -75,19 +80,17 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
       }
 
       if (operations.length === EMPTY_OPERATIONS_COUNT) {
-        const mappingCount = await countMappingsForDestination(database, calendarId);
-        await context.onDestinationSync?.({
-          calendarId,
-          localEventCount: localEvents.length,
-          remoteEventCount: mappingCount,
-          userId,
-        });
-        return {
-          addFailed: INITIAL_ADD_FAILED_COUNT,
-          added: INITIAL_ADDED_COUNT,
-          removeFailed: INITIAL_REMOVE_FAILED_COUNT,
-          removed: INITIAL_REMOVED_COUNT,
-        };
+        if (await context.isCurrent()) {
+          const mappingCount = await countMappingsForDestination(database, calendarId);
+          await context.onDestinationSync?.({
+            calendarId,
+            localEventCount: localEvents.length,
+            remoteEventCount: mappingCount,
+            userId,
+          });
+        }
+
+        return CalendarProvider.emptySyncResult();
       }
 
       const processed = await this.processOperations(operations, {
@@ -95,6 +98,10 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
         localEventCount: localEvents.length,
         remoteEventCount: remoteEvents.length,
       });
+
+      if (!(await context.isCurrent())) {
+        return processed;
+      }
 
       const finalRemoteCount = await countMappingsForDestination(database, calendarId);
       await context.onDestinationSync?.({
@@ -109,19 +116,37 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
     } catch (error) {
       WideEvent.error(error);
 
-      context.onSyncProgress?.({
-        calendarId: this.config.calendarId,
-        error: String(error),
-        inSync: false,
-        localEventCount: localEvents.length,
-        remoteEventCount: INITIAL_REMOTE_EVENT_COUNT,
-        stage: "error",
-        status: "error",
-        userId: this.config.userId,
-      });
+      let shouldEmitError = false;
+      try {
+        shouldEmitError = await context.isCurrent();
+      } catch {
+        shouldEmitError = false;
+      }
+
+      if (shouldEmitError) {
+        context.onSyncProgress?.({
+          calendarId: this.config.calendarId,
+          error: String(error),
+          inSync: false,
+          localEventCount: localEvents.length,
+          remoteEventCount: INITIAL_REMOTE_EVENT_COUNT,
+          stage: "error",
+          status: "error",
+          userId: this.config.userId,
+        });
+      }
 
       throw error;
     }
+  }
+
+  private static emptySyncResult(): SyncResult {
+    return {
+      addFailed: INITIAL_ADD_FAILED_COUNT,
+      added: INITIAL_ADDED_COUNT,
+      removeFailed: INITIAL_REMOVE_FAILED_COUNT,
+      removed: INITIAL_REMOVED_COUNT,
+    };
   }
 
   private static computeSyncOperations(
@@ -130,16 +155,21 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
     remoteEvents: RemoteEvent[],
   ): { operations: SyncOperation[]; staleMappingIds: string[] } {
     const localEventIds = new Set(localEvents.map((event) => event.id));
+    const localEventHashes = new Map(
+      localEvents.map((event) => [event.id, createSyncEventContentHash(event)]),
+    );
     const remoteEventUids = new Set(remoteEvents.map((event) => event.uid));
     const mappedDestinationUids = new Set(
       existingMappings.map(({ destinationEventUid }) => destinationEventUid),
     );
 
-    const { staleMappingIds, staleMappedEventIds } = CalendarProvider.identifyStaleMappings(
-      existingMappings,
-      localEventIds,
-      remoteEventUids,
-    );
+    const { staleMappingIds, staleMappedEventIds, staleRemoteMappings } =
+      CalendarProvider.identifyStaleMappings(
+        existingMappings,
+        localEventIds,
+        remoteEventUids,
+        localEventHashes,
+      );
 
     const addOperations = CalendarProvider.buildAddOperations(
       localEvents,
@@ -154,8 +184,15 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
       mappedDestinationUids,
     );
 
+    const staleMappingRemoveOperations =
+      CalendarProvider.buildRemoveOperationsForMappings(staleRemoteMappings);
+
     return {
-      operations: CalendarProvider.sortOperationsByTime([...addOperations, ...removeOperations]),
+      operations: CalendarProvider.sortOperationsByTime([
+        ...addOperations,
+        ...removeOperations,
+        ...staleMappingRemoveOperations,
+      ]),
       staleMappingIds,
     };
   }
@@ -164,9 +201,15 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
     mappings: EventMapping[],
     localEventIds: Set<string>,
     remoteEventUids: Set<string>,
-  ): { staleMappingIds: string[]; staleMappedEventIds: Set<string> } {
+    localEventHashes: Map<string, string>,
+  ): {
+    staleMappingIds: string[];
+    staleMappedEventIds: Set<string>;
+    staleRemoteMappings: EventMapping[];
+  } {
     const staleMappingIds: string[] = [];
     const staleMappedEventIds = new Set<string>();
+    const staleRemoteMappings: EventMapping[] = [];
 
     for (const mapping of mappings) {
       const localEventExists = localEventIds.has(mapping.eventStateId);
@@ -175,10 +218,25 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
       if (localEventExists && !remoteEventExists) {
         staleMappingIds.push(mapping.id);
         staleMappedEventIds.add(mapping.eventStateId);
+        continue;
+      }
+
+      if (!localEventExists || !remoteEventExists) {
+        continue;
+      }
+
+      const localEventHash = localEventHashes.get(mapping.eventStateId);
+      if (!localEventHash) {
+        continue;
+      }
+
+      if (mapping.syncEventHash !== localEventHash) {
+        staleMappingIds.push(mapping.id);
+        staleRemoteMappings.push(mapping);
       }
     }
 
-    return { staleMappedEventIds, staleMappingIds };
+    return { staleMappedEventIds, staleMappingIds, staleRemoteMappings };
   }
 
   private static buildAddOperations(
@@ -243,6 +301,15 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
     return operations;
   }
 
+  private static buildRemoveOperationsForMappings(mappings: EventMapping[]): SyncOperation[] {
+    return mappings.map((mapping) => ({
+      deleteId: mapping.deleteIdentifier,
+      startTime: mapping.startTime,
+      type: "remove",
+      uid: mapping.destinationEventUid,
+    }));
+  }
+
   private static sortOperationsByTime(operations: SyncOperation[]): SyncOperation[] {
     return operations.toSorted((first, second) => {
       const firstTime = CalendarProvider.getOperationEventTime(first).getTime();
@@ -287,6 +354,7 @@ abstract class CalendarProvider<TConfig extends ProviderConfig = ProviderConfig>
             destinationEventUid: result.remoteId,
             endTime: operation.event.endTime,
             eventStateId: operation.event.id,
+            syncEventHash: createSyncEventContentHash(operation.event),
             startTime: operation.event.startTime,
           });
           added++;

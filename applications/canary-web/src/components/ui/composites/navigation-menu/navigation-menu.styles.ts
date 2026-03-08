@@ -53,40 +53,6 @@ export const navigationMenuItemIconStyle = tv({
   },
 });
 
-export const navigationMenuCheckbox = tv({
-  base: "size-4 rounded shrink-0 flex items-center justify-center border",
-  variants: {
-    variant: {
-      default: "border-interactive-border",
-      highlight: "border-foreground-inverse-muted",
-    },
-    checked: {
-      true: "",
-      false: "",
-    },
-  },
-  compoundVariants: [
-    { variant: "default", checked: true, className: "bg-foreground border-foreground" },
-    { variant: "highlight", checked: true, className: "bg-foreground-inverse border-foreground-inverse" },
-  ],
-  defaultVariants: {
-    variant: "default",
-    checked: false,
-  },
-});
-
-export const navigationMenuCheckboxIcon = tv({
-  base: "shrink-0",
-  variants: {
-    variant: {
-      default: "text-foreground-inverse",
-      highlight: "text-foreground",
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-  },
-});
 
 export const navigationMenuToggleTrack = tv({
   base: "w-8 h-5 rounded-full shrink-0 flex items-center p-0.5",

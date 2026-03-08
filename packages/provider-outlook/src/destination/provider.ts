@@ -238,11 +238,23 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     };
   }
 
+  private static getLocationFromSyncableEvent(event: SyncableEvent): OutlookEvent["location"] {
+    if (!event.location) {
+      return undefined;
+    }
+
+    return {
+      displayName: event.location,
+    };
+  }
+
   private static toOutlookEvent(event: SyncableEvent): OutlookEvent {
     const body = OutlookCalendarProviderInstance.getBodyFromSyncableEvent(event);
+    const location = OutlookCalendarProviderInstance.getLocationFromSyncableEvent(event);
 
     return {
       ...(body && { body }),
+      ...(location && { location }),
       categories: [KEEPER_CATEGORY],
       end: { dateTime: event.endTime.toISOString(), timeZone: "UTC" },
       start: { dateTime: event.startTime.toISOString(), timeZone: "UTC" },
