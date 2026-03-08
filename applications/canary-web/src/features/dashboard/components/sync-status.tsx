@@ -34,7 +34,7 @@ function SyncProgressCircle({ percent }: { percent: number }) {
   const strokeDashoffset = circumference * (1 - clampedPercent / 100);
 
   return (
-    <svg aria-hidden="true" viewBox="0 0 12 12" className="-rotate-90 size-[15px] shrink-0">
+    <svg aria-hidden="true" viewBox="0 0 12 12" className="-rotate-90 size-3.5 shrink-0">
       <circle
         cx={6}
         cy={6}

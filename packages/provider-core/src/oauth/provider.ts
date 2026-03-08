@@ -83,21 +83,41 @@ abstract class OAuthCalendarProvider<
     };
   }
 
-  protected async markNeedsReauthentication(): Promise<void> {
-    const { database, calendarId, userId, broadcastSyncStatus } = this.config;
-
-    // Find the calendar account for this calendar
-    const [calendar] = await database
+  private async getCalendarAccountId(calendarId: string): Promise<string | null> {
+    const [calendar] = await this.config.database
       .select({ accountId: calendarsTable.accountId })
       .from(calendarsTable)
       .where(eq(calendarsTable.id, calendarId))
       .limit(1);
 
-    if (calendar) {
+    return calendar?.accountId ?? null;
+  }
+
+  private async getOAuthCredentialIdForCalendar(calendarId: string): Promise<string | null> {
+    const accountId = await this.getCalendarAccountId(calendarId);
+    if (!accountId) {
+      return null;
+    }
+
+    const [account] = await this.config.database
+      .select({ oauthCredentialId: calendarAccountsTable.oauthCredentialId })
+      .from(calendarAccountsTable)
+      .where(eq(calendarAccountsTable.id, accountId))
+      .limit(1);
+
+    return account?.oauthCredentialId ?? null;
+  }
+
+  protected async markNeedsReauthentication(): Promise<void> {
+    const { database, calendarId, userId, broadcastSyncStatus } = this.config;
+
+    const calendarAccountId = await this.getCalendarAccountId(calendarId);
+
+    if (calendarAccountId) {
       await database
         .update(calendarAccountsTable)
         .set({ needsReauthentication: true })
-        .where(eq(calendarAccountsTable.id, calendar.accountId));
+        .where(eq(calendarAccountsTable.id, calendarAccountId));
     }
 
     broadcastSyncStatus?.(userId, calendarId, { needsReauthentication: true });
@@ -128,30 +148,16 @@ abstract class OAuthCalendarProvider<
 
     const newExpiresAt = new Date(Date.now() + tokenData.expires_in * MS_PER_SECOND);
 
-    // Find the oauth credential through calendar -> calendar_account
-    const [calendar] = await database
-      .select({ accountId: calendarsTable.accountId })
-      .from(calendarsTable)
-      .where(eq(calendarsTable.id, calendarId))
-      .limit(1);
-
-    if (calendar) {
-      const [account] = await database
-        .select({ oauthCredentialId: calendarAccountsTable.oauthCredentialId })
-        .from(calendarAccountsTable)
-        .where(eq(calendarAccountsTable.id, calendar.accountId))
-        .limit(1);
-
-      if (account?.oauthCredentialId) {
-        await database
-          .update(oauthCredentialsTable)
-          .set({
-            accessToken: tokenData.access_token,
-            expiresAt: newExpiresAt,
-            refreshToken: tokenData.refresh_token ?? refreshToken,
-          })
-          .where(eq(oauthCredentialsTable.id, account.oauthCredentialId));
-      }
+    const oauthCredentialId = await this.getOAuthCredentialIdForCalendar(calendarId);
+    if (oauthCredentialId) {
+      await database
+        .update(oauthCredentialsTable)
+        .set({
+          accessToken: tokenData.access_token,
+          expiresAt: newExpiresAt,
+          refreshToken: tokenData.refresh_token ?? refreshToken,
+        })
+        .where(eq(oauthCredentialsTable.id, oauthCredentialId));
     }
 
     this.currentAccessToken = tokenData.access_token;
