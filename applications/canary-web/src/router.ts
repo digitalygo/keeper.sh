@@ -25,23 +25,33 @@ function resolveApiOrigin(request: Request | undefined): string {
   throw new Error("Unable to resolve API origin.");
 }
 
-function createApiFetcher(
-  request: Request | undefined,
-): AppRouterContext["fetchApi"] {
-  const requestCookie = request?.headers.get("cookie");
-  const apiOrigin = resolveApiOrigin(request);
+function resolveWebOrigin(request: Request | undefined): string {
+  if (request) {
+    return new URL(request.url).origin;
+  }
 
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  throw new Error("Unable to resolve web origin.");
+}
+
+function createJsonFetcher(
+  requestCookie: string | null,
+  origin: string,
+): AppRouterContext["fetchApi"] {
   return async <T>(path: string, init: RequestInit = {}): Promise<T> => {
-    const headers = new Headers(init.headers);
-    if (requestCookie && !headers.has("cookie")) {
-      headers.set("cookie", requestCookie);
+    const requestHeaders = new Headers(init.headers);
+    if (requestCookie && !requestHeaders.has("cookie")) {
+      requestHeaders.set("cookie", requestCookie);
     }
 
-    const absoluteUrl = new URL(path, apiOrigin).toString();
+    const absoluteUrl = new URL(path, origin).toString();
     const response = await fetch(absoluteUrl, {
       ...init,
       credentials: "include",
-      headers,
+      headers: requestHeaders,
     });
 
     if (!response.ok) {
@@ -50,6 +60,22 @@ function createApiFetcher(
 
     return response.json();
   };
+}
+
+function createApiFetcher(
+  request: Request | undefined,
+): AppRouterContext["fetchApi"] {
+  const requestCookie = request?.headers.get("cookie") ?? null;
+  const apiOrigin = resolveApiOrigin(request);
+  return createJsonFetcher(requestCookie, apiOrigin);
+}
+
+function createWebFetcher(
+  request: Request | undefined,
+): AppRouterContext["fetchWeb"] {
+  const requestCookie = request?.headers.get("cookie") ?? null;
+  const webOrigin = resolveWebOrigin(request);
+  return createJsonFetcher(requestCookie, webOrigin);
 }
 
 function buildRouterContext(request: Request | undefined): AppRouterContext {
@@ -62,6 +88,7 @@ function buildRouterContext(request: Request | undefined): AppRouterContext {
         request ? serverHasSession : hasSessionCookie(),
     },
     fetchApi: createApiFetcher(request),
+    fetchWeb: createWebFetcher(request),
   };
 }
 

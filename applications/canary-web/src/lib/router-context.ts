@@ -2,7 +2,10 @@ export interface AppAuthContext {
   hasSession: () => boolean;
 }
 
+export type AppJsonFetcher = <T>(path: string, init?: RequestInit) => Promise<T>;
+
 export interface AppRouterContext {
   auth: AppAuthContext;
-  fetchApi: <T>(path: string, init?: RequestInit) => Promise<T>;
+  fetchApi: AppJsonFetcher;
+  fetchWeb: AppJsonFetcher;
 }

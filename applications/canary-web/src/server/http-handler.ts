@@ -1,5 +1,6 @@
 import { isApiRequest, isDocumentRequest, proxyRequest } from "./proxy/http";
 import { buildHtmlResponse } from "./template";
+import { handleInternalRoute } from "./internal-routes";
 import type { Runtime, ServerConfig } from "./types";
 
 export async function handleApplicationRequest(
@@ -8,6 +9,11 @@ export async function handleApplicationRequest(
   config: ServerConfig,
 ): Promise<Response> {
   const requestUrl = new URL(request.url);
+  const internalRouteResponse = await handleInternalRoute(request);
+  if (internalRouteResponse) {
+    return internalRouteResponse;
+  }
+
   if (isApiRequest(requestUrl)) {
     return proxyRequest(request, config.apiProxyOrigin);
   }
