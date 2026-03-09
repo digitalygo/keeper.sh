@@ -40,6 +40,27 @@ interface FullSyncRequiredResult {
   fullSyncRequired: true;
 }
 
+interface FetchCalendarNameOptions {
+  accessToken: string;
+  calendarId: string;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const parseCalendarName = (value: unknown): string | null => {
+  if (!isRecord(value) || typeof value.name !== "string") {
+    return null;
+  }
+
+  const normalizedName = value.name.trim();
+  if (normalizedName.length === 0) {
+    return null;
+  }
+
+  return normalizedName;
+};
+
 const buildInitialUrl = (calendarId: string, timeMin: Date, timeMax: Date): URL => {
   const encodedCalendarId = encodeURIComponent(calendarId);
   const url = new URL(
@@ -178,6 +199,28 @@ const fetchCalendarEvents = async (options: FetchEventsOptions): Promise<FetchEv
   return result;
 };
 
+const fetchCalendarName = async (options: FetchCalendarNameOptions): Promise<string | null> => {
+  const encodedCalendarId = encodeURIComponent(options.calendarId);
+  const url = `${MICROSOFT_GRAPH_API}/me/calendars/${encodedCalendarId}?$select=name`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${options.accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const authRequired = isSimpleAuthError(response.status);
+    throw new EventsFetchError(
+      `Failed to fetch calendar metadata: ${response.status}`,
+      response.status,
+      authRequired,
+    );
+  }
+
+  const responseBody = await response.json();
+  return parseCalendarName(responseBody);
+};
+
 const parseOutlookEvents = (events: OutlookCalendarEvent[]): EventTimeSlot[] => {
   const result: EventTimeSlot[] = [];
 
@@ -219,4 +262,4 @@ const parseOutlookEvents = (events: OutlookCalendarEvent[]): EventTimeSlot[] => 
   return result;
 };
 
-export { fetchCalendarEvents, parseOutlookEvents, EventsFetchError };
+export { fetchCalendarEvents, fetchCalendarName, parseOutlookEvents, EventsFetchError };

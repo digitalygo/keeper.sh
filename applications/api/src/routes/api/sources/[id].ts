@@ -13,6 +13,7 @@ import {
   getSourcesForDestination,
 } from "../../../utils/source-destination-mappings";
 import { reportError } from "../../../utils/logging";
+import { withProviderMetadata } from "../../../utils/provider-display";
 import { handleDeleteSourceRoute, handlePatchSourceRoute } from "./[id]/source-item-routes";
 
 const GET = withWideEvent(
@@ -26,6 +27,7 @@ const GET = withWideEvent(
       .select({
         id: calendarsTable.id,
         name: calendarsTable.name,
+        originalName: calendarsTable.originalName,
         calendarType: calendarsTable.calendarType,
         capabilities: calendarsTable.capabilities,
         provider: calendarAccountsTable.provider,
@@ -61,7 +63,11 @@ const GET = withWideEvent(
       getSourcesForDestination(id),
     ]);
 
-    return Response.json({ ...source, destinationIds, sourceIds });
+    return Response.json({
+      ...withProviderMetadata(source),
+      destinationIds,
+      sourceIds,
+    });
   }),
 );
 

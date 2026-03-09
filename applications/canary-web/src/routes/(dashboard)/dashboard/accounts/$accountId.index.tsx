@@ -10,7 +10,6 @@ import { MetadataRow } from "../../../../features/dashboard/components/metadata-
 import { fetcher, apiFetch } from "../../../../lib/fetcher";
 import { formatDate } from "../../../../lib/time";
 import { invalidateAccountsAndSources } from "../../../../lib/swr";
-import { getAccountLabel } from "../../../../utils/accounts";
 import type { CalendarAccount, CalendarSource } from "../../../../types/api";
 import {
   NavigationMenu,
@@ -107,8 +106,8 @@ function AccountDetailPage() {
       <NavigationMenu>
         <MetadataRow label="Resource Type" value="Account" />
         <MetadataRow label="Calendar Count" value={String(calendars.length)} />
-        <MetadataRow label="Identifier" value={getAccountLabel(account)} truncate />
-        <MetadataRow label="Provider" value={account.provider} />
+        <MetadataRow label="Identifier" value={account.accountIdentifier ?? ""} truncate />
+        <MetadataRow label="Provider" value={account.providerName} />
         <MetadataRow label="Authenticated" value={account.authType} />
         <MetadataRow label="Connected" value={formatDate(account.createdAt)} />
       </NavigationMenu>

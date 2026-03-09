@@ -13,7 +13,6 @@ import {
   verification as verificationTable,
   passkey as passkeyTable,
 } from "@keeper.sh/database/auth-schema";
-import { signUpBodySchema } from "@keeper.sh/data-schemas";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import type { BetterAuthPlugin, User } from "better-auth";
 
@@ -48,6 +47,17 @@ interface AuthResult {
   auth: ReturnType<typeof betterAuth>;
   polarClient: Polar | null;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const extractSignUpEmail = (value: unknown): string | null => {
+  if (!isRecord(value) || typeof value.email !== "string") {
+    return null;
+  }
+
+  return value.email;
+};
 
 const createAuth = (config: AuthConfig): AuthResult => {
   const {
@@ -193,7 +203,10 @@ const createAuth = (config: AuthConfig): AuthResult => {
         if (context.path !== "/sign-up/email") {
           return;
         }
-        const { email } = signUpBodySchema.assert(context.body);
+        const email = extractSignUpEmail(context.body);
+        if (!email) {
+          return;
+        }
         const existingUser = await context.context.adapter.findOne<User>({
           model: "user",
           where: [

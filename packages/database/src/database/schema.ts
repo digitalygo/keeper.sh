@@ -102,6 +102,7 @@ const calendarsTable = pgTable(
     id: uuid().notNull().primaryKey().defaultRandom(),
     capabilities: text().array().notNull().default(["pull"]),
     name: text().notNull(),
+    originalName: text(),
     syncToken: text(),
     updatedAt: timestamp()
       .notNull()

@@ -11,7 +11,6 @@ import { ProviderIcon } from "../../../../components/ui/primitives/provider-icon
 import { DashboardHeading1, DashboardSection } from "../../../../components/ui/primitives/dashboard-heading";
 import { apiFetch, fetcher } from "../../../../lib/fetcher";
 import { formatDate } from "../../../../lib/time";
-import { getAccountLabel } from "../../../../utils/accounts";
 import { canPull, canPush } from "../../../../utils/calendars";
 import type { CalendarAccount, CalendarDetail, CalendarSource } from "../../../../types/api";
 import {
@@ -191,7 +190,7 @@ function CalendarHeader({ account }: { account: CalendarAccount }) {
       <CalendarTitle />
       <div className="flex items-center gap-1.5 pt-0.5">
         <ProviderIcon provider={provider} calendarType={calendarType} size={14} />
-        <Text className="truncate overflow-hidden" size="sm" tone="muted">{getAccountLabel(account)}</Text>
+        <Text className="truncate overflow-hidden" size="sm" tone="muted">{account.accountLabel}</Text>
       </div>
     </div>
   );
@@ -199,7 +198,7 @@ function CalendarHeader({ account }: { account: CalendarAccount }) {
 
 function CalendarTitle() {
   const name = useAtomValue(calendarNameAtom);
-  return <DashboardHeading1>{name}</DashboardHeading1>;
+  return <DashboardHeading1 className="select-none">{name}</DashboardHeading1>;
 }
 
 function RenameSection({ calendarId }: { calendarId: string }) {
@@ -597,6 +596,9 @@ function CalendarInfoSection({ account, accountId }: { account: CalendarAccount;
         <MetadataRow label="Resource Type" value="Calendar" />
         <MetadataRow label="Type" value={calendar.calendarType} />
         <MetadataRow label="Capabilities" value={calendar.capabilities.join(", ")} />
+        {calendar.originalName && (
+          <MetadataRow label="Original Source Name" value={calendar.originalName} truncate />
+        )}
         {calendar.url && (
           <MetadataRow label="URL" value={calendar.url} truncate />
         )}
@@ -605,8 +607,8 @@ function CalendarInfoSection({ account, accountId }: { account: CalendarAccount;
         )}
         <MetadataRow label="Added" value={formatDate(calendar.createdAt)} />
         <MetadataRow
-          label="Account"
-          value={getAccountLabel(account)}
+          label="Account Identifier"
+          value={account.accountIdentifier ?? ""}
           truncate
           to={`/dashboard/accounts/${accountId}`}
         />

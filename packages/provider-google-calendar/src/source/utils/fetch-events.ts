@@ -45,6 +45,31 @@ interface FullSyncRequiredResult {
   fullSyncRequired: true;
 }
 
+interface FetchCalendarNameOptions {
+  accessToken: string;
+  calendarId: string;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const parseCalendarName = (value: unknown): string | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  if (typeof value.summary !== "string") {
+    return null;
+  }
+
+  const normalizedName = value.summary.trim();
+  if (normalizedName.length === 0) {
+    return null;
+  }
+
+  return normalizedName;
+};
+
 const fetchEventsPage = async (
   options: PageFetchOptions,
 ): Promise<PageFetchResult | FullSyncRequiredResult> => {
@@ -179,6 +204,27 @@ const fetchCalendarEvents = async (options: FetchEventsOptions): Promise<FetchEv
   return fetchResult;
 };
 
+const fetchCalendarName = async (options: FetchCalendarNameOptions): Promise<string | null> => {
+  const url = `${GOOGLE_CALENDAR_EVENTS_URL}/${encodeURIComponent(options.calendarId)}`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${options.accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const authRequired = isSimpleAuthError(response.status);
+    throw new EventsFetchError(
+      `Failed to fetch calendar metadata: ${response.status}`,
+      response.status,
+      authRequired,
+    );
+  }
+
+  const responseBody = await response.json();
+  return parseCalendarName(responseBody);
+};
+
 interface EventTypeFilters {
   excludeFocusTime: boolean;
   excludeOutOfOffice: boolean;
@@ -231,5 +277,5 @@ const parseGoogleEvents = (
   return result;
 };
 
-export { fetchCalendarEvents, parseGoogleEvents, EventsFetchError };
+export { fetchCalendarEvents, fetchCalendarName, parseGoogleEvents, EventsFetchError };
 export type { EventTypeFilters };

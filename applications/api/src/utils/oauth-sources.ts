@@ -329,6 +329,7 @@ const createOAuthSource = async (
       excludeWorkingLocation,
       externalCalendarId,
       name,
+      originalName: name,
       userId,
     })
     .returning();
@@ -456,6 +457,7 @@ const insertOAuthCalendars = async (
         capabilities: ["pull", "push"],
         externalCalendarId: calendar.externalId,
         name: calendar.name,
+        originalName: calendar.name,
         userId,
       })),
     );

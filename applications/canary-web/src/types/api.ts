@@ -1,8 +1,12 @@
 export interface CalendarAccount {
   id: string;
   provider: string;
+  providerName: string;
+  providerIcon: string | null;
   displayName: string | null;
   email: string | null;
+  accountLabel: string;
+  accountIdentifier: string | null;
   authType: string;
   needsReauthentication: boolean;
   calendarCount: number;
@@ -16,8 +20,12 @@ export interface CalendarSource {
   capabilities: string[];
   accountId: string;
   provider: string;
+  providerName: string;
+  providerIcon: string | null;
   displayName: string | null;
   email: string | null;
+  accountLabel: string;
+  accountIdentifier: string | null;
   needsReauthentication: boolean;
   includeInIcalFeed: boolean;
 }
@@ -25,9 +33,12 @@ export interface CalendarSource {
 export interface CalendarDetail {
   id: string;
   name: string;
+  originalName: string | null;
   calendarType: string;
   capabilities: string[];
   provider: string;
+  providerName: string;
+  providerIcon: string | null;
   url: string | null;
   calendarUrl: string | null;
   customEventName: string;

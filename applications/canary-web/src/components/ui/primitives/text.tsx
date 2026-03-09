@@ -34,7 +34,7 @@ const text = tv({
 type TextProps = PropsWithChildren<{
   as?: "p" | "span";
   size?: "base" | "sm" | "xs";
-  tone?: "muted" | "disabled" | "inverse" | "inverseMuted" | "default" | "danger";
+  tone?: "muted" | "disabled" | "inverse" | "inverseMuted" | "default" | "danger" | "highlight";
   align?: "center" | "left" | "right";
   className?: string;
   style?: CSSProperties;

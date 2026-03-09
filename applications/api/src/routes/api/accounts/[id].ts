@@ -4,6 +4,7 @@ import { withAuth, withWideEvent } from "../../../utils/middleware";
 import { ErrorResponse } from "../../../utils/responses";
 import { idParamSchema } from "../../../utils/request-query";
 import { database } from "../../../context";
+import { withAccountDisplay } from "../../../utils/provider-display";
 
 const GET = withWideEvent(
   withAuth(async ({ params, userId }) => {
@@ -18,6 +19,7 @@ const GET = withWideEvent(
         provider: calendarAccountsTable.provider,
         displayName: calendarAccountsTable.displayName,
         email: calendarAccountsTable.email,
+        accountIdentifier: calendarAccountsTable.accountId,
         authType: calendarAccountsTable.authType,
         needsReauthentication: calendarAccountsTable.needsReauthentication,
         calendarCount: count(calendarsTable.id),
@@ -38,7 +40,7 @@ const GET = withWideEvent(
       return ErrorResponse.notFound("Account not found").toResponse();
     }
 
-    return Response.json(account);
+    return Response.json(withAccountDisplay(account));
   }),
 );
 

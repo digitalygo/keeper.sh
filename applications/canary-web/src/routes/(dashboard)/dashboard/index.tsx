@@ -30,7 +30,6 @@ import {
 import { NavigationMenuPopover } from "../../../components/ui/composites/navigation-menu/navigation-menu-popover";
 import { Text } from "../../../components/ui/primitives/text";
 import { ProviderIconStack } from "../../../components/ui/primitives/provider-icon-stack";
-import { getAccountLabel } from "../../../utils/accounts";
 import { pluralize } from "../../../lib/pluralize";
 import { useAnimatedSWR } from "../../../hooks/use-animated-swr";
 import { SyncStatus } from "../../../features/dashboard/components/sync-status";
@@ -156,7 +155,7 @@ function CalendarsMenu() {
             <NavigationMenuItemLabel className="shrink-0">{calendar.name}</NavigationMenuItemLabel>
             <NavigationMenuItemTrailing className="overflow-hidden">
               <Text size="sm" tone="muted" align="right" className="flex-1 min-w-0 truncate">
-                {getAccountLabel(calendar)}
+                {calendar.accountLabel}
               </Text>
             </NavigationMenuItemTrailing>
           </NavigationMenuLinkItem>
@@ -219,7 +218,7 @@ function AccountsPopover() {
           <NavigationMenuItemIcon>
             <ProviderIcon provider={account.provider} />
           </NavigationMenuItemIcon>
-          <NavigationMenuItemLabel>{getAccountLabel(account)}</NavigationMenuItemLabel>
+          <NavigationMenuItemLabel>{account.accountLabel}</NavigationMenuItemLabel>
           <NavigationMenuItemTrailing />
         </NavigationMenuLinkItem>
       ))}

@@ -2,6 +2,7 @@ import { calendarAccountsTable, calendarsTable } from "@keeper.sh/database/schem
 import { asc, eq, count } from "drizzle-orm";
 import { withAuth, withWideEvent } from "../../../utils/middleware";
 import { database } from "../../../context";
+import { withAccountDisplay } from "../../../utils/provider-display";
 
 const GET = withWideEvent(
   withAuth(async ({ userId }) => {
@@ -11,6 +12,7 @@ const GET = withWideEvent(
         provider: calendarAccountsTable.provider,
         displayName: calendarAccountsTable.displayName,
         email: calendarAccountsTable.email,
+        accountIdentifier: calendarAccountsTable.accountId,
         authType: calendarAccountsTable.authType,
         needsReauthentication: calendarAccountsTable.needsReauthentication,
         calendarCount: count(calendarsTable.id),
@@ -22,7 +24,7 @@ const GET = withWideEvent(
       .groupBy(calendarAccountsTable.id)
       .orderBy(asc(calendarAccountsTable.createdAt));
 
-    return Response.json(accounts);
+    return Response.json(accounts.map((account) => withAccountDisplay(account)));
   }),
 );
 

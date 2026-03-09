@@ -24,6 +24,7 @@ import {
 import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import {
+  fetchCalendarName,
   fetchCalendarEvents,
   parseGoogleEvents,
   type EventTypeFilters,
@@ -41,6 +42,7 @@ const stringifyIfPresent = (value: unknown) => {
 const YEARS_UNTIL_FUTURE = 2;
 
 interface GoogleSourceConfig extends OAuthSourceConfig {
+  originalName: string | null;
   sourceName: string;
   excludeFocusTime: boolean;
   excludeOutOfOffice: boolean;
@@ -59,6 +61,8 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
   }
 
   async fetchEvents(syncToken: string | null): Promise<BaseFetchEventsResult> {
+    await this.refreshOriginalName();
+
     const fetchOptions: Parameters<typeof fetchCalendarEvents>[0] = {
       accessToken: this.currentAccessToken,
       calendarId: this.config.externalCalendarId,
@@ -186,6 +190,24 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
     };
   }
 
+  private async refreshOriginalName(): Promise<void> {
+    const remoteCalendarName = await fetchCalendarName({
+      accessToken: this.currentAccessToken,
+      calendarId: this.config.externalCalendarId,
+    }).catch(() => null);
+
+    if (!remoteCalendarName || remoteCalendarName === this.config.originalName) {
+      return;
+    }
+
+    await this.config.database
+      .update(calendarsTable)
+      .set({ originalName: remoteCalendarName })
+      .where(eq(calendarsTable.id, this.config.calendarId));
+
+    this.config.originalName = remoteCalendarName;
+  }
+
   private static async hasOutOfRangeEvents(
     database: BunSQLDatabase,
     calendarId: string,
@@ -235,6 +257,7 @@ interface GoogleSourceAccount {
   oauthCredentialId: string;
   calendarAccountId: string;
   provider: string;
+  originalName: string | null;
   sourceName: string;
   excludeFocusTime: boolean;
   excludeOutOfOffice: boolean;
@@ -263,6 +286,7 @@ const createGoogleCalendarSourceProvider = (
       excludeWorkingLocation: account.excludeWorkingLocation,
       externalCalendarId: account.externalCalendarId,
       oauthCredentialId: account.oauthCredentialId,
+      originalName: account.originalName,
       refreshToken: account.refreshToken,
       sourceName: account.sourceName,
       syncToken: account.syncToken,
@@ -291,6 +315,7 @@ const getGoogleSourcesWithCredentials = async (
       excludeWorkingLocation: calendarsTable.excludeWorkingLocation,
       externalCalendarId: calendarsTable.externalCalendarId,
       oauthCredentialId: oauthCredentialsTable.id,
+      originalName: calendarsTable.originalName,
       provider: calendarAccountsTable.provider,
       refreshToken: oauthCredentialsTable.refreshToken,
       sourceName: calendarsTable.name,

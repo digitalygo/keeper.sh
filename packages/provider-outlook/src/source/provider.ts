@@ -23,7 +23,7 @@ import {
 } from "@keeper.sh/database/schema";
 import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
-import { fetchCalendarEvents, parseOutlookEvents } from "./utils/fetch-events";
+import { fetchCalendarEvents, fetchCalendarName, parseOutlookEvents } from "./utils/fetch-events";
 
 const OUTLOOK_PROVIDER_ID = "outlook";
 const EMPTY_COUNT = 0;
@@ -37,6 +37,7 @@ const stringifyIfPresent = (value: unknown) => {
 const YEARS_UNTIL_FUTURE = 2;
 
 interface OutlookSourceConfig extends OAuthSourceConfig {
+  originalName: string | null;
   sourceName: string;
   deltaLink: string | null;
 }
@@ -53,6 +54,8 @@ class OutlookSourceProvider extends OAuthSourceProvider<OutlookSourceConfig> {
   }
 
   async fetchEvents(syncToken: string | null): Promise<BaseFetchEventsResult> {
+    await this.refreshOriginalName();
+
     const fetchOptions: Parameters<typeof fetchCalendarEvents>[0] = {
       accessToken: this.currentAccessToken,
       calendarId: this.config.externalCalendarId,
@@ -171,6 +174,24 @@ class OutlookSourceProvider extends OAuthSourceProvider<OutlookSourceConfig> {
     };
   }
 
+  private async refreshOriginalName(): Promise<void> {
+    const remoteCalendarName = await fetchCalendarName({
+      accessToken: this.currentAccessToken,
+      calendarId: this.config.externalCalendarId,
+    }).catch(() => null);
+
+    if (!remoteCalendarName || remoteCalendarName === this.config.originalName) {
+      return;
+    }
+
+    await this.config.database
+      .update(calendarsTable)
+      .set({ originalName: remoteCalendarName })
+      .where(eq(calendarsTable.id, this.config.calendarId));
+
+    this.config.originalName = remoteCalendarName;
+  }
+
   private static async hasOutOfRangeEvents(
     database: BunSQLDatabase,
     calendarId: string,
@@ -220,6 +241,7 @@ interface OutlookSourceAccount {
   oauthCredentialId: string;
   calendarAccountId: string;
   provider: string;
+  originalName: string | null;
   sourceName: string;
 }
 
@@ -241,6 +263,7 @@ const createOutlookSourceProvider = (config: CreateOutlookSourceProviderConfig):
       deltaLink: account.syncToken,
       externalCalendarId: account.externalCalendarId,
       oauthCredentialId: account.oauthCredentialId,
+      originalName: account.originalName,
       refreshToken: account.refreshToken,
       sourceName: account.sourceName,
       syncToken: account.syncToken,
@@ -266,6 +289,7 @@ const getOutlookSourcesWithCredentials = async (
       credentialId: oauthCredentialsTable.id,
       externalCalendarId: calendarsTable.externalCalendarId,
       oauthCredentialId: oauthCredentialsTable.id,
+      originalName: calendarsTable.originalName,
       provider: calendarAccountsTable.provider,
       refreshToken: oauthCredentialsTable.refreshToken,
       sourceName: calendarsTable.name,
