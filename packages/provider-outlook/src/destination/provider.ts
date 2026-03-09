@@ -5,7 +5,6 @@ import {
   outlookEventListSchema,
   outlookEventSchema,
 } from "@keeper.sh/data-schemas";
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import type {
   BroadcastSyncStatus,
   DeleteResult,
@@ -21,6 +20,7 @@ import {
   OAuthCalendarProvider,
   createOAuthDestinationProvider,
   getErrorMessage,
+  getOAuthSyncWindowStart,
   reportError,
 } from "@keeper.sh/provider-core";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
@@ -81,11 +81,11 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     const remoteEvents: RemoteEvent[] = [];
     let nextLink: string | null = null;
 
-    const today = getStartOfToday();
+    const lookbackStart = getOAuthSyncWindowStart();
 
     do {
       const url = OutlookCalendarProviderInstance.buildListEventsUrl(
-        today,
+        lookbackStart,
         options.until,
         nextLink,
       );
@@ -122,7 +122,11 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     return remoteEvents;
   }
 
-  private static buildListEventsUrl(today: Date, until: Date, nextLink: string | null): URL {
+  private static buildListEventsUrl(
+    lookbackStart: Date,
+    until: Date,
+    nextLink: string | null,
+  ): URL {
     if (nextLink) {
       return new URL(nextLink);
     }
@@ -130,7 +134,7 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     const url = new URL(`${MICROSOFT_GRAPH_API}/me/calendar/events`);
     url.searchParams.set(
       "$filter",
-      `categories/any(c:c eq '${KEEPER_CATEGORY}') and start/dateTime ge '${today.toISOString()}' and start/dateTime le '${until.toISOString()}'`,
+      `categories/any(c:c eq '${KEEPER_CATEGORY}') and start/dateTime ge '${lookbackStart.toISOString()}' and start/dateTime le '${until.toISOString()}'`,
     );
     url.searchParams.set("$top", String(OUTLOOK_PAGE_SIZE));
     url.searchParams.set("$select", "id,iCalUId,subject,start,end,categories");

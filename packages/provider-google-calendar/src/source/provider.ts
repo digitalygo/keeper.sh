@@ -1,6 +1,12 @@
 import {
+  buildSourceEventStateIdsToRemove,
+  buildSourceEventsToAdd,
   OAuthSourceProvider,
   createOAuthSourceProvider,
+  encodeStoredSyncToken,
+  getOAuthSyncWindow,
+  OAUTH_SYNC_WINDOW_VERSION,
+  resolveSyncTokenForWindow,
   type FetchEventsResult as BaseFetchEventsResult,
   type OAuthSourceConfig,
   type OAuthTokenProvider,
@@ -15,8 +21,7 @@ import {
   eventStatesTable,
   oauthCredentialsTable,
 } from "@keeper.sh/database/schema";
-import { getStartOfToday } from "@keeper.sh/date-utils";
-import { and, eq, inArray, lt, or, gt } from "drizzle-orm";
+import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import {
   fetchCalendarEvents,
@@ -58,15 +63,21 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
       accessToken: this.currentAccessToken,
       calendarId: this.config.externalCalendarId,
     };
+    const syncTokenResolution = resolveSyncTokenForWindow(
+      syncToken,
+      OAUTH_SYNC_WINDOW_VERSION,
+    );
 
-    if (syncToken) {
-      fetchOptions.syncToken = syncToken;
+    if (syncTokenResolution.requiresBackfill && syncToken !== null) {
+      await this.clearSyncToken();
+    }
+
+    if (syncTokenResolution.syncToken === null) {
+      const syncWindow = getOAuthSyncWindow(YEARS_UNTIL_FUTURE);
+      fetchOptions.timeMin = syncWindow.timeMin;
+      fetchOptions.timeMax = syncWindow.timeMax;
     } else {
-      const today = getStartOfToday();
-      const futureDate = new Date(today);
-      futureDate.setFullYear(futureDate.getFullYear() + YEARS_UNTIL_FUTURE);
-      fetchOptions.timeMin = today;
-      fetchOptions.timeMax = futureDate;
+      fetchOptions.syncToken = syncTokenResolution.syncToken;
     }
 
     const result = await fetchCalendarEvents(fetchOptions);
@@ -120,37 +131,34 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
     const existingEvents = await database
       .select({
         id: eventStatesTable.id,
+        endTime: eventStatesTable.endTime,
         sourceEventUid: eventStatesTable.sourceEventUid,
+        startTime: eventStatesTable.startTime,
       })
       .from(eventStatesTable)
       .where(eq(eventStatesTable.calendarId, calendarId));
 
-    const existingUidSet = new Set(existingEvents.map((event) => event.sourceEventUid));
-
-    const toAdd = events.filter((event) => !existingUidSet.has(event.uid));
-
-
-    const toRemoveUids = GoogleCalendarSourceProvider.calculateEventsToRemove(
+    const eventsToAdd = buildSourceEventsToAdd(existingEvents, events);
+    const eventStateIdsToRemove = buildSourceEventStateIdsToRemove(
       existingEvents,
       events,
-      isDeltaSync,
-      cancelledEventUids,
+      { cancelledEventUids, isDeltaSync },
     );
 
-    if (toRemoveUids.length > EMPTY_COUNT) {
+    if (eventStateIdsToRemove.length > EMPTY_COUNT) {
       await database
         .delete(eventStatesTable)
         .where(
           and(
             eq(eventStatesTable.calendarId, calendarId),
-            inArray(eventStatesTable.sourceEventUid, toRemoveUids),
+            inArray(eventStatesTable.id, eventStateIdsToRemove),
           ),
         );
     }
 
-    if (toAdd.length > EMPTY_COUNT) {
+    if (eventsToAdd.length > EMPTY_COUNT) {
       await database.insert(eventStatesTable).values(
-        toAdd.map((event) => ({
+        eventsToAdd.map((event) => ({
           calendarId,
           description: event.description,
           endTime: event.endTime,
@@ -166,12 +174,14 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
     }
 
     if (nextSyncToken) {
-      await this.updateSyncToken(nextSyncToken);
+      await this.updateSyncToken(
+        encodeStoredSyncToken(nextSyncToken, OAUTH_SYNC_WINDOW_VERSION),
+      );
     }
 
     return {
-      eventsAdded: toAdd.length,
-      eventsRemoved: toRemoveUids.length,
+      eventsAdded: eventsToAdd.length,
+      eventsRemoved: eventStateIdsToRemove.length,
       syncToken: nextSyncToken,
     };
   }
@@ -180,9 +190,7 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
     database: BunSQLDatabase,
     calendarId: string,
   ): Promise<boolean> {
-    const today = getStartOfToday();
-    const futureDate = new Date(today);
-    futureDate.setFullYear(futureDate.getFullYear() + YEARS_UNTIL_FUTURE);
+    const syncWindow = getOAuthSyncWindow(YEARS_UNTIL_FUTURE);
 
     const outOfRange = await database
       .select({ id: eventStatesTable.id })
@@ -190,7 +198,10 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
       .where(
         and(
           eq(eventStatesTable.calendarId, calendarId),
-          or(lt(eventStatesTable.endTime, today), gt(eventStatesTable.startTime, futureDate)),
+          or(
+            lt(eventStatesTable.endTime, syncWindow.timeMin),
+            gt(eventStatesTable.startTime, syncWindow.timeMax),
+          ),
         ),
       )
       .limit(1);
@@ -210,30 +221,6 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
       .where(eq(calendarsTable.id, calendarId));
   }
 
-  private static calculateEventsToRemove(
-    existingEvents: { id: string; sourceEventUid: string | null }[],
-    incomingEvents: SourceEvent[],
-    isDeltaSync?: boolean,
-    cancelledEventUids?: string[],
-  ): string[] {
-    if (isDeltaSync) {
-      if (!cancelledEventUids || cancelledEventUids.length === EMPTY_COUNT) {
-        return [];
-      }
-      const existingUidSet = new Set(
-        existingEvents
-          .map((event) => event.sourceEventUid)
-          .filter((uid): uid is string => uid !== null),
-      );
-      return cancelledEventUids.filter((uid) => existingUidSet.has(uid));
-    }
-
-    const incomingUids = new Set(incomingEvents.map((event) => event.uid));
-    return existingEvents
-      .filter((event) => event.sourceEventUid && !incomingUids.has(event.sourceEventUid))
-      .map((event) => event.sourceEventUid)
-      .filter((uid): uid is string => uid !== null);
-  }
 }
 
 interface GoogleSourceAccount {

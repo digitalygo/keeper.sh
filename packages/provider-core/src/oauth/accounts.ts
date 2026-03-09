@@ -5,11 +5,11 @@ import {
   oauthCredentialsTable,
   userSubscriptionsTable,
 } from "@keeper.sh/database/schema";
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import { and, arrayContains, asc, eq, gte } from "drizzle-orm";
 import type { Plan } from "@keeper.sh/premium";
 import type { SyncableEvent } from "../types";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
+import { getOAuthSyncWindowStart } from "./sync-window";
 
 interface OAuthAccount {
   calendarId: string;
@@ -122,7 +122,7 @@ const getUserEventsForSync = async (
   database: BunSQLDatabase,
   userId: string,
 ): Promise<SyncableEvent[]> => {
-  const today = getStartOfToday();
+  const syncWindowStart = getOAuthSyncWindowStart();
 
   const results = await database
     .select({
@@ -136,7 +136,7 @@ const getUserEventsForSync = async (
     })
     .from(eventStatesTable)
     .innerJoin(calendarsTable, eq(eventStatesTable.calendarId, calendarsTable.id))
-    .where(and(eq(calendarsTable.userId, userId), gte(eventStatesTable.startTime, today)))
+    .where(and(eq(calendarsTable.userId, userId), gte(eventStatesTable.startTime, syncWindowStart)))
     .orderBy(asc(eventStatesTable.startTime));
 
   const events: SyncableEvent[] = [];

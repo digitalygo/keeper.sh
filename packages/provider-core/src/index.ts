@@ -31,6 +31,16 @@ export {
   type ProcessEventsOptions,
 } from "./oauth/source-provider";
 export {
+  OAUTH_SYNC_WINDOW_VERSION,
+  getOAuthSyncWindow,
+  getOAuthSyncWindowStart,
+} from "./oauth/sync-window";
+export {
+  decodeStoredSyncToken,
+  encodeStoredSyncToken,
+  resolveSyncTokenForWindow,
+} from "./oauth/sync-token";
+export {
   createOAuthSourceProvider,
   type CreateOAuthSourceProviderOptions,
   type OAuthSourceAccount,
@@ -52,6 +62,13 @@ export {
   startTiming,
 } from "./utils/wide-logging";
 export { getEventsForDestination } from "./events/events";
+export {
+  buildSourceEventIdentityKey,
+  buildSourceEventsToAdd,
+  buildSourceEventStateIdsToRemove,
+  type ExistingSourceEventState,
+  type SourceEventDiffOptions,
+} from "./source/event-diff";
 export { syncDestinationsForUser, type DestinationProvider } from "./sync/destinations";
 export {
   createSyncCoordinator,

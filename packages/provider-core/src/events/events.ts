@@ -3,10 +3,10 @@ import {
   eventStatesTable,
   sourceDestinationMappingsTable,
 } from "@keeper.sh/database/schema";
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import { and, asc, eq, gte, inArray, isNotNull, or } from "drizzle-orm";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import type { SyncableEvent } from "../types";
+import { getOAuthSyncWindowStart } from "../oauth/sync-window";
 import {
   hasActiveFutureOccurrence,
   parseExceptionDatesFromJson,
@@ -52,7 +52,7 @@ const fetchEventsForCalendars = async (
     return [];
   }
 
-  const startOfToday = getStartOfToday();
+  const syncWindowStart = getOAuthSyncWindowStart();
 
   const results = await database
     .select({
@@ -80,7 +80,7 @@ const fetchEventsForCalendars = async (
       and(
         inArray(eventStatesTable.calendarId, calendarIds),
         or(
-          gte(eventStatesTable.startTime, startOfToday),
+          gte(eventStatesTable.startTime, syncWindowStart),
           isNotNull(eventStatesTable.recurrenceRule),
         ),
       ),
@@ -98,12 +98,12 @@ const fetchEventsForCalendars = async (
     const parsedExceptionDates = parseExceptionDatesFromJson(result.exceptionDates);
 
     if (
-      result.startTime < startOfToday
+      result.startTime < syncWindowStart
       && !hasActiveFutureOccurrence(
         result.startTime,
         parsedRecurrenceRule,
         parsedExceptionDates,
-        startOfToday,
+        syncWindowStart,
       )
     ) {
       continue;

@@ -4,6 +4,7 @@ import {
   endTiming,
   generateEventUid,
   getErrorMessage,
+  getOAuthSyncWindowStart,
   isKeeperEvent,
   reportError,
   setLogFields,
@@ -23,7 +24,6 @@ import type {
 import { googleApiErrorSchema, googleEventListSchema } from "@keeper.sh/data-schemas";
 import type { GoogleEvent } from "@keeper.sh/data-schemas";
 import { HTTP_STATUS } from "@keeper.sh/constants";
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import { GOOGLE_CALENDAR_API, GOOGLE_CALENDAR_MAX_RESULTS } from "../shared/api";
 import { hasRateLimitMessage, isAuthError } from "../shared/errors";
@@ -90,10 +90,10 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     const remoteEvents: RemoteEvent[] = [];
 
     let pageToken: string | null = null;
-    const today = getStartOfToday();
+    const lookbackStart = getOAuthSyncWindowStart();
 
     do {
-      const url = this.buildListEventsUrl(today, options.until, pageToken);
+      const url = this.buildListEventsUrl(lookbackStart, options.until, pageToken);
 
       const response = await fetch(url, {
         headers: this.headers,
@@ -127,14 +127,14 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     return remoteEvents;
   }
 
-  private buildListEventsUrl(today: Date, until: Date, pageToken: string | null): URL {
+  private buildListEventsUrl(lookbackStart: Date, until: Date, pageToken: string | null): URL {
     const url = new URL(
       `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events`,
       GOOGLE_CALENDAR_API,
     );
 
     url.searchParams.set("maxResults", String(GOOGLE_CALENDAR_MAX_RESULTS));
-    url.searchParams.set("timeMin", today.toISOString());
+    url.searchParams.set("timeMin", lookbackStart.toISOString());
     url.searchParams.set("timeMax", until.toISOString());
     if (pageToken) {
       url.searchParams.set("pageToken", pageToken);

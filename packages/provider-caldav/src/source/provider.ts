@@ -1,11 +1,16 @@
-import { isKeeperEvent, reportError } from "@keeper.sh/provider-core";
+import {
+  buildSourceEventStateIdsToRemove,
+  buildSourceEventsToAdd,
+  isKeeperEvent,
+  reportError,
+} from "@keeper.sh/provider-core";
 import type { SourceEvent } from "@keeper.sh/provider-core";
 import { eventStatesTable } from "@keeper.sh/database/schema";
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import { and, eq, inArray } from "drizzle-orm";
 import { CalDAVClient } from "../shared/client";
 import { parseICalToRemoteEvent } from "../shared/ics";
 import { createCalDAVSourceService } from "./sync";
+import { getCalDAVSyncWindow } from "./sync-window";
 import type {
   CalDAVProviderOptions,
   CalDAVSourceAccount,
@@ -51,17 +56,15 @@ const createCalDAVSourceProvider = (
       serverUrl: account.serverUrl,
     });
 
-    const today = getStartOfToday();
-    const futureDate = new Date(today);
-    futureDate.setFullYear(futureDate.getFullYear() + YEARS_UNTIL_FUTURE);
+    const syncWindow = getCalDAVSyncWindow(YEARS_UNTIL_FUTURE);
 
     const calendarUrl = await client.resolveCalendarUrl(account.calendarUrl);
 
     const objects = await client.fetchCalendarObjects({
       calendarUrl,
       timeRange: {
-        end: futureDate.toISOString(),
-        start: today.toISOString(),
+        end: syncWindow.end.toISOString(),
+        start: syncWindow.start.toISOString(),
       },
     });
 
@@ -82,7 +85,7 @@ const createCalDAVSourceProvider = (
         continue;
       }
 
-      if (parsed.endTime < today) {
+      if (parsed.endTime < syncWindow.start) {
         continue;
       }
 
@@ -108,35 +111,31 @@ const createCalDAVSourceProvider = (
   ): Promise<CalDAVSourceSyncResult> => {
     const existingEvents = await database
       .select({
+        endTime: eventStatesTable.endTime,
         id: eventStatesTable.id,
         sourceEventUid: eventStatesTable.sourceEventUid,
+        startTime: eventStatesTable.startTime,
       })
       .from(eventStatesTable)
       .where(eq(eventStatesTable.calendarId, calendarId));
 
-    const existingUids = new Set(existingEvents.map((event) => event.sourceEventUid));
-    const incomingUids = new Set(events.map((event) => event.uid));
+    const eventsToAdd = buildSourceEventsToAdd(existingEvents, events);
+    const eventStateIdsToRemove = buildSourceEventStateIdsToRemove(existingEvents, events);
 
-    const toAdd = events.filter((event) => !existingUids.has(event.uid));
-    const toRemoveUids = existingEvents
-      .filter((event) => event.sourceEventUid && !incomingUids.has(event.sourceEventUid))
-      .map((event) => event.sourceEventUid)
-      .filter((uid): uid is string => uid !== null);
-
-    if (toRemoveUids.length > EMPTY_COUNT) {
+    if (eventStateIdsToRemove.length > EMPTY_COUNT) {
       await database
         .delete(eventStatesTable)
         .where(
           and(
             eq(eventStatesTable.calendarId, calendarId),
-            inArray(eventStatesTable.sourceEventUid, toRemoveUids),
+            inArray(eventStatesTable.id, eventStateIdsToRemove),
           ),
         );
     }
 
-    if (toAdd.length > EMPTY_COUNT) {
+    if (eventsToAdd.length > EMPTY_COUNT) {
       await database.insert(eventStatesTable).values(
-        toAdd.map((event) => ({
+        eventsToAdd.map((event) => ({
           calendarId,
           description: event.description,
           endTime: event.endTime,
@@ -152,8 +151,8 @@ const createCalDAVSourceProvider = (
     }
 
     return {
-      eventsAdded: toAdd.length,
-      eventsRemoved: toRemoveUids.length,
+      eventsAdded: eventsToAdd.length,
+      eventsRemoved: eventStateIdsToRemove.length,
       syncToken: null,
     };
   };

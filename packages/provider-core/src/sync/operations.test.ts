@@ -25,7 +25,7 @@ const createRemoteEvent = (overrides: Partial<RemoteEvent>): RemoteEvent => ({
 });
 
 describe("buildRemoveOperations", () => {
-  it("does not remove mapped events from before today", () => {
+  it("does not remove mapped events from before the sync window", () => {
     const historicalMapping = createEventMapping({
       destinationEventUid: "historical-uid",
       eventStateId: "historical-event-state-id",
@@ -40,14 +40,14 @@ describe("buildRemoveOperations", () => {
       new Set<string>(),
       {
         now: new Date("2026-03-08T12:00:00.000Z"),
-        startOfToday: new Date("2026-03-08T00:00:00.000Z"),
+        syncWindowStart: new Date("2026-03-08T00:00:00.000Z"),
       },
     );
 
     expect(operations).toHaveLength(0);
   });
 
-  it("removes missing mapped events from today or later", () => {
+  it("removes missing mapped events from inside the sync window", () => {
     const futureMapping = createEventMapping({
       deleteIdentifier: "future-delete-id",
       destinationEventUid: "future-uid",
@@ -63,7 +63,7 @@ describe("buildRemoveOperations", () => {
       new Set<string>(),
       {
         now: new Date("2026-03-08T12:00:00.000Z"),
-        startOfToday: new Date("2026-03-08T00:00:00.000Z"),
+        syncWindowStart: new Date("2026-03-08T00:00:00.000Z"),
       },
     );
 
@@ -91,7 +91,7 @@ describe("buildRemoveOperations", () => {
       new Set<string>(),
       {
         now: new Date("2026-03-08T12:00:00.000Z"),
-        startOfToday: new Date("2026-03-08T00:00:00.000Z"),
+        syncWindowStart: new Date("2026-03-08T00:00:00.000Z"),
       },
     );
 
@@ -119,7 +119,7 @@ describe("buildRemoveOperations", () => {
       new Set<string>(),
       {
         now: new Date("2026-03-08T12:00:00.000Z"),
-        startOfToday: new Date("2026-03-08T00:00:00.000Z"),
+        syncWindowStart: new Date("2026-03-08T00:00:00.000Z"),
       },
     );
 

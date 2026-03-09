@@ -1,15 +1,15 @@
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import type { EventMapping } from "../events/mappings";
 import type { RemoteEvent, SyncOperation } from "../types";
+import { getOAuthSyncWindowStart } from "../oauth/sync-window";
 
 interface RemoveOperationTimeBoundary {
   now: Date;
-  startOfToday: Date;
+  syncWindowStart: Date;
 }
 
 const getDefaultTimeBoundary = (): RemoveOperationTimeBoundary => ({
   now: new Date(),
-  startOfToday: getStartOfToday(),
+  syncWindowStart: getOAuthSyncWindowStart(),
 });
 
 const buildRemoveOperations = (
@@ -22,7 +22,7 @@ const buildRemoveOperations = (
   const operations: SyncOperation[] = [];
 
   for (const mapping of existingMappings) {
-    if (mapping.startTime < timeBoundary.startOfToday) {
+    if (mapping.startTime < timeBoundary.syncWindowStart) {
       continue;
     }
 
