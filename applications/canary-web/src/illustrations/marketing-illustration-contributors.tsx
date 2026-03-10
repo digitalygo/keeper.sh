@@ -75,7 +75,7 @@ export function MarketingIllustrationContributors() {
 
   return (
     <LazyMotion features={loadMotionFeatures}>
-      <div className="relative w-full pt-3 px-4 overflow-hidden" style={{ height: rowHeight * VISIBLE_COUNT + 12 }}>
+      <div className="relative w-full pt-3 px-4" style={{ height: rowHeight * VISIBLE_COUNT + 12 }}>
         <div ref={measureRef} className="absolute inset-x-0 invisible pointer-events-none" aria-hidden="true">
           <ContributorRow contributor={CONTRIBUTORS[0]} />
         </div>
