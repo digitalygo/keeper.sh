@@ -8,4 +8,4 @@ done
 cd /app
 export HOSTNAME=0.0.0.0
 export PORT=3000
-exec /root/.bun/bin/bun applications/web/server.js
+exec /root/.bun/bin/bun applications/canary-web/src/server/index.ts

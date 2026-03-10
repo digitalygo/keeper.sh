@@ -21,7 +21,7 @@ function PremiumFeatureGate({ locked, children, hint }: { locked: boolean; child
 
   return (
     <div
-      className="-mx-1 p-1 rounded-[1.25rem] flex flex-col gap-1 relative overflow-hidden border border-border-elevated [background-image:repeating-linear-gradient(135deg,transparent,transparent_4px,rgba(0,0,0,0.03)_4px,rgba(0,0,0,0.03)_8px)] dark:[background-image:repeating-linear-gradient(135deg,transparent,transparent_4px,rgba(255,255,255,0.03)_4px,rgba(255,255,255,0.03)_8px)]"
+      className="-mx-1 p-1 rounded-[1.25rem] flex flex-col gap-1 relative overflow-hidden border border-border-elevated bg-[repeating-linear-gradient(135deg,transparent,transparent_4px,rgba(0,0,0,0.03)_4px,rgba(0,0,0,0.03)_8px)]"
     >
       <div className="pointer-events-none" aria-disabled="true">
         {children}

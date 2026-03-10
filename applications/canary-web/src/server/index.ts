@@ -5,6 +5,9 @@ import { destroyWideLogger, emitLifecycleWideEvent, handleWithWideLogging } from
 import { websocketProxyHandlers, upgradeSocketProxy } from "./proxy/websocket";
 import { createRuntime } from "./runtime";
 import type { SocketProxyData } from "./types";
+import { checkMigrationStatus } from "./migration-check";
+
+checkMigrationStatus();
 
 await entry({
   env: envSchema,

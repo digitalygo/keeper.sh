@@ -21,7 +21,7 @@ export function MarketingHowItWorksCard({ children }: PropsWithChildren) {
 
 export function MarketingHowItWorksRow({ children, className, reverse }: PropsWithChildren<{ className?: string; reverse?: boolean }>) {
   return (
-    <li className={cn("grid grid-cols-1 sm:grid-cols-2", reverse && "[&>:first-child]:sm:order-2 [&>:last-child]:sm:order-1", className)}>
+    <li className={cn("grid grid-cols-1 sm:grid-cols-2", reverse && "*:first:sm:order-2 *:last:sm:order-1", className)}>
       {children}
     </li>
   );
@@ -58,11 +58,11 @@ export function MarketingHowItWorksStepIllustration({ children, align }: PropsWi
           <div
             className={cn(
               "absolute inset-y-0 w-16 pointer-events-none hidden sm:block",
-              align === "right" && "right-0 bg-gradient-to-r from-transparent to-background",
-              align === "left" && "left-0 bg-gradient-to-l from-transparent to-background",
+              align === "right" && "right-0 bg-linear-to-r from-transparent to-background",
+              align === "left" && "left-0 bg-linear-to-l from-transparent to-background",
             )}
           />
-          <div className="absolute inset-x-0 bottom-0 h-12 pointer-events-none bg-gradient-to-t from-background to-transparent sm:hidden" />
+          <div className="absolute inset-x-0 bottom-0 h-12 pointer-events-none bg-linear-to-t from-background to-transparent sm:hidden" />
         </>
       )}
     </div>

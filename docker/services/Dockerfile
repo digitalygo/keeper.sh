@@ -9,7 +9,7 @@ COPY . .
 FROM base AS prune
 RUN bun install --global turbo
 COPY --from=source /app .
-RUN turbo prune @keeper.sh/api @keeper.sh/cron @keeper.sh/web --docker
+RUN turbo prune @keeper.sh/api @keeper.sh/cron canary-web --docker
 
 FROM base AS build
 COPY --from=prune /app/out/json/ .
@@ -18,7 +18,7 @@ COPY --from=prune /app/out/full/ .
 ENV VITE_COMMERCIAL_MODE=false
 RUN bun run --cwd applications/api build && \
     bun run --cwd applications/cron build && \
-    bun run --cwd applications/web build
+    bun run --cwd applications/canary-web build
 
 FROM debian:bookworm-slim AS runtime
 
@@ -57,9 +57,8 @@ COPY --from=build /app/packages/database/src ./packages/database/src
 COPY --from=source /app/packages/database/scripts ./packages/database/scripts
 COPY --from=source /app/packages/database/drizzle ./packages/database/drizzle
 
-COPY --from=build /app/applications/web/.next/standalone ./
-COPY --from=build /app/applications/web/.next/static ./applications/web/.next/static
-COPY --from=build /app/applications/web/public ./applications/web/public
+COPY --from=build /app/applications/canary-web/dist ./applications/canary-web/dist
+COPY --from=source /app/applications/canary-web/src/server ./applications/canary-web/src/server
 
 COPY docker/services/rootfs /
 
@@ -71,7 +70,7 @@ ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME=60000
 
 ENV API_PORT=3001
-ENV API_URL=http://127.0.0.1:3001
+ENV VITE_API_URL=http://127.0.0.1:3001
 ENV COMMERCIAL_MODE=false
 
 EXPOSE 3000 3001

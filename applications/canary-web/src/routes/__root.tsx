@@ -8,6 +8,7 @@ import { LinkButton, ButtonText } from "../components/ui/primitives/button";
 import { fetcher, HttpError } from "../lib/fetcher";
 import { resolveErrorMessage } from "../utils/errors";
 import type { AppRouterContext, ViteScript } from "../lib/router-context";
+import { AnalyticsScripts } from "../components/analytics-scripts";
 
 const NON_RETRYABLE_STATUSES = new Set([401, 403, 404]);
 
@@ -94,6 +95,7 @@ function RootComponent() {
         {viteAssets?.bodyScripts.map((script, index) => (
           <ViteScriptTag key={script.src ?? index} script={script} />
         ))}
+        <AnalyticsScripts />
       </body>
     </html>
   );
