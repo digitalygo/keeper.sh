@@ -1,4 +1,4 @@
-import { use, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PropsWithChildren, type ReactNode } from "react";
+import { use, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import Pencil from "lucide-react/dist/esm/icons/pencil";
 import { cn } from "../../../../utils/cn";
 import { ItemDisabledContext, MenuVariantContext } from "./navigation-menu.contexts";
@@ -120,10 +120,6 @@ export function NavigationMenuEditableTemplateItem(props: NavigationMenuEditable
       {children ?? <EditableItemDefaultValue value={valueContent ?? resolveValue()} label={label} />}
     </EditableItemDisplay>
   );
-}
-
-export function NavigationMenuEditableDisabledProvider({ disabled, children }: PropsWithChildren<{ disabled: boolean }>) {
-  return <ItemDisabledContext value={disabled}>{children}</ItemDisabledContext>;
 }
 
 function useEditableCommit(

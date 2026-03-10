@@ -39,16 +39,6 @@ export function Modal({ children, open: controlledOpen, onOpenChange }: ModalPro
   );
 }
 
-export function ModalTrigger({ children, ...props }: PropsWithChildren<{ className?: string }>) {
-  const { setOpen } = useModal();
-
-  return (
-    <button type="button" onClick={() => setOpen(true)} {...props}>
-      {children}
-    </button>
-  );
-}
-
 export function ModalContent({ children }: PropsWithChildren) {
   const { open, setOpen } = useModal();
   const contentRef = useRef<HTMLDivElement>(null);

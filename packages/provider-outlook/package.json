@@ -16,7 +16,6 @@
     "@keeper.sh/constants": "workspace:*",
     "@keeper.sh/data-schemas": "workspace:*",
     "@keeper.sh/database": "workspace:*",
-    "@keeper.sh/date-utils": "workspace:*",
     "@keeper.sh/premium": "workspace:*",
     "@keeper.sh/provider-core": "workspace:*",
     "drizzle-orm": "^0.45.1"

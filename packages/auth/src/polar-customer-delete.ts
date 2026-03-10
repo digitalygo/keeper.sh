@@ -1,3 +1,5 @@
+import { writeAuthStderr } from "./runtime-environment";
+
 interface PolarCustomerDeletionClient {
   customers: {
     deleteExternal: (payload: { externalId: string }) => Promise<unknown>;
@@ -40,7 +42,7 @@ const deletePolarCustomerByExternalId = async (
       return;
     }
 
-    process.stderr.write(
+    writeAuthStderr(
       `[auth] Failed to delete Polar customer for user ${externalId}: ${toErrorMessage(error)}\n`,
     );
   }

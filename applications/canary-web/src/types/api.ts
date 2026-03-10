@@ -55,14 +55,6 @@ export interface CalendarDetail {
   updatedAt: string;
 }
 
-export interface CalendarEntry {
-  id: string;
-  name: string;
-  calendarType: string;
-  capabilities: string[];
-  provider?: string;
-}
-
 export interface ApiEvent {
   id: string;
   startTime: string;

@@ -1,23 +1,34 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": ["**/*.css", "applications/cron/src/jobs/**/*"],
+  "ignore": [
+    "**/*.css",
+    "applications/cron/src/jobs/**/*",
+    "applications/canary-web/src/generated/**/*"
+  ],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@svgr/webpack"],
+  "ignoreDependencies": [],
   "ignoreWorkspaces": ["packages/typescript-config"],
+  "ignoreExportsUsedInFile": true,
   "workspaces": {
     "packages/*": {
+      "entry": ["src/**/*.test.ts!"],
       "project": "src/**/*.{ts,tsx}"
     },
     "applications/*": {
+      "entry": ["src/**/*.test.ts!"],
       "project": "src/**/*.{ts,tsx}"
     },
     "applications/api": {
-      "entry": ["src/routes/**/*.ts"],
+      "entry": ["src/routes/**/*.ts", "src/**/*.test.ts"],
       "project": "src/**/*.{ts,tsx}"
     },
     "applications/cron": {
-      "entry": ["src/jobs/*.ts"],
+      "entry": ["src/jobs/*.ts", "src/**/*.test.ts"],
       "project": "src/**/*.{ts,tsx}"
+    },
+    "applications/canary-web": {
+      "entry": ["src/main.tsx", "src/server.tsx", "plugins/**/*.ts", "src/**/*.test.ts"],
+      "project": ["src/**/*.{ts,tsx}", "plugins/**/*.ts"]
     }
   }
 }

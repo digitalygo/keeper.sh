@@ -7,6 +7,7 @@ import { Polar } from "@polar-sh/sdk";
 import { Resend } from "resend";
 import { usernameOnly } from "@keeper.sh/auth-plugin-username-only";
 import { deletePolarCustomerByExternalId } from "./polar-customer-delete";
+import { writeAuthStderr } from "./runtime-environment";
 import { resolveAuthCapabilities } from "./capabilities";
 import {
   user as userTable,
@@ -258,7 +259,7 @@ const createAuth = (config: AuthConfig): AuthResult => {
         }
 
         if (error.body.message.toLowerCase().includes("invalid origin")) {
-          process.stderr.write(
+          writeAuthStderr(
             "A request has failed due to an origin mismatch. If this was meant to be a valid request, please set the `TRUSTED_ORIGINS` environment variable to include the origin you intend on accessing Keeper from.\n\nThis should be a comma-delimited array of values, for more information please refer to the documentation on GitHub. https://github.com/ridafkih/keeper.sh#accessing-keeper-from-non-localhost-urls",
           );
         }

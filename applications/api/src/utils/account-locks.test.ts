@@ -205,7 +205,15 @@ beforeAll(async () => {
   }));
 
   mock.module("@keeper.sh/provider-registry", () => ({
+    PROVIDER_DEFINITIONS: [],
+    getActiveProviders: () => [],
+    getCalDAVProviders: () => [],
+    getOAuthProviders: () => [],
+    getProvider: () => globalThis.undefined,
+    getProvidersByAuthType: () => [],
     isCalDAVProvider: () => true,
+    isOAuthProvider: () => false,
+    isProviderId: () => false,
   }));
 
   ({

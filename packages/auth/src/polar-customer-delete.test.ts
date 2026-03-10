@@ -30,4 +30,28 @@ describe("deletePolarCustomerByExternalId", () => {
       ),
     ).resolves.toBeUndefined();
   });
+
+  it("does not write to stderr during tests when deletion fails unexpectedly", async () => {
+    const deleteExternal = mock(() => Promise.reject(new Error("polar unavailable")));
+    const stderrWrite = mock(() => true as never);
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
+    process.env.NODE_ENV = "test";
+    process.stderr.write = stderrWrite as typeof process.stderr.write;
+
+    try {
+      await expect(
+        deletePolarCustomerByExternalId(
+          { customers: { deleteExternal } },
+          "user-1",
+        ),
+      ).resolves.toBeUndefined();
+
+      expect(stderrWrite).not.toHaveBeenCalled();
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+      process.stderr.write = originalStderrWrite;
+    }
+  });
 });

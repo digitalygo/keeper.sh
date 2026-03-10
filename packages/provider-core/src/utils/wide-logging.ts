@@ -1,9 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 import { widelogger, type WideloggerOptions } from "widelogger";
+import { DEFAULT_EVENT_NAME, getDefaultLoggerConfig, getDefaultServiceName, type LoggerConfig } from "./wide-logging-config";
 
-const DEFAULT_EVENT_NAME = "wide_event";
-const DEFAULT_SERVICE_NAME = "keeper";
 const DEFAULT_ERROR_OPERATION_NAME = "unhandled-error";
 const ERROR_STATUS_CODE = 500;
 const DEFAULT_ERROR_TYPE = "UnknownError";
@@ -24,38 +23,9 @@ interface ErrorDetails {
   errorType: string;
 }
 
-type LoggerConfig = Omit<WideloggerOptions, "service" | "defaultEventName"> & {
-  defaultEventName: string;
-  service: string;
-};
-
 const contextStore = new AsyncLocalStorage<WideLogContext>();
 
-const getDefaultServiceName = (): string =>
-  process.env.SERVICE_NAME ?? process.env.npm_package_name ?? DEFAULT_SERVICE_NAME;
-
-const getDefaultLogLevel = (): string | undefined => {
-  if (process.env.LOG_LEVEL) {
-    return process.env.LOG_LEVEL;
-  }
-
-  if (process.env.ENV === "test") {
-    return "silent";
-  }
-
-  return globalThis.undefined;
-};
-
-const getDefaultConfig = (): LoggerConfig => ({
-  commitHash: process.env.COMMIT_SHA,
-  defaultEventName: DEFAULT_EVENT_NAME,
-  environment: process.env.ENV,
-  level: getDefaultLogLevel(),
-  service: getDefaultServiceName(),
-  version: process.env.npm_package_version,
-});
-
-let activeConfig: LoggerConfig = getDefaultConfig();
+let activeConfig: LoggerConfig = getDefaultLoggerConfig();
 let activeRuntime: LoggerRuntime = widelogger(activeConfig);
 
 const isSameConfig = (left: LoggerConfig, right: LoggerConfig): boolean =>
@@ -81,7 +51,7 @@ const emitRuntimeError = (error: unknown, operationName: string): void => {
 
 const initializeWideLogger = (options: Partial<WideloggerOptions> = {}): void => {
   const nextConfig: LoggerConfig = {
-    ...getDefaultConfig(),
+    ...getDefaultLoggerConfig(),
     ...options,
     defaultEventName: options.defaultEventName ?? DEFAULT_EVENT_NAME,
     service: options.service ?? getDefaultServiceName(),

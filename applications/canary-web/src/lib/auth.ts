@@ -76,10 +76,6 @@ export const signUpWithCredential = async (
   throw new Error(error.message ?? "Sign up failed");
 };
 
-export const signInWithGoogle = async (): Promise<void> => {
-  await authClient.signIn.social({ callbackURL: "/dashboard", provider: "google" });
-};
-
 export const signOut = () => authPost("/api/auth/sign-out");
 
 export const forgotPassword = async (email: string): Promise<void> => {
