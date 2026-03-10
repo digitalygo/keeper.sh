@@ -1,3 +1,5 @@
+import type { PublicRuntimeConfig } from "./runtime-config";
+
 export interface AppAuthContext {
   hasSession: () => boolean;
 }
@@ -21,5 +23,6 @@ export interface AppRouterContext {
   auth: AppAuthContext;
   fetchApi: AppJsonFetcher;
   fetchWeb: AppJsonFetcher;
+  runtimeConfig: PublicRuntimeConfig;
   viteAssets: ViteAssets | null;
 }

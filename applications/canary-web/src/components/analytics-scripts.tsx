@@ -1,9 +1,9 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useLocation } from "@tanstack/react-router";
+import type { PublicRuntimeConfig } from "../lib/runtime-config";
 import {
-  GOOGLE_ADS_ID,
-  VISITORS_NOW_TOKEN,
   hasAnalyticsConsent,
+  resolveAnalyticsConfig,
   track,
 } from "../lib/analytics";
 
@@ -15,10 +15,11 @@ const subscribe = (callback: () => void): (() => void) => {
 const getSnapshot = (): boolean => hasAnalyticsConsent();
 const getServerSnapshot = (): boolean => false;
 
-function AnalyticsScripts() {
+function AnalyticsScripts({ runtimeConfig }: { runtimeConfig: PublicRuntimeConfig }) {
   const hasConsent = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const location = useLocation();
   const consentState = hasConsent ? "granted" : "denied";
+  const { googleAdsId, visitorsNowToken } = resolveAnalyticsConfig(runtimeConfig);
 
   useEffect(() => {
     track("page_view", { path: location.pathname });
@@ -26,14 +27,14 @@ function AnalyticsScripts() {
 
   return (
     <>
-      {VISITORS_NOW_TOKEN && (
+      {visitorsNowToken && (
         <script
           src="https://cdn.visitors.now/v.js"
-          data-token={VISITORS_NOW_TOKEN}
+          data-token={visitorsNowToken}
           {...(hasConsent && { "data-persist": true })}
         />
       )}
-      {GOOGLE_ADS_ID && (
+      {googleAdsId && (
         <>
           <script
             dangerouslySetInnerHTML={{
@@ -52,7 +53,7 @@ function AnalyticsScripts() {
           />
           <script
             async
-            src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`}
           />
           <script
             dangerouslySetInnerHTML={{
@@ -60,7 +61,7 @@ function AnalyticsScripts() {
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${GOOGLE_ADS_ID}');
+                gtag('config', '${googleAdsId}');
               `,
             }}
           />

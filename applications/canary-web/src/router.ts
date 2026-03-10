@@ -1,6 +1,7 @@
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./generated/tanstack/route-tree.generated";
 import { HttpError } from "./lib/fetcher";
+import { getPublicRuntimeConfig, getServerPublicRuntimeConfig } from "./lib/runtime-config";
 import { hasSessionCookie } from "./lib/session-cookie";
 import type { AppRouterContext } from "./lib/router-context";
 
@@ -87,6 +88,9 @@ function buildRouterContext(
 ): AppRouterContext {
   const cookieHeader = request?.headers.get("cookie") ?? undefined;
   const serverHasSession = hasSessionCookie(cookieHeader);
+  const runtimeConfig = request
+    ? getServerPublicRuntimeConfig(process.env)
+    : getPublicRuntimeConfig();
 
   return {
     auth: {
@@ -95,6 +99,7 @@ function buildRouterContext(
     },
     fetchApi: createApiFetcher(request),
     fetchWeb: createWebFetcher(request),
+    runtimeConfig,
     viteAssets: viteAssets ?? null,
   };
 }

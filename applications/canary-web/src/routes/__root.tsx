@@ -8,6 +8,7 @@ import { LinkButton, ButtonText } from "../components/ui/primitives/button";
 import { fetcher, HttpError } from "../lib/fetcher";
 import { resolveErrorMessage } from "../utils/errors";
 import type { AppRouterContext, ViteScript } from "../lib/router-context";
+import { serializePublicRuntimeConfig } from "../lib/runtime-config";
 import { AnalyticsScripts } from "../components/analytics-scripts";
 
 const NON_RETRYABLE_STATUSES = new Set([401, 403, 404]);
@@ -59,12 +60,17 @@ function ViteScriptTag({ script }: { script: ViteScript }) {
 }
 
 function RootComponent() {
-  const { viteAssets } = Route.useRouteContext();
+  const { runtimeConfig, viteAssets } = Route.useRouteContext();
 
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__KEEPER_RUNTIME_CONFIG__ = ${serializePublicRuntimeConfig(runtimeConfig)};`,
+          }}
+        />
         {viteAssets?.inlineStyles?.map((css, index) => (
           <style key={index} dangerouslySetInnerHTML={{ __html: css }} />
         ))}
@@ -95,7 +101,7 @@ function RootComponent() {
         {viteAssets?.bodyScripts.map((script, index) => (
           <ViteScriptTag key={script.src ?? index} script={script} />
         ))}
-        <AnalyticsScripts />
+        <AnalyticsScripts runtimeConfig={runtimeConfig} />
       </body>
     </html>
   );

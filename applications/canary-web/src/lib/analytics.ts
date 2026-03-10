@@ -1,9 +1,10 @@
+import { getPublicRuntimeConfig, type PublicRuntimeConfig } from "./runtime-config";
+
 const CONSENT_KEY = "analytics_consent";
 
-const GOOGLE_ADS_ID = import.meta.env.VITE_GOOGLE_ADS_ID ?? null;
-const GOOGLE_ADS_CONVERSION_LABEL =
-  import.meta.env.VITE_GOOGLE_ADS_CONVERSION_LABEL ?? null;
-const VISITORS_NOW_TOKEN = import.meta.env.VITE_VISITORS_NOW_TOKEN ?? null;
+const resolveAnalyticsConfig = (
+  runtimeConfig?: PublicRuntimeConfig,
+): PublicRuntimeConfig => runtimeConfig ?? getPublicRuntimeConfig();
 
 const getConsentState = (granted: boolean): "granted" | "denied" =>
   granted ? "granted" : "denied";
@@ -62,9 +63,10 @@ interface ConversionOptions {
 }
 
 const reportPurchaseConversion = (options?: ConversionOptions): void => {
-  if (!GOOGLE_ADS_ID || !GOOGLE_ADS_CONVERSION_LABEL) return;
+  const { googleAdsConversionLabel, googleAdsId } = resolveAnalyticsConfig();
+  if (!googleAdsId || !googleAdsConversionLabel) return;
   globalThis.gtag?.("event", "conversion", {
-    send_to: `${GOOGLE_ADS_ID}/${GOOGLE_ADS_CONVERSION_LABEL}`,
+    send_to: `${googleAdsId}/${googleAdsConversionLabel}`,
     ...options,
   });
 };
@@ -80,12 +82,11 @@ declare global {
 }
 
 export {
-  GOOGLE_ADS_ID,
-  VISITORS_NOW_TOKEN,
   hasAnalyticsConsent,
   hasConsentChoice,
   identify,
   reportPurchaseConversion,
+  resolveAnalyticsConfig,
   setAnalyticsConsent,
   track,
 };
