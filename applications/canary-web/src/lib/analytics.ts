@@ -70,14 +70,12 @@ const reportPurchaseConversion = (options?: ConversionOptions): void => {
 };
 
 declare global {
-  // eslint-disable-next-line no-var -- globalThis augmentation requires var
   var visitors:
     | {
         identify: (props: IdentifyProps) => void;
         track: (event: string, properties?: EventProperties) => void;
       }
     | undefined;
-  // eslint-disable-next-line no-var -- globalThis augmentation requires var
   var gtag: ((...args: unknown[]) => void) | undefined;
 }
 
