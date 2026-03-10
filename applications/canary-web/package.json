@@ -9,7 +9,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "types": "tsc --noEmit",
     "preview": "vite preview",
-    "start": "bun dist/server-entry/index.js"
+    "start": "bun scripts/start.ts"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.5.2",
