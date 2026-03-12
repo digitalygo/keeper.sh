@@ -3,6 +3,7 @@ import {
   createOAuthDestinationProvider,
   generateEventUid,
   getErrorMessage,
+  getOAuthSyncWindowStart,
   isKeeperEvent,
 } from "@keeper.sh/provider-core";
 import type {
@@ -13,31 +14,48 @@ import type {
   ListRemoteEventsOptions,
   OAuthTokenProvider,
   PushResult,
+  RefreshLockStore,
   RemoteEvent,
   SyncableEvent,
 } from "@keeper.sh/provider-core";
-import { WideEvent } from "@keeper.sh/log";
 import { googleApiErrorSchema, googleEventListSchema } from "@keeper.sh/data-schemas";
 import type { GoogleEvent } from "@keeper.sh/data-schemas";
 import { HTTP_STATUS } from "@keeper.sh/constants";
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
+import { widelogger } from "widelogger";
 import { GOOGLE_CALENDAR_API, GOOGLE_CALENDAR_MAX_RESULTS } from "../shared/api";
 import { hasRateLimitMessage, isAuthError } from "../shared/errors";
 import { parseEventTime } from "../shared/date-time";
+import { canSerializeGoogleEvent, serializeGoogleEvent } from "./serialize-event";
 import { getGoogleAccountsForUser } from "./sync";
 import type { GoogleAccount } from "./sync";
+
+const { widelog } = widelogger({
+  service: "keeper",
+  defaultEventName: "wide_event",
+  commitHash: process.env.COMMIT_SHA,
+  environment: process.env.ENV ?? process.env.NODE_ENV,
+  version: process.env.npm_package_version,
+});
+
+const formatByDayValue = (value: { day: string; occurrence?: number }): string => {
+  if (value.occurrence) {
+    return `${value.occurrence}${value.day}`;
+  }
+  return value.day;
+};
 
 interface GoogleCalendarProviderConfig {
   database: BunSQLDatabase;
   oauthProvider: OAuthTokenProvider;
   broadcastSyncStatus?: BroadcastSyncStatus;
+  refreshLockStore?: RefreshLockStore | null;
 }
 
 const createGoogleCalendarProvider = (
   config: GoogleCalendarProviderConfig,
 ): DestinationProvider => {
-  const { database, oauthProvider, broadcastSyncStatus } = config;
+  const { database, oauthProvider, broadcastSyncStatus, refreshLockStore } = config;
 
   return createOAuthDestinationProvider<GoogleAccount, GoogleCalendarConfig>({
     broadcastSyncStatus,
@@ -46,9 +64,9 @@ const createGoogleCalendarProvider = (
       accessTokenExpiresAt: account.accessTokenExpiresAt,
       accountId: account.accountId,
       broadcastSyncStatus: broadcast,
-      calendarId: "primary",
+      calendarId: account.calendarId,
       database: db,
-      destinationId: account.destinationId,
+      externalCalendarId: "primary",
       refreshToken: account.refreshToken,
       userId: account.userId,
     }),
@@ -57,6 +75,8 @@ const createGoogleCalendarProvider = (
     database,
     getAccountsForUser: getGoogleAccountsForUser,
     oauthProvider,
+    prepareLocalEvents: (events) => events.filter((event) => canSerializeGoogleEvent(event)),
+    refreshLockStore,
   });
 };
 
@@ -80,10 +100,10 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     const remoteEvents: RemoteEvent[] = [];
 
     let pageToken: string | null = null;
-    const today = getStartOfToday();
+    const lookbackStart = getOAuthSyncWindowStart();
 
     do {
-      const url = this.buildListEventsUrl(today, options.until, pageToken);
+      const url = this.buildListEventsUrl(lookbackStart, options.until, pageToken);
 
       const response = await fetch(url, {
         headers: this.headers,
@@ -117,14 +137,14 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     return remoteEvents;
   }
 
-  private buildListEventsUrl(today: Date, until: Date, pageToken: string | null): URL {
+  private buildListEventsUrl(lookbackStart: Date, until: Date, pageToken: string | null): URL {
     const url = new URL(
-      `calendars/${encodeURIComponent(this.config.calendarId)}/events`,
+      `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events`,
       GOOGLE_CALENDAR_API,
     );
 
     url.searchParams.set("maxResults", String(GOOGLE_CALENDAR_MAX_RESULTS));
-    url.searchParams.set("timeMin", today.toISOString());
+    url.searchParams.set("timeMin", lookbackStart.toISOString());
     url.searchParams.set("timeMax", until.toISOString());
     if (pageToken) {
       url.searchParams.set("pageToken", pageToken);
@@ -154,25 +174,42 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     };
   }
 
-  protected async pushEvent(event: SyncableEvent): Promise<PushResult> {
-    const uid = generateEventUid();
-    const resource = GoogleCalendarProviderInstance.toGoogleEvent(event, uid);
+  protected pushEvent(event: SyncableEvent): Promise<PushResult> {
+    return widelog.context(async () => {
+      widelog.set("destination.calendar_id", this.config.calendarId);
+      widelog.set("operation.name", "google-calendar:push");
+      widelog.set("source.provider", this.id);
+      widelog.set("user.id", this.config.userId);
 
-    try {
-      const result = await this.createEvent(resource);
-      if (result.success) {
-        return { remoteId: uid, success: true };
+      try {
+        const uid = generateEventUid();
+        const resource = serializeGoogleEvent(
+          event,
+          uid,
+          GoogleCalendarProviderInstance.buildRecurrenceRule(event),
+        );
+
+        if (!resource) {
+          return { success: true };
+        }
+
+        const result = await this.createEvent(resource);
+        if (result.success) {
+          return { remoteId: uid, success: true };
+        }
+        return result;
+      } catch (error) {
+        widelog.errorFields(error);
+        return { error: getErrorMessage(error), success: false };
+      } finally {
+        widelog.flush();
       }
-      return result;
-    } catch (error) {
-      WideEvent.error(error);
-      return { error: getErrorMessage(error), success: false };
-    }
+    });
   }
 
   private async createEvent(resource: GoogleEvent): Promise<PushResult> {
     const url = new URL(
-      `calendars/${encodeURIComponent(this.config.calendarId)}/events`,
+      `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events`,
       GOOGLE_CALENDAR_API,
     );
 
@@ -199,49 +236,58 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     return { success: true };
   }
 
-  protected async deleteEvent(uid: string): Promise<DeleteResult> {
-    try {
-      const existing = await this.findEventByUid(uid);
+  protected deleteEvent(uid: string): Promise<DeleteResult> {
+    return widelog.context(async () => {
+      widelog.set("destination.calendar_id", this.config.calendarId);
+      widelog.set("operation.name", "google-calendar:delete");
+      widelog.set("source.provider", this.id);
+      widelog.set("user.id", this.config.userId);
 
-      if (!existing?.id) {
-        return { success: true };
-      }
+      try {
+        const existing = await this.findEventByUid(uid);
 
-      const url = new URL(
-        `calendars/${encodeURIComponent(this.config.calendarId)}/events/${encodeURIComponent(existing.id)}`,
-        GOOGLE_CALENDAR_API,
-      );
-
-      const response = await fetch(url, {
-        headers: this.headers,
-        method: "DELETE",
-      });
-
-      if (!response.ok && response.status !== HTTP_STATUS.NOT_FOUND) {
-        const body = await response.json();
-        const { error } = googleApiErrorSchema.assert(body);
-        const errorMessage = error?.message ?? response.statusText;
-
-        if (isAuthError(response.status, error)) {
-          return this.handleAuthErrorResponse(errorMessage);
+        if (!existing?.id) {
+          return { success: true };
         }
 
-        return { error: errorMessage, success: false };
-      }
+        const url = new URL(
+          `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events/${encodeURIComponent(existing.id)}`,
+          GOOGLE_CALENDAR_API,
+        );
 
-      return { success: true };
-    } catch (error) {
-      WideEvent.error(error);
-      return { error: getErrorMessage(error), success: false };
-    }
+        const response = await fetch(url, {
+          headers: this.headers,
+          method: "DELETE",
+        });
+
+        if (!response.ok && response.status !== HTTP_STATUS.NOT_FOUND) {
+          const body = await response.json();
+          const { error } = googleApiErrorSchema.assert(body);
+          const errorMessage = error?.message ?? response.statusText;
+
+          if (isAuthError(response.status, error)) {
+            return this.handleAuthErrorResponse(errorMessage);
+          }
+
+          return { error: errorMessage, success: false };
+        }
+
+        await response.body?.cancel?.();
+        return { success: true };
+      } catch (error) {
+        widelog.errorFields(error);
+        return { error: getErrorMessage(error), success: false };
+      } finally {
+        widelog.flush();
+      }
+    });
   }
 
   private async findEventByUid(uid: string): Promise<GoogleEvent | null> {
-    const event = WideEvent.grasp();
-    event?.startTiming("findEventByUid");
+    widelog.time.start("findEventByUid");
 
     const url = new URL(
-      `calendars/${encodeURIComponent(this.config.calendarId)}/events`,
+      `calendars/${encodeURIComponent(this.config.externalCalendarId)}/events`,
       GOOGLE_CALENDAR_API,
     );
 
@@ -252,10 +298,11 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
       method: "GET",
     });
 
-    event?.endTiming("findEventByUid");
+    widelog.time.stop("findEventByUid");
 
     if (!response.ok) {
-      event?.set({ "find_event_by_uid.status": response.status });
+      await response.body?.cancel?.();
+      widelog.set("find_event_by_uid.status", response.status);
       return null;
     }
 
@@ -265,14 +312,119 @@ class GoogleCalendarProviderInstance extends OAuthCalendarProvider<GoogleCalenda
     return item ?? null;
   }
 
-  private static toGoogleEvent(event: SyncableEvent, uid: string): GoogleEvent {
-    return {
-      description: event.description,
-      end: { dateTime: event.endTime.toISOString() },
-      iCalUID: uid,
-      start: { dateTime: event.startTime.toISOString() },
-      summary: event.summary,
-    };
+  private static formatRecurrenceDate(value: Date | string): string {
+    if (value instanceof Date) {
+      return value.toISOString().replaceAll(/[-:]/g, "").replace(/\.\d{3}/, "");
+    }
+    return new Date(value).toISOString().replaceAll(/[-:]/g, "").replace(/\.\d{3}/, "");
+  }
+
+  private static isRecord(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+
+  private static parseNumberArray(value: unknown): number[] | void {
+    if (!Array.isArray(value)) {
+      return;
+    }
+
+    if (value.some((entry) => typeof entry !== "number")) {
+      return;
+    }
+
+    return value;
+  }
+
+  private static parseByDay(value: unknown): { day: string; occurrence?: number }[] | void {
+    if (!Array.isArray(value)) {
+      return;
+    }
+
+    const parsedByDay: { day: string; occurrence?: number }[] = [];
+
+    for (const entry of value) {
+      if (!GoogleCalendarProviderInstance.isRecord(entry)) {
+        continue;
+      }
+
+      if (typeof entry.day !== "string") {
+        continue;
+      }
+
+      if ("occurrence" in entry && typeof entry.occurrence !== "number") {
+        continue;
+      }
+
+      if (typeof entry.occurrence === "number") {
+        parsedByDay.push({ day: entry.day, occurrence: entry.occurrence });
+        continue;
+      }
+
+      parsedByDay.push({ day: entry.day });
+    }
+
+    if (parsedByDay.length === 0) {
+      return;
+    }
+    return parsedByDay;
+  }
+
+  private static pushNumberArrayPart(
+    parts: string[],
+    key: string,
+    value: unknown,
+  ): void {
+    const parsed = GoogleCalendarProviderInstance.parseNumberArray(value);
+    if (parsed?.length) {
+      parts.push(`${key}=${parsed.join(",")}`);
+    }
+  }
+
+  private static buildRecurrenceRule(event: SyncableEvent): string | null {
+    const { recurrenceRule } = event;
+    if (!GoogleCalendarProviderInstance.isRecord(recurrenceRule)) {
+      return null;
+    }
+
+    if (typeof recurrenceRule.frequency !== "string") {
+      return null;
+    }
+
+    const parts: string[] = [`FREQ=${recurrenceRule.frequency}`];
+
+    if (typeof recurrenceRule.interval === "number") {
+      parts.push(`INTERVAL=${recurrenceRule.interval}`);
+    }
+    if (typeof recurrenceRule.count === "number") {
+      parts.push(`COUNT=${recurrenceRule.count}`);
+    }
+
+    if (GoogleCalendarProviderInstance.isRecord(recurrenceRule.until)) {
+      const untilDate = recurrenceRule.until.date;
+      if (untilDate instanceof Date || typeof untilDate === "string") {
+        parts.push(`UNTIL=${GoogleCalendarProviderInstance.formatRecurrenceDate(untilDate)}`);
+      }
+    }
+
+    const byDay = GoogleCalendarProviderInstance.parseByDay(recurrenceRule.byDay);
+    if (byDay?.length) {
+      parts.push(`BYDAY=${byDay.map((value) => formatByDayValue(value)).join(",")}`);
+    }
+
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYMONTH", recurrenceRule.byMonth);
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYMONTHDAY", recurrenceRule.byMonthday);
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYSETPOS", recurrenceRule.bySetPos);
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYYEARDAY", recurrenceRule.byYearday);
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYWEEKNO", recurrenceRule.byWeekNo);
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYHOUR", recurrenceRule.byHour);
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYMINUTE", recurrenceRule.byMinute);
+    GoogleCalendarProviderInstance.pushNumberArrayPart(parts, "BYSECOND", recurrenceRule.bySecond);
+
+    if (typeof recurrenceRule.workweekStart === "string") {
+      parts.push(`WKST=${recurrenceRule.workweekStart}`);
+    }
+
+    return parts.join(";");
   }
 }
 

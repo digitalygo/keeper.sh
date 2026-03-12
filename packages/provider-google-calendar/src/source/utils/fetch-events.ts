@@ -5,9 +5,14 @@ import type {
   GoogleEventsListResponse,
   EventTimeSlot,
 } from "../types";
-import { GOOGLE_CALENDAR_EVENTS_URL, GOOGLE_CALENDAR_MAX_RESULTS, GONE_STATUS } from "../../shared/api";
+import {
+  GOOGLE_CALENDAR_EVENTS_URL,
+  GOOGLE_CALENDAR_MAX_RESULTS,
+  GONE_STATUS,
+} from "../../shared/api";
 import { isSimpleAuthError } from "../../shared/errors";
 import { parseEventDateTime } from "../../shared/date-time";
+import { googleEventListSchema } from "@keeper.sh/data-schemas";
 import { isKeeperEvent } from "@keeper.sh/provider-core";
 
 class EventsFetchError extends Error {
@@ -20,6 +25,12 @@ class EventsFetchError extends Error {
     this.name = "EventsFetchError";
   }
 }
+
+const REQUEST_TIMEOUT_MS = 15_000;
+
+const isRequestTimeoutError = (error: unknown): boolean =>
+  error instanceof Error
+  && (error.name === "AbortError" || error.name === "TimeoutError");
 
 interface PageFetchOptions {
   accessToken: string;
@@ -68,6 +79,17 @@ const fetchEventsPage = async (
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  }).catch((error) => {
+    if (isRequestTimeoutError(error)) {
+      throw new EventsFetchError(
+        `Failed to fetch events: timeout after ${REQUEST_TIMEOUT_MS}ms`,
+        408,
+        false,
+      );
+    }
+
+    throw error;
   });
 
   if (response.status === GONE_STATUS) {
@@ -83,12 +105,20 @@ const fetchEventsPage = async (
     );
   }
 
-  const data = (await response.json()) as GoogleEventsListResponse;
+  const responseBody = await response.json();
+  const data = googleEventListSchema.assert(responseBody);
   return { data, fullSyncRequired: false };
 };
 
 const fetchCalendarEvents = async (options: FetchEventsOptions): Promise<FetchEventsResult> => {
-  const { accessToken, calendarId, syncToken, timeMin, timeMax, maxResults = GOOGLE_CALENDAR_MAX_RESULTS } = options;
+  const {
+    accessToken,
+    calendarId,
+    syncToken,
+    timeMin,
+    timeMax,
+    maxResults = GOOGLE_CALENDAR_MAX_RESULTS,
+  } = options;
 
   const baseUrl = `${GOOGLE_CALENDAR_EVENTS_URL}/${encodeURIComponent(calendarId)}/events`;
   const events: GoogleCalendarEvent[] = [];
@@ -108,10 +138,12 @@ const fetchCalendarEvents = async (options: FetchEventsOptions): Promise<FetchEv
     return { events: [], fullSyncRequired: true };
   }
 
-  for (const event of result.data.items) {
+  for (const event of result.data.items ?? []) {
     if (event.status === "cancelled") {
       const uid = event.iCalUID ?? event.id;
-      cancelledEventUids.push(uid);
+      if (uid) {
+        cancelledEventUids.push(uid);
+      }
     } else {
       events.push(event);
     }
@@ -134,10 +166,12 @@ const fetchCalendarEvents = async (options: FetchEventsOptions): Promise<FetchEv
       return { events: [], fullSyncRequired: true };
     }
 
-    for (const event of result.data.items) {
+    for (const event of result.data.items ?? []) {
       if (event.status === "cancelled") {
         const uid = event.iCalUID ?? event.id;
-        cancelledEventUids.push(uid);
+        if (uid) {
+          cancelledEventUids.push(uid);
+        }
       } else {
         events.push(event);
       }
@@ -162,32 +196,59 @@ const fetchCalendarEvents = async (options: FetchEventsOptions): Promise<FetchEv
   return fetchResult;
 };
 
-interface EventTypeFilters {
-  excludeFocusTime: boolean;
-  excludeOutOfOffice: boolean;
-  excludeWorkingLocation: boolean;
-}
+const resolveGoogleAvailability = (
+  event: Pick<GoogleCalendarEvent, "eventType" | "transparency">,
+): EventTimeSlot["availability"] => {
+  if (event.eventType === "workingLocation") {
+    return "workingElsewhere";
+  }
 
-const shouldExcludeEvent = (
-  eventType: GoogleCalendarEvent["eventType"],
-  filters: EventTypeFilters,
-): boolean => {
-  if (filters.excludeFocusTime && eventType === "focusTime") {
-    return true;
+  if (event.transparency === "transparent") {
+    return "free";
   }
-  if (filters.excludeOutOfOffice && eventType === "outOfOffice") {
-    return true;
+
+  if (event.eventType === "outOfOffice") {
+    return "oof";
   }
-  if (filters.excludeWorkingLocation && eventType === "workingLocation") {
-    return true;
-  }
-  return false;
+
+  return "busy";
 };
 
-const parseGoogleEvents = (
-  events: GoogleCalendarEvent[],
-  filters?: EventTypeFilters,
-): EventTimeSlot[] => {
+const resolveGoogleLocation = (
+  event: Pick<GoogleCalendarEvent, "location" | "workingLocationProperties">,
+): string | undefined => {
+  if (event.location?.trim()) {
+    return event.location;
+  }
+
+  const customLocationLabel = event.workingLocationProperties?.customLocation?.label?.trim();
+  if (customLocationLabel) {
+    return customLocationLabel;
+  }
+
+  return event.workingLocationProperties?.officeLocation?.label?.trim();
+};
+
+const isAllDayGoogleEvent = (
+  event: Pick<GoogleCalendarEvent, "start" | "end">,
+): boolean => Boolean(event.start?.date || event.end?.date);
+
+const resolveSourceEventType = (
+  eventType: GoogleCalendarEvent["eventType"],
+): EventTimeSlot["sourceEventType"] => {
+  if (eventType === "focusTime") {
+    return "focusTime";
+  }
+  if (eventType === "outOfOffice") {
+    return "outOfOffice";
+  }
+  if (eventType === "workingLocation") {
+    return "workingLocation";
+  }
+  return "default";
+};
+
+const parseGoogleEvents = (events: GoogleCalendarEvent[]): EventTimeSlot[] => {
   const result: EventTimeSlot[] = [];
 
   for (const event of events) {
@@ -197,12 +258,16 @@ const parseGoogleEvents = (
     if (isKeeperEvent(event.iCalUID)) {
       continue;
     }
-    if (filters && shouldExcludeEvent(event.eventType, filters)) {
-      continue;
-    }
     result.push({
+      availability: resolveGoogleAvailability(event),
+      description: event.description,
       endTime: parseEventDateTime(event.end),
+      isAllDay: isAllDayGoogleEvent(event),
+      location: resolveGoogleLocation(event),
+      sourceEventType: resolveSourceEventType(event.eventType),
       startTime: parseEventDateTime(event.start),
+      startTimeZone: event.start.timeZone ?? event.end.timeZone,
+      title: event.summary,
       uid: event.iCalUID,
     });
   }
@@ -211,4 +276,3 @@ const parseGoogleEvents = (
 };
 
 export { fetchCalendarEvents, parseGoogleEvents, EventsFetchError };
-export type { EventTypeFilters };

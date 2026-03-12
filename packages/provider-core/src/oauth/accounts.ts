@@ -1,24 +1,27 @@
 import {
-  calendarDestinationsTable,
-  calendarSourcesTable,
+  calendarAccountsTable,
+  calendarsTable,
   eventStatesTable,
   oauthCredentialsTable,
   userSubscriptionsTable,
 } from "@keeper.sh/database/schema";
-import { getStartOfToday } from "@keeper.sh/date-utils";
-import { and, asc, eq, gte } from "drizzle-orm";
+import { and, arrayContains, asc, eq, gte } from "drizzle-orm";
 import type { Plan } from "@keeper.sh/premium";
 import type { SyncableEvent } from "../types";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
+import { getOAuthSyncWindowStart } from "./sync-window";
 
 interface OAuthAccount {
-  destinationId: string;
+  calendarId: string;
   userId: string;
   accountId: string;
   accessToken: string;
   refreshToken: string;
   accessTokenExpiresAt: Date;
 }
+
+const getDestinationScopeFilter = (_database: BunSQLDatabase) =>
+  arrayContains(calendarsTable.capabilities, ["push"]);
 
 const getOAuthAccountsByPlan = async (
   database: BunSQLDatabase,
@@ -29,25 +32,27 @@ const getOAuthAccountsByPlan = async (
     .select({
       accessToken: oauthCredentialsTable.accessToken,
       accessTokenExpiresAt: oauthCredentialsTable.expiresAt,
-      accountId: calendarDestinationsTable.accountId,
-      destinationId: calendarDestinationsTable.id,
+      accountId: calendarAccountsTable.accountId,
+      calendarId: calendarsTable.id,
       plan: userSubscriptionsTable.plan,
       refreshToken: oauthCredentialsTable.refreshToken,
-      userId: calendarDestinationsTable.userId,
+      userId: calendarsTable.userId,
     })
-    .from(calendarDestinationsTable)
+    .from(calendarsTable)
+    .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
     .innerJoin(
       oauthCredentialsTable,
-      eq(calendarDestinationsTable.oauthCredentialId, oauthCredentialsTable.id),
+      eq(calendarAccountsTable.oauthCredentialId, oauthCredentialsTable.id),
     )
     .leftJoin(
       userSubscriptionsTable,
-      eq(calendarDestinationsTable.userId, userSubscriptionsTable.userId),
+      eq(calendarsTable.userId, userSubscriptionsTable.userId),
     )
     .where(
       and(
-        eq(calendarDestinationsTable.provider, provider),
-        eq(calendarDestinationsTable.needsReauthentication, false),
+        eq(calendarAccountsTable.provider, provider),
+        eq(calendarAccountsTable.needsReauthentication, false),
+        getDestinationScopeFilter(database),
       ),
     );
 
@@ -64,8 +69,8 @@ const getOAuthAccountsByPlan = async (
     accounts.push({
       accessToken,
       accessTokenExpiresAt,
-      accountId,
-      destinationId: result.destinationId,
+      accountId: accountId ?? "",
+      calendarId: result.calendarId,
       refreshToken,
       userId: result.userId,
     });
@@ -83,29 +88,31 @@ const getOAuthAccountsForUser = async (
     .select({
       accessToken: oauthCredentialsTable.accessToken,
       accessTokenExpiresAt: oauthCredentialsTable.expiresAt,
-      accountId: calendarDestinationsTable.accountId,
-      destinationId: calendarDestinationsTable.id,
+      accountId: calendarAccountsTable.accountId,
+      calendarId: calendarsTable.id,
       refreshToken: oauthCredentialsTable.refreshToken,
-      userId: calendarDestinationsTable.userId,
+      userId: calendarsTable.userId,
     })
-    .from(calendarDestinationsTable)
+    .from(calendarsTable)
+    .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
     .innerJoin(
       oauthCredentialsTable,
-      eq(calendarDestinationsTable.oauthCredentialId, oauthCredentialsTable.id),
+      eq(calendarAccountsTable.oauthCredentialId, oauthCredentialsTable.id),
     )
     .where(
       and(
-        eq(calendarDestinationsTable.provider, provider),
-        eq(calendarDestinationsTable.userId, userId),
-        eq(calendarDestinationsTable.needsReauthentication, false),
+        eq(calendarAccountsTable.provider, provider),
+        eq(calendarsTable.userId, userId),
+        eq(calendarAccountsTable.needsReauthentication, false),
+        getDestinationScopeFilter(database),
       ),
     );
 
   return results.map((result) => ({
     accessToken: result.accessToken,
     accessTokenExpiresAt: result.accessTokenExpiresAt,
-    accountId: result.accountId,
-    destinationId: result.destinationId,
+    accountId: result.accountId ?? "",
+    calendarId: result.calendarId,
     refreshToken: result.refreshToken,
     userId: result.userId,
   }));
@@ -115,22 +122,21 @@ const getUserEventsForSync = async (
   database: BunSQLDatabase,
   userId: string,
 ): Promise<SyncableEvent[]> => {
-  const today = getStartOfToday();
+  const syncWindowStart = getOAuthSyncWindowStart();
 
   const results = await database
     .select({
+      calendarId: eventStatesTable.calendarId,
+      calendarName: calendarsTable.name,
+      calendarUrl: calendarsTable.url,
       endTime: eventStatesTable.endTime,
       id: eventStatesTable.id,
       sourceEventUid: eventStatesTable.sourceEventUid,
-      sourceId: eventStatesTable.sourceId,
-      sourceName: calendarSourcesTable.name,
-      sourceType: calendarSourcesTable.sourceType,
-      sourceUrl: calendarSourcesTable.url,
       startTime: eventStatesTable.startTime,
     })
     .from(eventStatesTable)
-    .innerJoin(calendarSourcesTable, eq(eventStatesTable.sourceId, calendarSourcesTable.id))
-    .where(and(eq(calendarSourcesTable.userId, userId), gte(eventStatesTable.startTime, today)))
+    .innerJoin(calendarsTable, eq(eventStatesTable.calendarId, calendarsTable.id))
+    .where(and(eq(calendarsTable.userId, userId), gte(eventStatesTable.startTime, syncWindowStart)))
     .orderBy(asc(eventStatesTable.startTime));
 
   const events: SyncableEvent[] = [];
@@ -141,14 +147,14 @@ const getUserEventsForSync = async (
     }
 
     events.push({
+      calendarId: result.calendarId,
+      calendarName: result.calendarName,
+      calendarUrl: result.calendarUrl,
       endTime: result.endTime,
       id: result.id,
       sourceEventUid: result.sourceEventUid,
-      sourceId: result.sourceId,
-      sourceName: result.sourceName,
-      sourceUrl: result.sourceUrl ?? result.sourceType,
       startTime: result.startTime,
-      summary: result.sourceName ?? "Busy",
+      summary: result.calendarName ?? "Busy",
     });
   }
 

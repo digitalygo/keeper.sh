@@ -16,11 +16,10 @@
     "@keeper.sh/constants": "workspace:*",
     "@keeper.sh/data-schemas": "workspace:*",
     "@keeper.sh/database": "workspace:*",
-    "@keeper.sh/date-utils": "workspace:*",
-    "@keeper.sh/provider-core": "workspace:*",
-    "@keeper.sh/log": "workspace:*",
     "@keeper.sh/premium": "workspace:*",
-    "drizzle-orm": "^0.45.1"
+    "@keeper.sh/provider-core": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "widelogger": "^0.2.1"
   },
   "devDependencies": {
     "@keeper.sh/typescript-config": "workspace:*",

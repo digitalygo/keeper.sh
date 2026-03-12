@@ -1,22 +1,22 @@
-import { calendarSnapshotsTable, calendarSourcesTable } from "@keeper.sh/database/schema";
+import { calendarSnapshotsTable, calendarsTable } from "@keeper.sh/database/schema";
 import { eq } from "drizzle-orm";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 
 const createSnapshot = async (
   database: BunSQLDatabase,
-  sourceId: string,
+  calendarId: string,
   ical: string,
 ): Promise<void> => {
-  const [source] = await database
-    .select({ id: calendarSourcesTable.id })
-    .from(calendarSourcesTable)
-    .where(eq(calendarSourcesTable.id, sourceId));
+  const [calendar] = await database
+    .select({ id: calendarsTable.id })
+    .from(calendarsTable)
+    .where(eq(calendarsTable.id, calendarId));
 
-  if (!source) {
+  if (!calendar) {
     return;
   }
 
-  await database.insert(calendarSnapshotsTable).values({ ical, sourceId });
+  await database.insert(calendarSnapshotsTable).values({ ical, calendarId });
 };
 
 export { createSnapshot };

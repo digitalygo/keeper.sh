@@ -1,29 +1,48 @@
 import {
+  buildSourceEventStateIdsToRemove,
+  buildSourceEventsToAdd,
+  filterSourceEventsToSyncWindow,
   OAuthSourceProvider,
   createOAuthSourceProvider,
+  encodeStoredSyncToken,
+  getOAuthSyncWindow,
+  insertEventStatesWithConflictResolution,
+  OAUTH_SYNC_WINDOW_VERSION,
+  resolveSourceSyncTokenAction,
+  resolveSyncTokenForWindow,
+  splitSourceEventsByStorageIdentity,
   type FetchEventsResult as BaseFetchEventsResult,
   type OAuthSourceConfig,
   type OAuthTokenProvider,
   type ProcessEventsOptions,
+  type RefreshLockStore,
   type SourceEvent,
   type SourceProvider,
   type SourceSyncResult,
 } from "@keeper.sh/provider-core";
 import {
-  calendarSourcesTable,
+  calendarAccountsTable,
+  calendarsTable,
   eventStatesTable,
-  oauthSourceCredentialsTable,
+  oauthCredentialsTable,
 } from "@keeper.sh/database/schema";
-import { getStartOfToday } from "@keeper.sh/date-utils";
-import { and, eq, inArray, lt, or, gt } from "drizzle-orm";
+import { and, arrayContains, eq, gt, inArray, lt, or } from "drizzle-orm";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
-import { fetchCalendarEvents, parseGoogleEvents, type EventTypeFilters } from "./utils/fetch-events";
+import { fetchCalendarEvents, parseGoogleEvents } from "./utils/fetch-events";
 
 const GOOGLE_PROVIDER_ID = "google";
 const EMPTY_COUNT = 0;
+
+const stringifyIfPresent = (value: unknown) => {
+  if (!value) {
+    return;
+  }
+  return JSON.stringify(value);
+};
 const YEARS_UNTIL_FUTURE = 2;
 
 interface GoogleSourceConfig extends OAuthSourceConfig {
+  originalName: string | null;
   sourceName: string;
   excludeFocusTime: boolean;
   excludeOutOfOffice: boolean;
@@ -46,15 +65,21 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
       accessToken: this.currentAccessToken,
       calendarId: this.config.externalCalendarId,
     };
+    const syncTokenResolution = resolveSyncTokenForWindow(
+      syncToken,
+      OAUTH_SYNC_WINDOW_VERSION,
+    );
 
-    if (syncToken) {
-      fetchOptions.syncToken = syncToken;
+    if (syncTokenResolution.requiresBackfill && syncToken !== null) {
+      await this.clearSyncToken();
+    }
+
+    if (syncTokenResolution.syncToken === null) {
+      const syncWindow = getOAuthSyncWindow(YEARS_UNTIL_FUTURE);
+      fetchOptions.timeMin = syncWindow.timeMin;
+      fetchOptions.timeMax = syncWindow.timeMax;
     } else {
-      const today = getStartOfToday();
-      const futureDate = new Date(today);
-      futureDate.setFullYear(futureDate.getFullYear() + YEARS_UNTIL_FUTURE);
-      fetchOptions.timeMin = today;
-      fetchOptions.timeMax = futureDate;
+      fetchOptions.syncToken = syncTokenResolution.syncToken;
     }
 
     const result = await fetchCalendarEvents(fetchOptions);
@@ -63,13 +88,7 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
       return { events: [], fullSyncRequired: true };
     }
 
-    const filters: EventTypeFilters = {
-      excludeFocusTime: this.config.excludeFocusTime,
-      excludeOutOfOffice: this.config.excludeOutOfOffice,
-      excludeWorkingLocation: this.config.excludeWorkingLocation,
-    };
-
-    const events = parseGoogleEvents(result.events, filters);
+    const events = parseGoogleEvents(result.events);
     const fetchResult: BaseFetchEventsResult = {
       events,
       fullSyncRequired: false,
@@ -88,141 +107,123 @@ class GoogleCalendarSourceProvider extends OAuthSourceProvider<GoogleSourceConfi
     events: SourceEvent[],
     options: ProcessEventsOptions,
   ): Promise<SourceSyncResult> {
-    const { database, sourceId } = this.config;
+    const { database, calendarId } = this.config;
     const { nextSyncToken, isDeltaSync, cancelledEventUids } = options;
+    const syncWindow = getOAuthSyncWindow(YEARS_UNTIL_FUTURE);
+    const {
+      events: eventsInWindow,
+      filteredCount: eventsFilteredOutOfWindow,
+    } = filterSourceEventsToSyncWindow(events, syncWindow);
 
-    const needsFullResync = await GoogleCalendarSourceProvider.hasOutOfRangeEvents(database, sourceId);
-
-    if (needsFullResync) {
-      await GoogleCalendarSourceProvider.clearSourceAndResetToken(database, sourceId);
-      return {
-        eventsAdded: EMPTY_COUNT,
-        eventsRemoved: EMPTY_COUNT,
-        fullSyncRequired: true,
-      };
-    }
+    await GoogleCalendarSourceProvider.removeOutOfRangeEvents(
+      database,
+      calendarId,
+      syncWindow,
+    );
 
     const existingEvents = await database
       .select({
+        availability: eventStatesTable.availability,
         id: eventStatesTable.id,
+        endTime: eventStatesTable.endTime,
+        isAllDay: eventStatesTable.isAllDay,
+        sourceEventType: eventStatesTable.sourceEventType,
         sourceEventUid: eventStatesTable.sourceEventUid,
+        startTime: eventStatesTable.startTime,
       })
       .from(eventStatesTable)
-      .where(eq(eventStatesTable.sourceId, sourceId));
+      .where(eq(eventStatesTable.calendarId, calendarId));
 
-    const existingUids = new Set(existingEvents.map((event) => event.sourceEventUid));
-
-    const toAdd = events.filter((event) => !existingUids.has(event.uid));
-
-    const toRemoveUids = GoogleCalendarSourceProvider.calculateEventsToRemove(
+    const eventsToAdd = buildSourceEventsToAdd(existingEvents, eventsInWindow, { isDeltaSync });
+    const eventStateIdsToRemove = buildSourceEventStateIdsToRemove(
       existingEvents,
-      events,
-      isDeltaSync,
-      cancelledEventUids,
+      eventsInWindow,
+      { cancelledEventUids, isDeltaSync },
+    );
+    const { eventsToInsert, eventsToUpdate } = splitSourceEventsByStorageIdentity(
+      existingEvents,
+      eventsToAdd,
     );
 
-    if (toRemoveUids.length > EMPTY_COUNT) {
-      await database
-        .delete(eventStatesTable)
-        .where(
-          and(
-            eq(eventStatesTable.sourceId, sourceId),
-            inArray(eventStatesTable.sourceEventUid, toRemoveUids),
-          ),
-        );
+    if (eventStateIdsToRemove.length > EMPTY_COUNT || eventsToAdd.length > EMPTY_COUNT) {
+      await database.transaction(async (transactionDatabase) => {
+        if (eventStateIdsToRemove.length > EMPTY_COUNT) {
+          await transactionDatabase
+            .delete(eventStatesTable)
+            .where(
+              and(
+                eq(eventStatesTable.calendarId, calendarId),
+                inArray(eventStatesTable.id, eventStateIdsToRemove),
+              ),
+            );
+        }
+
+        if (eventsToAdd.length > EMPTY_COUNT) {
+          await insertEventStatesWithConflictResolution(
+            transactionDatabase,
+            eventsToAdd.map((event) => ({
+              availability: event.availability,
+              calendarId,
+              description: event.description,
+              endTime: event.endTime,
+              exceptionDates: stringifyIfPresent(event.exceptionDates),
+              isAllDay: event.isAllDay,
+              location: event.location,
+              recurrenceRule: stringifyIfPresent(event.recurrenceRule),
+              sourceEventType: event.sourceEventType,
+              sourceEventUid: event.uid,
+              startTime: event.startTime,
+              startTimeZone: event.startTimeZone,
+              title: event.title,
+            })),
+          );
+        }
+      });
     }
 
-    if (toAdd.length > EMPTY_COUNT) {
-      await database
-        .insert(eventStatesTable)
-        .values(
-          toAdd.map((event) => ({
-            endTime: event.endTime,
-            sourceEventUid: event.uid,
-            sourceId,
-            startTime: event.startTime,
-          })),
-        );
+    const syncTokenAction = resolveSourceSyncTokenAction(nextSyncToken, isDeltaSync);
+    if (syncTokenAction.shouldResetSyncToken) {
+      await this.clearSyncToken();
     }
 
-    if (nextSyncToken) {
-      await this.updateSyncToken(nextSyncToken);
+    if (syncTokenAction.nextSyncTokenToPersist) {
+      await this.updateSyncToken(
+        encodeStoredSyncToken(syncTokenAction.nextSyncTokenToPersist, OAUTH_SYNC_WINDOW_VERSION),
+      );
     }
 
     return {
-      eventsAdded: toAdd.length,
-      eventsRemoved: toRemoveUids.length,
+      eventsAdded: eventsToInsert.length,
+      eventsFilteredOutOfWindow,
+      eventsInserted: eventsToInsert.length,
+      eventsRemoved: eventStateIdsToRemove.length,
+      eventsUpdated: eventsToUpdate.length,
+      syncTokenResetCount: Number(syncTokenAction.shouldResetSyncToken),
       syncToken: nextSyncToken,
     };
   }
-
-  private static async hasOutOfRangeEvents(
+  private static async removeOutOfRangeEvents(
     database: BunSQLDatabase,
-    sourceId: string,
-  ): Promise<boolean> {
-    const today = getStartOfToday();
-    const futureDate = new Date(today);
-    futureDate.setFullYear(futureDate.getFullYear() + YEARS_UNTIL_FUTURE);
-
-    const outOfRange = await database
-      .select({ id: eventStatesTable.id })
-      .from(eventStatesTable)
-      .where(
-        and(
-          eq(eventStatesTable.sourceId, sourceId),
-          or(
-            lt(eventStatesTable.endTime, today),
-            gt(eventStatesTable.startTime, futureDate),
-          ),
-        ),
-      )
-      .limit(1);
-
-    return outOfRange.length > EMPTY_COUNT;
-  }
-
-  private static async clearSourceAndResetToken(
-    database: BunSQLDatabase,
-    sourceId: string,
+    calendarId: string,
+    syncWindow: { timeMin: Date; timeMax: Date },
   ): Promise<void> {
     await database
       .delete(eventStatesTable)
-      .where(eq(eventStatesTable.sourceId, sourceId));
-
-    await database
-      .update(calendarSourcesTable)
-      .set({ syncToken: null })
-      .where(eq(calendarSourcesTable.id, sourceId));
-  }
-
-  private static calculateEventsToRemove(
-    existingEvents: { id: string; sourceEventUid: string | null }[],
-    incomingEvents: SourceEvent[],
-    isDeltaSync?: boolean,
-    cancelledEventUids?: string[],
-  ): string[] {
-    if (isDeltaSync) {
-      if (!cancelledEventUids || cancelledEventUids.length === EMPTY_COUNT) {
-        return [];
-      }
-      const existingUidSet = new Set(
-        existingEvents
-          .map((event) => event.sourceEventUid)
-          .filter((uid): uid is string => uid !== null),
+      .where(
+        and(
+          eq(eventStatesTable.calendarId, calendarId),
+          or(
+            lt(eventStatesTable.endTime, syncWindow.timeMin),
+            gt(eventStatesTable.startTime, syncWindow.timeMax),
+          ),
+        ),
       );
-      return cancelledEventUids.filter((uid) => existingUidSet.has(uid));
-    }
-
-    const incomingUids = new Set(incomingEvents.map((event) => event.uid));
-    return existingEvents
-      .filter((event) => event.sourceEventUid && !incomingUids.has(event.sourceEventUid))
-      .map((event) => event.sourceEventUid)
-      .filter((uid): uid is string => uid !== null);
   }
+
 }
 
 interface GoogleSourceAccount {
-  sourceId: string;
+  calendarId: string;
   userId: string;
   externalCalendarId: string;
   syncToken: string | null;
@@ -230,9 +231,10 @@ interface GoogleSourceAccount {
   refreshToken: string;
   accessTokenExpiresAt: Date;
   credentialId: string;
-  oauthCredentialId?: string;
-  oauthSourceCredentialId?: string;
+  oauthCredentialId: string;
+  calendarAccountId: string;
   provider: string;
+  originalName: string | null;
   sourceName: string;
   excludeFocusTime: boolean;
   excludeOutOfOffice: boolean;
@@ -242,26 +244,28 @@ interface GoogleSourceAccount {
 interface CreateGoogleSourceProviderConfig {
   database: BunSQLDatabase;
   oauthProvider: OAuthTokenProvider;
+  refreshLockStore?: RefreshLockStore | null;
 }
 
 const createGoogleCalendarSourceProvider = (
   config: CreateGoogleSourceProviderConfig,
 ): SourceProvider => {
-  const { database, oauthProvider } = config;
+  const { database, oauthProvider, refreshLockStore } = config;
 
   return createOAuthSourceProvider<GoogleSourceAccount, GoogleSourceConfig>({
     buildConfig: (db, account) => ({
       accessToken: account.accessToken,
       accessTokenExpiresAt: account.accessTokenExpiresAt,
+      calendarAccountId: account.calendarAccountId,
+      calendarId: account.calendarId,
       database: db,
       excludeFocusTime: account.excludeFocusTime,
       excludeOutOfOffice: account.excludeOutOfOffice,
       excludeWorkingLocation: account.excludeWorkingLocation,
       externalCalendarId: account.externalCalendarId,
       oauthCredentialId: account.oauthCredentialId,
-      oauthSourceCredentialId: account.oauthSourceCredentialId,
+      originalName: account.originalName,
       refreshToken: account.refreshToken,
-      sourceId: account.sourceId,
       sourceName: account.sourceName,
       syncToken: account.syncToken,
       userId: account.userId,
@@ -271,6 +275,7 @@ const createGoogleCalendarSourceProvider = (
     database,
     getAllSources: getGoogleSourcesWithCredentials,
     oauthProvider,
+    refreshLockStore,
   });
 };
 
@@ -279,45 +284,45 @@ const getGoogleSourcesWithCredentials = async (
 ): Promise<GoogleSourceAccount[]> => {
   const sources = await database
     .select({
-      accessToken: oauthSourceCredentialsTable.accessToken,
-      accessTokenExpiresAt: oauthSourceCredentialsTable.expiresAt,
-      credentialId: oauthSourceCredentialsTable.id,
-      excludeFocusTime: calendarSourcesTable.excludeFocusTime,
-      excludeOutOfOffice: calendarSourcesTable.excludeOutOfOffice,
-      excludeWorkingLocation: calendarSourcesTable.excludeWorkingLocation,
-      externalCalendarId: calendarSourcesTable.externalCalendarId,
-      oauthSourceCredentialId: oauthSourceCredentialsTable.id,
-      provider: calendarSourcesTable.provider,
-      refreshToken: oauthSourceCredentialsTable.refreshToken,
-      sourceId: calendarSourcesTable.id,
-      sourceName: calendarSourcesTable.name,
-      syncToken: calendarSourcesTable.syncToken,
-      userId: calendarSourcesTable.userId,
+      accessToken: oauthCredentialsTable.accessToken,
+      accessTokenExpiresAt: oauthCredentialsTable.expiresAt,
+      calendarAccountId: calendarAccountsTable.id,
+      calendarId: calendarsTable.id,
+      credentialId: oauthCredentialsTable.id,
+      excludeFocusTime: calendarsTable.excludeFocusTime,
+      excludeOutOfOffice: calendarsTable.excludeOutOfOffice,
+      excludeWorkingLocation: calendarsTable.excludeWorkingLocation,
+      externalCalendarId: calendarsTable.externalCalendarId,
+      oauthCredentialId: oauthCredentialsTable.id,
+      originalName: calendarsTable.originalName,
+      provider: calendarAccountsTable.provider,
+      refreshToken: oauthCredentialsTable.refreshToken,
+      sourceName: calendarsTable.name,
+      syncToken: calendarsTable.syncToken,
+      userId: calendarsTable.userId,
     })
-    .from(calendarSourcesTable)
+    .from(calendarsTable)
+    .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
     .innerJoin(
-      oauthSourceCredentialsTable,
-      eq(calendarSourcesTable.oauthCredentialId, oauthSourceCredentialsTable.id),
+      oauthCredentialsTable,
+      eq(calendarAccountsTable.oauthCredentialId, oauthCredentialsTable.id),
     )
     .where(
       and(
-        eq(calendarSourcesTable.sourceType, "oauth"),
-        eq(calendarSourcesTable.provider, GOOGLE_PROVIDER_ID),
+        eq(calendarsTable.calendarType, "oauth"),
+        arrayContains(calendarsTable.capabilities, ["pull"]),
+        eq(calendarAccountsTable.provider, GOOGLE_PROVIDER_ID),
+        eq(calendarAccountsTable.needsReauthentication, false),
       ),
     );
 
-  return sources.map((source) => {
-    if (!source.externalCalendarId) {
-      throw new Error(`Google source ${source.sourceId} is missing externalCalendarId`);
-    }
-    if (!source.provider) {
-      throw new Error(`Google source ${source.sourceId} is missing provider`);
-    }
-    return {
+  return sources.flatMap((source) => {
+    if (!source.externalCalendarId) {return [];}
+    return [{
       ...source,
       externalCalendarId: source.externalCalendarId,
       provider: source.provider,
-    };
+    }];
   });
 };
 

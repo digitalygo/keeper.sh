@@ -1,13 +1,14 @@
 import {
-  calendarDestinationsTable,
-  calendarSourcesTable,
+  calendarAccountsTable,
+  calendarsTable,
   oauthCredentialsTable,
-  oauthSourceCredentialsTable,
 } from "@keeper.sh/database/schema";
 import { TOKEN_REFRESH_BUFFER_MS } from "@keeper.sh/constants";
 import { eq } from "drizzle-orm";
 import type { OAuthSourceConfig, SourceEvent, SourceSyncResult } from "../types";
 import type { OAuthTokenProvider } from "./provider";
+import { isOAuthReauthRequiredError } from "./error-classification";
+import { runWithCredentialRefreshLock } from "./refresh-coordinator";
 
 const MS_PER_SECOND = 1000;
 
@@ -79,38 +80,28 @@ abstract class OAuthSourceProvider<TConfig extends OAuthSourceConfig = OAuthSour
   ): Promise<SourceSyncResult>;
 
   protected async clearSyncToken(): Promise<void> {
-    const { database, sourceId } = this.config;
+    const { database, calendarId } = this.config;
     await database
-      .update(calendarSourcesTable)
+      .update(calendarsTable)
       .set({ syncToken: null })
-      .where(eq(calendarSourcesTable.id, sourceId));
+      .where(eq(calendarsTable.id, calendarId));
   }
 
   protected async updateSyncToken(syncToken: string): Promise<void> {
-    const { database, sourceId } = this.config;
+    const { database, calendarId } = this.config;
     await database
-      .update(calendarSourcesTable)
+      .update(calendarsTable)
       .set({ syncToken })
-      .where(eq(calendarSourcesTable.id, sourceId));
+      .where(eq(calendarsTable.id, calendarId));
   }
 
   protected async markNeedsReauthentication(): Promise<void> {
-    const { database, destinationId, oauthSourceCredentialId } = this.config;
+    const { database, calendarAccountId } = this.config;
 
-    if (oauthSourceCredentialId) {
-      await database
-        .update(oauthSourceCredentialsTable)
-        .set({ needsReauthentication: true })
-        .where(eq(oauthSourceCredentialsTable.id, oauthSourceCredentialId));
-      return;
-    }
-
-    if (destinationId) {
-      await database
-        .update(calendarDestinationsTable)
-        .set({ needsReauthentication: true })
-        .where(eq(calendarDestinationsTable.id, destinationId));
-    }
+    await database
+      .update(calendarAccountsTable)
+      .set({ needsReauthentication: true })
+      .where(eq(calendarAccountsTable.id, calendarAccountId));
   }
 
   protected async ensureValidToken(): Promise<void> {
@@ -119,41 +110,33 @@ abstract class OAuthSourceProvider<TConfig extends OAuthSourceConfig = OAuthSour
       accessTokenExpiresAt,
       refreshToken,
       oauthCredentialId,
-      oauthSourceCredentialId,
     } = this.config;
 
     if (accessTokenExpiresAt.getTime() > Date.now() + TOKEN_REFRESH_BUFFER_MS) {
       return;
     }
 
-    const tokenData = await this.oauthProvider
-      .refreshAccessToken(refreshToken)
-      .catch(async (error) => {
-        await this.markNeedsReauthentication();
+    const tokenData = await runWithCredentialRefreshLock(oauthCredentialId, async () => {
+      try {
+        return await this.oauthProvider.refreshAccessToken(refreshToken);
+      } catch (error) {
+        if (isOAuthReauthRequiredError(error)) {
+          await this.markNeedsReauthentication();
+        }
         throw error;
-      });
+      }
+    }, this.config.refreshLockStore ?? null);
 
     const newExpiresAt = new Date(Date.now() + tokenData.expires_in * MS_PER_SECOND);
 
-    if (oauthSourceCredentialId) {
-      await database
-        .update(oauthSourceCredentialsTable)
-        .set({
-          accessToken: tokenData.access_token,
-          expiresAt: newExpiresAt,
-          refreshToken: tokenData.refresh_token ?? refreshToken,
-        })
-        .where(eq(oauthSourceCredentialsTable.id, oauthSourceCredentialId));
-    } else if (oauthCredentialId) {
-      await database
-        .update(oauthCredentialsTable)
-        .set({
-          accessToken: tokenData.access_token,
-          expiresAt: newExpiresAt,
-          refreshToken: tokenData.refresh_token ?? refreshToken,
-        })
-        .where(eq(oauthCredentialsTable.id, oauthCredentialId));
-    }
+    await database
+      .update(oauthCredentialsTable)
+      .set({
+        accessToken: tokenData.access_token,
+        expiresAt: newExpiresAt,
+        refreshToken: tokenData.refresh_token ?? refreshToken,
+      })
+      .where(eq(oauthCredentialsTable.id, oauthCredentialId));
 
     this.currentAccessToken = tokenData.access_token;
     this.config.accessTokenExpiresAt = newExpiresAt;

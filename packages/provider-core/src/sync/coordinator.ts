@@ -1,4 +1,3 @@
-import { WideEvent } from "@keeper.sh/log";
 import { SYNC_TTL_SECONDS } from "@keeper.sh/constants";
 import type { RedisClient } from "bun";
 
@@ -6,17 +5,9 @@ const SYNC_KEY_PREFIX = "sync:generation:";
 
 const getSyncKey = (userId: string): string => `${SYNC_KEY_PREFIX}${userId}`;
 
-const enrichWideEventWithSyncContext = (userId: string, generation: number): void => {
-  const event = WideEvent.grasp();
-  if (!event) {
-    return;
-  }
-  event.set({ "sync.generation": generation, "user.id": userId });
-};
-
 interface DestinationSyncResult {
   userId: string;
-  destinationId: string;
+  calendarId: string;
   localEventCount: number;
   remoteEventCount: number;
   broadcast?: boolean;
@@ -26,7 +17,7 @@ type SyncStage = "fetching" | "comparing" | "processing" | "error";
 
 interface SyncProgressUpdate {
   userId: string;
-  destinationId: string;
+  calendarId: string;
   status: "syncing" | "error";
   stage: SyncStage;
   localEventCount: number;
@@ -40,6 +31,8 @@ interface SyncProgressUpdate {
 interface SyncContext {
   userId: string;
   generation: number;
+  jobName?: string;
+  jobType?: string;
   isCurrent: () => Promise<boolean>;
   onDestinationSync?: (result: DestinationSyncResult) => Promise<void>;
   onSyncProgress?: (update: SyncProgressUpdate) => void;
@@ -65,8 +58,6 @@ const createSyncCoordinator = (config: SyncCoordinatorConfig): SyncCoordinator =
     const key = getSyncKey(userId);
     const generation = await redis.incr(key);
     await redis.expire(key, SYNC_TTL_SECONDS);
-
-    enrichWideEventWithSyncContext(userId, generation);
 
     const isCurrent = async (): Promise<boolean> => {
       const currentGeneration = await redis.get(key);

@@ -1,11 +1,26 @@
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import type { OAuthTokenProvider } from "./provider";
 import type { DestinationProvider } from "../sync/destinations";
-import type { BroadcastSyncStatus, OAuthProviderConfig, SyncResult, SyncableEvent } from "../types";
+import type {
+  BroadcastSyncStatus,
+  OAuthProviderConfig,
+  SyncResult,
+  SyncableEvent,
+} from "../types";
+import type { RefreshLockStore } from "./refresh-coordinator";
 import type { SyncContext } from "../sync/coordinator";
 import { getEventsForDestination } from "../events/events";
+import { widelogger } from "widelogger";
 import type { OAuthCalendarProvider } from "./provider";
 import type { OAuthAccount } from "./accounts";
+
+const { widelog } = widelogger({
+  service: "keeper",
+  defaultEventName: "wide_event",
+  commitHash: process.env.COMMIT_SHA,
+  environment: process.env.ENV ?? process.env.NODE_ENV,
+  version: process.env.npm_package_version,
+});
 
 const EMPTY_ACCOUNTS_COUNT = 0;
 const INITIAL_ADDED_COUNT = 0;
@@ -20,6 +35,7 @@ interface CreateOAuthProviderOptions<
   database: BunSQLDatabase;
   oauthProvider: OAuthTokenProvider;
   broadcastSyncStatus?: BroadcastSyncStatus;
+  refreshLockStore?: RefreshLockStore | null;
   getAccountsForUser: (database: BunSQLDatabase, userId: string) => Promise<TAccount[]>;
   createProviderInstance: (
     config: TConfig,
@@ -30,6 +46,7 @@ interface CreateOAuthProviderOptions<
     account: TAccount,
     broadcastSyncStatus?: BroadcastSyncStatus,
   ) => TConfig;
+  prepareLocalEvents?: (events: SyncableEvent[], account: TAccount) => SyncableEvent[];
 }
 
 const createOAuthDestinationProvider = <
@@ -42,10 +59,17 @@ const createOAuthDestinationProvider = <
     database,
     oauthProvider,
     broadcastSyncStatus,
+    refreshLockStore,
     getAccountsForUser,
     createProviderInstance,
     buildConfig,
+    prepareLocalEvents,
   } = options;
+
+  const getLocalEvents = (localEvents: SyncableEvent[], account: TAccount) => {
+    if (!prepareLocalEvents) {return localEvents}
+    return prepareLocalEvents(localEvents, account);
+  }
 
   const syncForUser = async (userId: string, context: SyncContext): Promise<SyncResult | null> => {
     const accounts = await getAccountsForUser(database, userId);
@@ -54,13 +78,40 @@ const createOAuthDestinationProvider = <
     }
 
     const results = await Promise.all(
-      accounts.map(async (account) => {
-        const localEvents = await getEventsForDestination(database, account.destinationId);
+      accounts.map((account) =>
+        widelog.context(async () => {
+          widelog.set("operation.name", "sync:destination-account");
+          widelog.set("operation.type", "sync");
+          widelog.set("destination.calendar_id", account.calendarId);
+          widelog.set("user.id", userId);
+          if (context.jobName) {
+            widelog.set("job.name", context.jobName);
+          }
+          if (context.jobType) {
+            widelog.set("job.type", context.jobType);
+          }
+          widelog.time.start("duration_ms");
 
-        const config = buildConfig(database, account, broadcastSyncStatus);
-        const provider = createProviderInstance(config, oauthProvider);
-        return provider.sync(localEvents as SyncableEvent[], context);
-      }),
+          const localEvents = await getEventsForDestination(database, account.calendarId);
+          const preparedEvents = getLocalEvents(localEvents, account);
+          widelog.set("local_events.count", preparedEvents.length);
+
+          const config = buildConfig(database, account, broadcastSyncStatus);
+          config.refreshLockStore = refreshLockStore ?? null;
+          const provider = createProviderInstance(config, oauthProvider);
+          const result = await provider.sync(preparedEvents, context);
+
+          widelog.set("events.added", result.added);
+          widelog.set("events.add_failed", result.addFailed);
+          widelog.set("events.removed", result.removed);
+          widelog.set("events.remove_failed", result.removeFailed);
+
+          widelog.time.stop("duration_ms");
+          widelog.flush();
+
+          return result;
+        }),
+      ),
     );
 
     const combined: SyncResult = {

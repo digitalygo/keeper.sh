@@ -43,6 +43,21 @@ const getEventEndTime = (event: IcsEvent, startTime: Date): Date => {
 const isKeeperEvent = (uid: string | undefined): boolean =>
   uid?.endsWith(KEEPER_EVENT_SUFFIX) ?? false;
 
+const getEventStartTimeZone = (event: IcsEvent): string | undefined =>
+  event.start.local?.timezone;
+
+const getEventAvailability = (event: IcsEvent) => {
+  if (event.timeTransparent === "TRANSPARENT") {
+    return "free";
+  }
+
+  if (event.timeTransparent === "OPAQUE") {
+    return "busy";
+  }
+
+  return null;
+};
+
 const parseIcsEvents = (calendar: IcsCalendar): EventTimeSlot[] => {
   const result: EventTimeSlot[] = [];
 
@@ -55,9 +70,19 @@ const parseIcsEvents = (calendar: IcsCalendar): EventTimeSlot[] => {
     }
 
     const startTime = event.start.date;
+    const availability = getEventAvailability(event);
+
     result.push({
+      ...availability && { availability },
+      description: event.description,
       endTime: getEventEndTime(event, startTime),
+      exceptionDates: event.exceptionDates,
+      isAllDay: event.start.type === "DATE",
+      location: event.location,
+      recurrenceRule: event.recurrenceRule,
       startTime,
+      startTimeZone: getEventStartTimeZone(event),
+      title: event.summary,
       uid: event.uid,
     });
   }

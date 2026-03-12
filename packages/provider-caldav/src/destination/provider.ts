@@ -16,12 +16,20 @@ import type {
   SyncResult,
   SyncableEvent,
 } from "@keeper.sh/provider-core";
-import { getStartOfToday } from "@keeper.sh/date-utils";
-import { WideEvent } from "@keeper.sh/log";
+import { widelogger } from "widelogger";
 import { CalDAVClient } from "../shared/client";
 import { eventToICalString, parseICalToRemoteEvent } from "../shared/ics";
+import { getCalDAVSyncWindow } from "../shared/sync-window";
 import { createCalDAVService } from "./sync";
 import type { CalDAVProviderConfig, CalDAVProviderOptions } from "../types";
+
+const { widelog } = widelogger({
+  service: "keeper",
+  defaultEventName: "wide_event",
+  commitHash: process.env.COMMIT_SHA,
+  environment: process.env.ENV ?? process.env.NODE_ENV,
+  version: process.env.npm_package_version,
+});
 
 const EMPTY_ACCOUNTS_COUNT = 0;
 const INITIAL_ADDED_COUNT = 0;
@@ -50,14 +58,17 @@ const createCalDAVProvider = (
 
     const results = await Promise.all(
       accounts.map(async (account) => {
-        const localEvents = await getEventsForDestination(config.database, account.destinationId);
+        const localEvents = await getEventsForDestination(config.database, account.calendarId);
+        const supportedEvents = localEvents.filter(
+          (event) => event.availability !== "workingElsewhere",
+        );
 
         const password = caldavService.getDecryptedPassword(account.encryptedPassword);
         const provider = new CalDAVProviderInstance(
           {
+            calendarId: account.calendarId,
             calendarUrl: account.calendarUrl,
             database: config.database,
-            destinationId: account.destinationId,
             serverUrl: account.serverUrl,
             userId: account.userId,
             username: account.username,
@@ -65,7 +76,7 @@ const createCalDAVProvider = (
           password,
           options,
         );
-        return provider.sync(localEvents, context);
+        return provider.sync(supportedEvents, context);
       }),
     );
 
@@ -113,72 +124,83 @@ class CalDAVProviderInstance extends CalendarProvider<CalDAVConfig> {
     this.rateLimiter = new RateLimiter({ concurrency: CALDAV_RATE_LIMIT_CONCURRENCY });
   }
 
-  async pushEvents(events: SyncableEvent[]): Promise<PushResult[]> {
-    const results = await Promise.all(
+  pushEvents(events: SyncableEvent[]): Promise<PushResult[]> {
+    return Promise.all(
       events.map((event) =>
-        this.rateLimiter.execute(async (): Promise<PushResult> => {
-          try {
-            const uid = generateEventUid();
-            const iCalString = eventToICalString(event, uid);
+        this.rateLimiter.execute((): Promise<PushResult> =>
+          widelog.context(async () => {
+            widelog.set("destination.calendar_id", this.config.calendarId);
+            widelog.set("operation.name", "caldav:push");
+            widelog.set("source.provider", this.id);
+            widelog.set("user.id", this.config.userId);
 
-            await this.client.createCalendarObject({
-              calendarUrl: this.config.calendarUrl,
-              filename: `${uid}.ics`,
-              iCalString,
-            });
+            try {
+              const uid = generateEventUid();
+              const iCalString = eventToICalString(event, uid);
 
-            return { remoteId: uid, success: true };
-          } catch (error) {
-            WideEvent.error(error);
-            return { error: getErrorMessage(error), success: false };
-          }
-        }),
+              await this.client.createCalendarObject({
+                calendarUrl: this.config.calendarUrl,
+                filename: `${uid}.ics`,
+                iCalString,
+              });
+
+              return { remoteId: uid, success: true };
+            } catch (error) {
+              widelog.errorFields(error);
+              return { error: getErrorMessage(error), success: false };
+            } finally {
+              widelog.flush();
+            }
+          }),
+        ),
       ),
     );
-
-    return results;
   }
 
-  async deleteEvents(eventIds: string[]): Promise<DeleteResult[]> {
-    const results = await Promise.all(
+  deleteEvents(eventIds: string[]): Promise<DeleteResult[]> {
+    return Promise.all(
       eventIds.map((uid) =>
-        this.rateLimiter.execute(async (): Promise<DeleteResult> => {
-          try {
-            await this.client.deleteCalendarObject({
-              calendarUrl: this.config.calendarUrl,
-              filename: `${uid}.ics`,
-            });
-            return { success: true };
-          } catch (error) {
-            const notFound = error instanceof Error && error.message.includes("404");
+        this.rateLimiter.execute((): Promise<DeleteResult> =>
+          widelog.context(async () => {
+            widelog.set("destination.calendar_id", this.config.calendarId);
+            widelog.set("operation.name", "caldav:delete");
+            widelog.set("source.provider", this.id);
+            widelog.set("user.id", this.config.userId);
 
-            if (notFound) {
+            try {
+              await this.client.deleteCalendarObject({
+                calendarUrl: this.config.calendarUrl,
+                filename: `${uid}.ics`,
+              });
               return { success: true };
-            }
+            } catch (error) {
+              const notFound = error instanceof Error && error.message.includes("404");
 
-            WideEvent.error(error);
-            return { error: getErrorMessage(error), success: false };
-          }
-        }),
+              if (notFound) {
+                return { success: true };
+              }
+
+              widelog.errorFields(error);
+              return { error: getErrorMessage(error), success: false };
+            } finally {
+              widelog.flush();
+            }
+          }),
+        ),
       ),
     );
-
-    return results;
   }
 
   async listRemoteEvents(): Promise<RemoteEvent[]> {
-    const today = getStartOfToday();
-
-    const futureDate = new Date(today);
-    futureDate.setFullYear(futureDate.getFullYear() + YEARS_UNTIL_FUTURE);
+    const syncWindow = getCalDAVSyncWindow(YEARS_UNTIL_FUTURE);
 
     const calendarUrl = await this.client.resolveCalendarUrl(this.config.calendarUrl);
 
     const objects = await this.client.fetchCalendarObjects({
       calendarUrl,
       timeRange: {
-        end: futureDate.toISOString(),
-        start: today.toISOString(),
+        end: syncWindow.end.toISOString(),
+        start: syncWindow.start.toISOString(),
       },
     });
 
@@ -199,7 +221,7 @@ class CalDAVProviderInstance extends CalendarProvider<CalDAVConfig> {
         continue;
       }
 
-      if (parsed.endTime < today) {
+      if (parsed.endTime < syncWindow.start) {
         continue;
       }
 

@@ -7,11 +7,15 @@ interface GoogleDateTime {
 interface PartialGoogleDateTime {
   date?: string;
   dateTime?: string;
+  timeZone?: string;
 }
 
 interface GoogleApiError {
   code?: number;
+  message?: string;
   status?: string;
+  errors?: { reason?: string }[];
+  details?: { reason?: string }[];
 }
 
 export type { GoogleDateTime, PartialGoogleDateTime, GoogleApiError };

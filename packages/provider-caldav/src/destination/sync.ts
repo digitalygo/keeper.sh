@@ -1,27 +1,29 @@
 import {
+  calendarAccountsTable,
   caldavCredentialsTable,
-  calendarDestinationsTable,
-  calendarSourcesTable,
+  calendarsTable,
   eventStatesTable,
 } from "@keeper.sh/database/schema";
 import { getStartOfToday } from "@keeper.sh/date-utils";
 import { decryptPassword } from "@keeper.sh/encryption";
-import { and, asc, eq, gte, or } from "drizzle-orm";
+import { and, arrayContains, asc, eq, gte, or } from "drizzle-orm";
 import type { SyncableEvent } from "@keeper.sh/provider-core";
 import type { CalDAVAccount, CalDAVService, CalDAVServiceConfig } from "../types";
+import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 
-const buildProviderCondition = (
-  filter?: string,
-): ReturnType<typeof eq> | ReturnType<typeof or> => {
+const buildProviderCondition = (filter?: string): ReturnType<typeof eq> | ReturnType<typeof or> => {
   if (filter) {
-    return eq(calendarDestinationsTable.provider, filter);
+    return eq(calendarAccountsTable.provider, filter);
   }
   return or(
-    eq(calendarDestinationsTable.provider, "caldav"),
-    eq(calendarDestinationsTable.provider, "fastmail"),
-    eq(calendarDestinationsTable.provider, "icloud"),
+    eq(calendarAccountsTable.provider, "caldav"),
+    eq(calendarAccountsTable.provider, "fastmail"),
+    eq(calendarAccountsTable.provider, "icloud"),
   );
 };
+
+const getDestinationScopeFilter = (_database: BunSQLDatabase) =>
+  arrayContains(calendarsTable.capabilities, ["push"]);
 
 const createCalDAVService = (config: CalDAVServiceConfig): CalDAVService => {
   const { database, encryptionKey } = config;
@@ -34,47 +36,66 @@ const createCalDAVService = (config: CalDAVServiceConfig): CalDAVService => {
 
     const results = await database
       .select({
-        accountId: calendarDestinationsTable.accountId,
-        calendarUrl: caldavCredentialsTable.calendarUrl,
-        destinationId: calendarDestinationsTable.id,
-        email: calendarDestinationsTable.email,
+        accountId: calendarAccountsTable.accountId,
+        calendarId: calendarsTable.id,
+        calendarUrl: calendarsTable.calendarUrl,
+        email: calendarAccountsTable.email,
         encryptedPassword: caldavCredentialsTable.encryptedPassword,
-        provider: calendarDestinationsTable.provider,
+        provider: calendarAccountsTable.provider,
         serverUrl: caldavCredentialsTable.serverUrl,
-        userId: calendarDestinationsTable.userId,
+        userId: calendarsTable.userId,
         username: caldavCredentialsTable.username,
       })
-      .from(calendarDestinationsTable)
+      .from(calendarsTable)
+      .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
       .innerJoin(
         caldavCredentialsTable,
-        eq(calendarDestinationsTable.caldavCredentialId, caldavCredentialsTable.id),
+        eq(calendarAccountsTable.caldavCredentialId, caldavCredentialsTable.id),
       )
-      .where(and(providerCondition, eq(calendarDestinationsTable.userId, userId)));
+      .where(
+        and(
+          providerCondition,
+          eq(calendarsTable.userId, userId),
+          getDestinationScopeFilter(database),
+        ),
+      );
 
-    return results;
+    return results.map((result) => ({
+      ...result,
+      calendarUrl: result.calendarUrl ?? "",
+    }));
   };
 
   const getCalDAVAccountsByProvider = async (provider: string): Promise<CalDAVAccount[]> => {
     const results = await database
       .select({
-        accountId: calendarDestinationsTable.accountId,
-        calendarUrl: caldavCredentialsTable.calendarUrl,
-        destinationId: calendarDestinationsTable.id,
-        email: calendarDestinationsTable.email,
+        accountId: calendarAccountsTable.accountId,
+        calendarId: calendarsTable.id,
+        calendarUrl: calendarsTable.calendarUrl,
+        email: calendarAccountsTable.email,
         encryptedPassword: caldavCredentialsTable.encryptedPassword,
-        provider: calendarDestinationsTable.provider,
+        provider: calendarAccountsTable.provider,
         serverUrl: caldavCredentialsTable.serverUrl,
-        userId: calendarDestinationsTable.userId,
+        userId: calendarsTable.userId,
         username: caldavCredentialsTable.username,
       })
-      .from(calendarDestinationsTable)
+      .from(calendarsTable)
+      .innerJoin(calendarAccountsTable, eq(calendarsTable.accountId, calendarAccountsTable.id))
       .innerJoin(
         caldavCredentialsTable,
-        eq(calendarDestinationsTable.caldavCredentialId, caldavCredentialsTable.id),
+        eq(calendarAccountsTable.caldavCredentialId, caldavCredentialsTable.id),
       )
-      .where(eq(calendarDestinationsTable.provider, provider));
+      .where(
+        and(
+          eq(calendarAccountsTable.provider, provider),
+          getDestinationScopeFilter(database),
+        ),
+      );
 
-    return results;
+    return results.map((result) => ({
+      ...result,
+      calendarUrl: result.calendarUrl ?? "",
+    }));
   };
 
   const getDecryptedPassword = (encryptedPassword: string): string =>
@@ -85,17 +106,17 @@ const createCalDAVService = (config: CalDAVServiceConfig): CalDAVService => {
 
     const results = await database
       .select({
+        calendarId: eventStatesTable.calendarId,
+        calendarName: calendarsTable.name,
+        calendarUrl: calendarsTable.url,
         endTime: eventStatesTable.endTime,
         id: eventStatesTable.id,
         sourceEventUid: eventStatesTable.sourceEventUid,
-        sourceId: eventStatesTable.sourceId,
-        sourceName: calendarSourcesTable.name,
-        sourceUrl: calendarSourcesTable.url,
         startTime: eventStatesTable.startTime,
       })
       .from(eventStatesTable)
-      .innerJoin(calendarSourcesTable, eq(eventStatesTable.sourceId, calendarSourcesTable.id))
-      .where(and(eq(calendarSourcesTable.userId, userId), gte(eventStatesTable.startTime, today)))
+      .innerJoin(calendarsTable, eq(eventStatesTable.calendarId, calendarsTable.id))
+      .where(and(eq(calendarsTable.userId, userId), gte(eventStatesTable.startTime, today)))
       .orderBy(asc(eventStatesTable.startTime));
 
     const events: SyncableEvent[] = [];
@@ -105,14 +126,14 @@ const createCalDAVService = (config: CalDAVServiceConfig): CalDAVService => {
         continue;
       }
 
-      const summary = result.sourceName ?? "Busy";
+      const summary = result.calendarName ?? "Busy";
       events.push({
+        calendarId: result.calendarId,
+        calendarName: result.calendarName,
+        calendarUrl: result.calendarUrl,
         endTime: result.endTime,
         id: result.id,
         sourceEventUid: result.sourceEventUid,
-        sourceId: result.sourceId,
-        sourceName: result.sourceName,
-        sourceUrl: result.sourceUrl,
         startTime: result.startTime,
         summary,
       });

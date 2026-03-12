@@ -1,20 +1,38 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": ["**/*.css", "packages/cron/src/jobs/**/*"],
+  "ignore": [
+    "**/*.css",
+    "applications/cron/src/jobs/**/*",
+    "applications/canary-web/src/generated/**/*"
+  ],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@svgr/webpack"],
+  "ignoreDependencies": [],
   "ignoreWorkspaces": ["packages/typescript-config"],
+  "ignoreExportsUsedInFile": true,
   "workspaces": {
     "packages/*": {
+      "entry": ["src/{index.ts,api.ts,cron.ts,**/*.test.ts}"],
       "project": "src/**/*.{ts,tsx}"
     },
-    "packages/api": {
-      "entry": ["src/routes/**/*.ts"],
+    "applications/*": {
+      "entry": ["src/{index.ts,main.tsx,server.tsx,**/*.test.ts,**/*.test.tsx}"],
       "project": "src/**/*.{ts,tsx}"
     },
-    "packages/cron": {
-      "entry": ["src/jobs/*.ts"],
+    "applications/api": {
+      "entry": ["src/routes/**/*.ts", "src/**/*.test.ts"],
       "project": "src/**/*.{ts,tsx}"
+    },
+    "applications/cron": {
+      "entry": ["src/jobs/*.ts", "src/**/*.test.ts"],
+      "project": "src/**/*.{ts,tsx}"
+    },
+    "applications/mcp": {
+      "entry": ["src/routes/**/*.ts", "src/**/*.test.ts"],
+      "project": "src/**/*.{ts,tsx}"
+    },
+    "applications/canary-web": {
+      "entry": ["src/main.tsx", "src/server.tsx", "plugins/**/*.ts", "scripts/**/*.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
+      "project": ["src/**/*.{ts,tsx}", "plugins/**/*.ts", "scripts/**/*.ts"]
     }
   }
 }

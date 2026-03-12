@@ -1,6 +1,7 @@
 export { CalendarProvider } from "./sync/provider";
 export {
   createOAuthProviders,
+  configureStateStore,
   type ValidatedState,
   type AuthorizationUrlOptions,
   type NormalizedUserInfo,
@@ -8,14 +9,23 @@ export {
   type OAuthProvider,
   type OAuthProvidersConfig,
   type OAuthProviders,
+  type OAuthStateStore,
 } from "./oauth/providers";
-export { buildOAuthConfigs, type OAuthCredentials, type OAuthEnv, type OAuthConfigs } from "./oauth/config";
+export {
+  buildOAuthConfigs,
+  type OAuthCredentials,
+  type OAuthEnv,
+  type OAuthConfigs,
+} from "./oauth/config";
 export {
   OAuthCalendarProvider,
   type OAuthRefreshResult,
   type OAuthTokenProvider,
   type AuthErrorResult,
 } from "./oauth/provider";
+export {
+  type RefreshLockStore,
+} from "./oauth/refresh-coordinator";
 export {
   createOAuthDestinationProvider,
   type CreateOAuthProviderOptions,
@@ -26,15 +36,50 @@ export {
   type ProcessEventsOptions,
 } from "./oauth/source-provider";
 export {
+  OAUTH_SYNC_WINDOW_VERSION,
+  getOAuthSyncWindow,
+  getOAuthSyncWindowStart,
+} from "./oauth/sync-window";
+export {
+  decodeStoredSyncToken,
+  encodeStoredSyncToken,
+  resolveSyncTokenForWindow,
+} from "./oauth/sync-token";
+export {
   createOAuthSourceProvider,
   type CreateOAuthSourceProviderOptions,
   type OAuthSourceAccount,
   type SourceProvider,
 } from "./oauth/create-source-provider";
 export { generateEventUid, isKeeperEvent } from "./events/identity";
+export { inferAllDayEvent, resolveIsAllDayEvent } from "./events/all-day";
 export { RateLimiter, type RateLimiterConfig } from "./utils/rate-limiter";
+export { allSettledWithConcurrency, type AllSettledWithConcurrencyOptions } from "./utils/concurrency";
 export { getErrorMessage } from "./utils/error";
+export { widelogger } from "widelogger";
+export type { WideloggerOptions } from "widelogger";
 export { getEventsForDestination } from "./events/events";
+export {
+  buildSourceEventIdentityKey,
+  buildSourceEventsToAdd,
+  buildSourceEventStateIdsToRemove,
+  type ExistingSourceEventState,
+  type SourceEventDiffOptions,
+} from "./source/event-diff";
+export {
+  filterSourceEventsToSyncWindow,
+  resolveSourceSyncTokenAction,
+  splitSourceEventsByStorageIdentity,
+  type OAuthSyncWindow,
+  type SourceEventsInWindowResult,
+  type SourceEventStoragePartition,
+  type SourceSyncTokenAction,
+} from "./source/sync-diagnostics";
+export {
+  insertEventStatesWithConflictResolution,
+  type EventStateInsertRow,
+  type EventStateInsertClient,
+} from "./source/write-event-states";
 export { syncDestinationsForUser, type DestinationProvider } from "./sync/destinations";
 export {
   createSyncCoordinator,
@@ -45,6 +90,17 @@ export {
   type SyncProgressUpdate,
   type SyncStage,
 } from "./sync/coordinator";
+export {
+  SyncAggregateTracker,
+  type SyncAggregateSnapshot,
+  type SyncAggregateMessage,
+  type SyncAggregateTrackerConfig,
+} from "./sync/aggregate-tracker";
+export {
+  createSyncAggregateRuntime,
+  type SyncAggregateRuntimeConfig,
+  type SyncAggregateRuntime,
+} from "./sync/aggregate-runtime";
 export {
   getEventMappingsForDestination,
   createEventMapping,
@@ -60,6 +116,7 @@ export {
 export type {
   AuthType,
   CalDAVProviderConfig,
+  ProviderCapabilities,
   ProviderDefinition,
   SourcePreferenceOption,
   SourcePreferencesConfig,
@@ -68,6 +125,7 @@ export type {
   DeleteResult,
   SyncResult,
   RemoteEvent,
+  EventAvailability,
   ProviderConfig,
   OAuthProviderConfig,
   GoogleCalendarConfig,

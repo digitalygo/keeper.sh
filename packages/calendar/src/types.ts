@@ -1,7 +1,17 @@
+type EventAvailability = "busy" | "free" | "oof" | "workingElsewhere";
+
 interface EventTimeSlot {
   uid: string;
   startTime: Date;
   endTime: Date;
+  availability?: EventAvailability;
+  isAllDay?: boolean;
+  startTimeZone?: string;
+  recurrenceRule?: object;
+  exceptionDates?: object;
+  title?: string;
+  description?: string;
+  location?: string;
 }
 
 type StoredEventTimeSlot = EventTimeSlot & {
@@ -29,4 +39,10 @@ interface SerializedIcsCalendar {
   }[];
 }
 
-export type { EventTimeSlot, StoredEventTimeSlot, EventDiff, SerializedIcsCalendar };
+export type {
+  EventAvailability,
+  EventTimeSlot,
+  StoredEventTimeSlot,
+  EventDiff,
+  SerializedIcsCalendar,
+};

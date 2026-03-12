@@ -10,6 +10,11 @@ const MICROSOFT_USERINFO_URL = "https://graph.microsoft.com/v1.0/me";
 const MICROSOFT_CALENDAR_SCOPE = "Calendars.ReadWrite";
 const MICROSOFT_USER_SCOPE = "User.Read";
 const MICROSOFT_OFFLINE_SCOPE = "offline_access";
+const REQUEST_TIMEOUT_MS = 15_000;
+
+const isRequestTimeoutError = (error: unknown): boolean =>
+  error instanceof Error
+  && (error.name === "AbortError" || error.name === "TimeoutError");
 
 interface MicrosoftOAuthCredentials {
   clientId: string;
@@ -24,7 +29,7 @@ interface AuthorizationUrlOptions {
 }
 
 interface MicrosoftOAuthService {
-  getAuthorizationUrl: (userId: string, options: AuthorizationUrlOptions) => string;
+  getAuthorizationUrl: (userId: string, options: AuthorizationUrlOptions) => Promise<string>;
   exchangeCodeForTokens: (code: string, callbackUrl: string) => Promise<MicrosoftTokenResponse>;
   refreshAccessToken: (refreshToken: string) => Promise<MicrosoftTokenResponse>;
 }
@@ -34,8 +39,8 @@ const createMicrosoftOAuthService = (
 ): MicrosoftOAuthService => {
   const { clientId, clientSecret } = credentials;
 
-  const getAuthorizationUrl = (userId: string, options: AuthorizationUrlOptions): string => {
-    const state = generateState(userId, {
+  const getAuthorizationUrl = async (userId: string, options: AuthorizationUrlOptions): Promise<string> => {
+    const state = await generateState(userId, {
       destinationId: options.destinationId,
       sourceCredentialId: options.sourceCredentialId,
     });
@@ -92,6 +97,13 @@ const createMicrosoftOAuthService = (
       }),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       method: "POST",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    }).catch((error) => {
+      if (isRequestTimeoutError(error)) {
+        throw new Error(`Token refresh timed out after ${REQUEST_TIMEOUT_MS}ms`);
+      }
+
+      throw error;
     });
 
     if (!response.ok) {

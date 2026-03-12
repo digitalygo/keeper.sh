@@ -1,4 +1,0 @@
-{
-  "extends": "@keeper.sh/typescript-config",
-  "include": ["src/**/*"]
-}

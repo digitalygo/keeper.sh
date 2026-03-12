@@ -7,20 +7,23 @@ COPY . .
 FROM base AS prune
 RUN bun install --global turbo
 COPY --from=source /app .
-RUN turbo prune @keeper.sh/web --docker
+RUN turbo prune canary-web --docker
 
 FROM base AS build
 COPY --from=prune /app/out/json/ .
 RUN bun install --frozen-lockfile
 COPY --from=prune /app/out/full/ .
-RUN bun run --cwd packages/web build
+RUN bun run --cwd applications/canary-web build
 
 FROM base AS runtime
-COPY --from=build /app/packages/web/.next/standalone ./
-COPY --from=build /app/packages/web/.next/static ./packages/web/.next/static
-COPY --from=build /app/packages/web/public ./packages/web/public
+COPY --from=prune /app/out/json/ .
+RUN bun install --frozen-lockfile --production
+COPY --from=build /app/applications/canary-web/dist ./applications/canary-web/dist
+COPY --from=build /app/applications/canary-web/public ./applications/canary-web/public
 
-ENV NODE_ENV=production
+WORKDIR /app/applications/canary-web
+
+ENV ENV=production
 EXPOSE 3000
 
-CMD ["bun", "packages/web/server.js"]
+CMD ["bun", "dist/server-entry/index.js"]

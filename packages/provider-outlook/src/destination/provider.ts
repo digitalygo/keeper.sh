@@ -1,12 +1,10 @@
 import { HTTP_STATUS, KEEPER_CATEGORY } from "@keeper.sh/constants";
-import { WideEvent } from "@keeper.sh/log";
 import type { OutlookEvent } from "@keeper.sh/data-schemas";
 import {
   microsoftApiErrorSchema,
   outlookEventListSchema,
   outlookEventSchema,
 } from "@keeper.sh/data-schemas";
-import { getStartOfToday } from "@keeper.sh/date-utils";
 import type {
   BroadcastSyncStatus,
   DeleteResult,
@@ -15,6 +13,7 @@ import type {
   OAuthTokenProvider,
   OutlookCalendarConfig,
   PushResult,
+  RefreshLockStore,
   RemoteEvent,
   SyncableEvent,
 } from "@keeper.sh/provider-core";
@@ -22,24 +21,36 @@ import {
   OAuthCalendarProvider,
   createOAuthDestinationProvider,
   getErrorMessage,
+  getOAuthSyncWindowStart,
 } from "@keeper.sh/provider-core";
+import { widelogger } from "widelogger";
 import type { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import { MICROSOFT_GRAPH_API, OUTLOOK_PAGE_SIZE } from "../shared/api";
 import { hasRateLimitMessage, isAuthError } from "../shared/errors";
 import { parseEventTime } from "../shared/date-time";
+import { serializeOutlookEvent } from "./serialize-event";
 import type { OutlookAccount } from "./sync";
 import { getOutlookAccountsForUser } from "./sync";
+
+const { widelog } = widelogger({
+  service: "keeper",
+  defaultEventName: "wide_event",
+  commitHash: process.env.COMMIT_SHA,
+  environment: process.env.ENV ?? process.env.NODE_ENV,
+  version: process.env.npm_package_version,
+});
 
 interface OutlookCalendarProviderConfig {
   database: BunSQLDatabase;
   oauthProvider: OAuthTokenProvider;
   broadcastSyncStatus?: BroadcastSyncStatus;
+  refreshLockStore?: RefreshLockStore | null;
 }
 
 const createOutlookCalendarProvider = (
   config: OutlookCalendarProviderConfig,
 ): DestinationProvider => {
-  const { database, oauthProvider, broadcastSyncStatus } = config;
+  const { database, oauthProvider, broadcastSyncStatus, refreshLockStore } = config;
 
   return createOAuthDestinationProvider<OutlookAccount, OutlookCalendarConfig>({
     broadcastSyncStatus,
@@ -48,8 +59,8 @@ const createOutlookCalendarProvider = (
       accessTokenExpiresAt: account.accessTokenExpiresAt,
       accountId: account.accountId,
       broadcastSyncStatus: broadcast,
+      calendarId: account.calendarId,
       database: db,
-      destinationId: account.destinationId,
       refreshToken: account.refreshToken,
       userId: account.userId,
     }),
@@ -58,6 +69,9 @@ const createOutlookCalendarProvider = (
     database,
     getAccountsForUser: getOutlookAccountsForUser,
     oauthProvider,
+    prepareLocalEvents: (events) =>
+      events.filter((event) => event.availability !== "workingElsewhere"),
+    refreshLockStore,
   });
 };
 
@@ -81,10 +95,14 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     const remoteEvents: RemoteEvent[] = [];
     let nextLink: string | null = null;
 
-    const today = getStartOfToday();
+    const lookbackStart = getOAuthSyncWindowStart();
 
     do {
-      const url = OutlookCalendarProviderInstance.buildListEventsUrl(today, options.until, nextLink);
+      const url = OutlookCalendarProviderInstance.buildListEventsUrl(
+        lookbackStart,
+        options.until,
+        nextLink,
+      );
 
       const response = await fetch(url, {
         headers: this.headers,
@@ -118,7 +136,11 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     return remoteEvents;
   }
 
-  private static buildListEventsUrl(today: Date, until: Date, nextLink: string | null): URL {
+  private static buildListEventsUrl(
+    lookbackStart: Date,
+    until: Date,
+    nextLink: string | null,
+  ): URL {
     if (nextLink) {
       return new URL(nextLink);
     }
@@ -126,7 +148,7 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     const url = new URL(`${MICROSOFT_GRAPH_API}/me/calendar/events`);
     url.searchParams.set(
       "$filter",
-      `categories/any(c:c eq '${KEEPER_CATEGORY}') and start/dateTime ge '${today.toISOString()}' and start/dateTime le '${until.toISOString()}'`,
+      `categories/any(c:c eq '${KEEPER_CATEGORY}') and start/dateTime ge '${lookbackStart.toISOString()}' and start/dateTime le '${until.toISOString()}'`,
     );
     url.searchParams.set("$top", String(OUTLOOK_PAGE_SIZE));
     url.searchParams.set("$select", "id,iCalUId,subject,start,end,categories");
@@ -151,18 +173,26 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     };
   }
 
-  protected async pushEvent(event: SyncableEvent): Promise<PushResult> {
-    const resource = OutlookCalendarProviderInstance.toOutlookEvent(event);
+  protected pushEvent(event: SyncableEvent): Promise<PushResult> {
+    return widelog.context(async () => {
+      widelog.set("destination.calendar_id", this.config.calendarId);
+      widelog.set("operation.name", "outlook-calendar:push");
+      widelog.set("source.provider", this.id);
+      widelog.set("user.id", this.config.userId);
 
-    try {
-      return await this.createEvent(resource);
-    } catch (error) {
-      WideEvent.error(error);
-      return {
-        error: getErrorMessage(error),
-        success: false,
-      };
-    }
+      try {
+        const resource = serializeOutlookEvent(event);
+        return await this.createEvent(resource);
+      } catch (error) {
+        widelog.errorFields(error);
+        return {
+          error: getErrorMessage(error),
+          success: false,
+        };
+      } finally {
+        widelog.flush();
+      }
+    });
   }
 
   private async createEvent(resource: OutlookEvent): Promise<PushResult> {
@@ -191,58 +221,45 @@ class OutlookCalendarProviderInstance extends OAuthCalendarProvider<OutlookCalen
     return { deleteId: event.id, remoteId: event.iCalUId, success: true };
   }
 
-  protected async deleteEvent(eventId: string): Promise<DeleteResult> {
-    try {
-      const url = new URL(`${MICROSOFT_GRAPH_API}/me/events/${eventId}`);
+  protected deleteEvent(eventId: string): Promise<DeleteResult> {
+    return widelog.context(async () => {
+      widelog.set("destination.calendar_id", this.config.calendarId);
+      widelog.set("operation.name", "outlook-calendar:delete");
+      widelog.set("source.provider", this.id);
+      widelog.set("user.id", this.config.userId);
 
-      const response = await fetch(url, {
-        headers: this.headers,
-        method: "DELETE",
-      });
+      try {
+        const url = new URL(`${MICROSOFT_GRAPH_API}/me/events/${eventId}`);
 
-      if (!response.ok && response.status !== HTTP_STATUS.NOT_FOUND) {
-        const body = await response.json();
-        const { error } = microsoftApiErrorSchema.assert(body);
-        const errorMessage = error?.message ?? response.statusText;
+        const response = await fetch(url, {
+          headers: this.headers,
+          method: "DELETE",
+        });
 
-        if (isAuthError(response.status, error)) {
-          return this.handleAuthErrorResponse(errorMessage);
+        if (!response.ok && response.status !== HTTP_STATUS.NOT_FOUND) {
+          const body = await response.json();
+          const { error } = microsoftApiErrorSchema.assert(body);
+          const errorMessage = error?.message ?? response.statusText;
+
+          if (isAuthError(response.status, error)) {
+            return this.handleAuthErrorResponse(errorMessage);
+          }
+
+          return { error: errorMessage, success: false };
         }
 
-        return { error: errorMessage, success: false };
+        await response.body?.cancel?.();
+        return { success: true };
+      } catch (error) {
+        widelog.errorFields(error);
+        return {
+          error: getErrorMessage(error),
+          success: false,
+        };
+      } finally {
+        widelog.flush();
       }
-
-      return { success: true };
-    } catch (error) {
-      WideEvent.error(error);
-      return {
-        error: getErrorMessage(error),
-        success: false,
-      };
-    }
-  }
-
-  private static getBodyFromSyncableEvent(event: SyncableEvent): OutlookEvent["body"] {
-    if (!event.description) {
-      return null;
-    }
-
-    return {
-      content: event.description,
-      contentType: "text",
-    };
-  }
-
-  private static toOutlookEvent(event: SyncableEvent): OutlookEvent {
-    const body = OutlookCalendarProviderInstance.getBodyFromSyncableEvent(event);
-
-    return {
-      ...(body && { body }),
-      categories: [KEEPER_CATEGORY],
-      end: { dateTime: event.endTime.toISOString(), timeZone: "UTC" },
-      start: { dateTime: event.startTime.toISOString(), timeZone: "UTC" },
-      subject: event.summary,
-    };
+    });
   }
 }
 

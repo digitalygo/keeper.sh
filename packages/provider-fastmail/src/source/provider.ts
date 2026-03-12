@@ -3,7 +3,7 @@ import type { CalDAVSourceProviderConfig } from "@keeper.sh/provider-caldav";
 
 const PROVIDER_OPTIONS = {
   providerId: "fastmail",
-  providerName: "FastMail",
+  providerName: "Fastmail",
 };
 
 const createFastMailSourceProvider = (config: CalDAVSourceProviderConfig) =>

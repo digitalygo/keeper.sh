@@ -260,6 +260,174 @@
       "when": 1767726486605,
       "tag": "0036_late_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1772591956950,
+      "tag": "0037_thankful_machine_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1772604096971,
+      "tag": "0038_military_radioactive_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1772606278747,
+      "tag": "0039_fat_mad_thinker",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1772607203052,
+      "tag": "0040_sparkling_toad",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1772611192679,
+      "tag": "0041_keen_black_panther",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1772746497799,
+      "tag": "0042_famous_obadiah_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1772747616453,
+      "tag": "0043_smart_demogoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1772750203607,
+      "tag": "0044_crazy_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1772750984190,
+      "tag": "0045_flippant_paper_doll",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1772763457068,
+      "tag": "0046_rainy_steve_rogers",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1772845661125,
+      "tag": "0047_soft_ravenous",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1772847974972,
+      "tag": "0048_gigantic_kid_colt",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1772937997653,
+      "tag": "0049_handy_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1772939018483,
+      "tag": "0050_purple_patch",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1772954619121,
+      "tag": "0051_normal_mentallo",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1773045316163,
+      "tag": "0052_military_trish_tilby",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1773127873531,
+      "tag": "0053_greedy_reptil",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1773130756858,
+      "tag": "0054_nasty_sage",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1773223735093,
+      "tag": "0055_zippy_wolfsbane",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1773236557259,
+      "tag": "0056_ambiguous_unus",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1773239345341,
+      "tag": "0057_requeue_source_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1773283970756,
+      "tag": "0058_same_robbie_robertson",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1773284731304,
+      "tag": "0059_shocking_stone_men",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1773304717977,
+      "tag": "0060_condemned_imperial_guard",
+      "breakpoints": true
     }
   ]
 }

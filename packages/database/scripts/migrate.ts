@@ -30,7 +30,7 @@ try {
 
 await migrate(database, {
   migrationsFolder: join(import.meta.dirname, "..", "drizzle"),
-})
+});
 
-await connection.end()
+await connection.end();
 process.exit(0);

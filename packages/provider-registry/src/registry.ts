@@ -2,11 +2,13 @@ import type { AuthType, ProviderDefinition } from "@keeper.sh/provider-core";
 
 const googleCalendarDefinition = {
   authType: "oauth",
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-google.svg",
   id: "google",
   name: "Google Calendar",
   sourcePreferences: {
-    description: "Uncheck events of the following types to prevent them from syncing to destinations.",
+    description:
+      "Uncheck events of the following types to prevent them from syncing to destinations.",
     label: "Event Sync Types",
     options: [
       {
@@ -36,6 +38,7 @@ const googleCalendarDefinition = {
 
 const outlookDefinition = {
   authType: "oauth",
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-outlook.svg",
   id: "outlook",
   name: "Outlook",
@@ -50,6 +53,7 @@ const caldavDefinition = {
     usernameHelp: "Your CalDAV username",
     usernameLabel: "Username",
   },
+  capabilities: { canRead: true, canWrite: true },
   id: "caldav",
   name: "CalDAV",
 } as const satisfies ProviderDefinition;
@@ -60,12 +64,13 @@ const fastmailDefinition = {
     passwordHelp: "Generate one at Settings → Password & Security → Third-party apps",
     passwordLabel: "App Password",
     serverUrl: "https://caldav.fastmail.com/",
-    usernameHelp: "Your FastMail email address",
+    usernameHelp: "Your Fastmail email address",
     usernameLabel: "Email",
   },
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-fastmail.svg",
   id: "fastmail",
-  name: "FastMail",
+  name: "Fastmail",
 } as const satisfies ProviderDefinition;
 
 const icloudDefinition = {
@@ -77,9 +82,17 @@ const icloudDefinition = {
     usernameHelp: "Your Apple ID email address",
     usernameLabel: "Apple ID",
   },
+  capabilities: { canRead: true, canWrite: true },
   icon: "/integrations/icon-icloud.svg",
   id: "icloud",
   name: "iCloud",
+} as const satisfies ProviderDefinition;
+
+const icsDefinition = {
+  authType: "none",
+  capabilities: { canRead: true, canWrite: false },
+  id: "ics",
+  name: "ICS Feed",
 } as const satisfies ProviderDefinition;
 
 const PROVIDER_DEFINITIONS = [
@@ -88,6 +101,7 @@ const PROVIDER_DEFINITIONS = [
   fastmailDefinition,
   icloudDefinition,
   caldavDefinition,
+  icsDefinition,
 ] as const;
 
 type ProviderId = (typeof PROVIDER_DEFINITIONS)[number]["id"];
@@ -112,10 +126,14 @@ const getProvidersByAuthType = (authType: AuthType): ProviderDefinition[] =>
   PROVIDER_DEFINITIONS.filter((provider) => provider.authType === authType);
 
 const getOAuthProviders = (): OAuthProviderDefinition[] =>
-  PROVIDER_DEFINITIONS.filter((provider): provider is OAuthProviderDefinition => provider.authType === "oauth");
+  PROVIDER_DEFINITIONS.filter(
+    (provider): provider is OAuthProviderDefinition => provider.authType === "oauth",
+  );
 
 const getCalDAVProviders = (): CalDAVProviderDefinition[] =>
-  PROVIDER_DEFINITIONS.filter((provider): provider is CalDAVProviderDefinition => provider.authType === "caldav");
+  PROVIDER_DEFINITIONS.filter(
+    (provider): provider is CalDAVProviderDefinition => provider.authType === "caldav",
+  );
 
 const isCalDAVProvider = (id: string): id is CalDAVProviderId => {
   const provider = getProvider(id);
@@ -144,4 +162,10 @@ export {
   isProviderId,
   getActiveProviders,
 };
-export type { ProviderId, OAuthProviderId, CalDAVProviderId, OAuthProviderDefinition, CalDAVProviderDefinition };
+export type {
+  ProviderId,
+  OAuthProviderId,
+  CalDAVProviderId,
+  OAuthProviderDefinition,
+  CalDAVProviderDefinition,
+};
