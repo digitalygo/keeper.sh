@@ -7,20 +7,16 @@ import { createAuth } from "@keeper.sh/auth";
 import { createBroadcastService } from "@keeper.sh/broadcast";
 import { createPremiumService } from "@keeper.sh/premium";
 import {
-  createSyncCoordinator,
   createOAuthProviders,
   buildOAuthConfigs,
   createSyncAggregateRuntime,
   configureStateStore,
-} from "@keeper.sh/providers";
-import type { OAuthStateStore, RefreshLockStore } from "@keeper.sh/providers";
-import { createDestinationProviders } from "@keeper.sh/providers";
-import type { DestinationSyncResult } from "@keeper.sh/providers";
+} from "@keeper.sh/calendar";
+import type { OAuthStateStore, RefreshLockStore, DestinationSyncResult } from "@keeper.sh/calendar";
 
-const INITIAL_EVENT_COUNT = 0;
 const MIN_TRUSTED_ORIGINS_COUNT = 0;
 
-const database = createDatabase(env.DATABASE_URL);
+const database = await createDatabase(env.DATABASE_URL);
 const redis = new Redis(env.REDIS_URL, {
   commandTimeout: 10_000,
   maxRetriesPerRequest: 3,
@@ -95,29 +91,6 @@ const premiumService = createPremiumService({
 const oauthConfigs = buildOAuthConfigs(env);
 const oauthProviders = createOAuthProviders(oauthConfigs);
 
-const broadcastSyncStatus = (
-  userId: string,
-  calendarId: string,
-  data: { needsReauthentication: boolean },
-): void => {
-  broadcastService.emit(userId, "sync:status", {
-    calendarId,
-    inSync: false,
-    localEventCount: INITIAL_EVENT_COUNT,
-    needsReauthentication: data.needsReauthentication,
-    remoteEventCount: INITIAL_EVENT_COUNT,
-    status: "idle",
-  });
-};
-
-const destinationProviders = createDestinationProviders({
-  broadcastSyncStatus,
-  database,
-  encryptionKey: env.ENCRYPTION_KEY,
-  oauthProviders,
-  refreshLockStore,
-});
-
 const persistSyncStatus = async (
   result: DestinationSyncResult,
   syncedAt: Date,
@@ -162,11 +135,7 @@ const getCurrentSyncAggregate = (
 const getCachedSyncAggregate = (userId: string) =>
   syncAggregateRuntime.getCachedSyncAggregate(userId);
 
-const syncCoordinator = createSyncCoordinator({
-  onDestinationSync: syncAggregateRuntime.onDestinationSync,
-  onSyncProgress: syncAggregateRuntime.onSyncProgress,
-  redis,
-});
+const getSyncAggregateRuntime = () => syncAggregateRuntime;
 
 const createResendClient = (): Resend | null => {
   if (!env.RESEND_API_KEY) {
@@ -193,12 +162,11 @@ export {
   premiumService,
   oauthProviders,
   refreshLockStore,
-  destinationProviders,
-  syncCoordinator,
   resend,
   feedbackEmail,
   baseUrl,
   encryptionKey,
   getCurrentSyncAggregate,
   getCachedSyncAggregate,
+  getSyncAggregateRuntime,
 };

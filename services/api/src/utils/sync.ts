@@ -1,71 +1,88 @@
-import { syncDestinationsForUser } from "@keeper.sh/providers";
+import { syncDestinationsForUser } from "@keeper.sh/sync";
+import type { SyncConfig, SyncDestinationsResult } from "@keeper.sh/sync";
 import { spawnBackgroundJob } from "./background-task";
-import { runApiWideEventContext, setWideEventFields, widelog } from "./logging";
+import { widelog } from "./logging";
 
-type DestinationSyncResult = Awaited<ReturnType<typeof syncDestinationsForUser>>;
+const resolveCount = (value: unknown): number => {
+  if (typeof value === "number") {
+    return value;
+  }
+  return 0;
+};
 
-interface DestinationSyncDependencies {
-  spawnBackgroundJob: (
-    jobName: string,
-    fields: Record<string, unknown>,
-    callback: () => Promise<Record<string, number>>,
-  ) => void;
-  syncDestinationsForUser: (userId: string) => Promise<DestinationSyncResult>;
-}
-
-const mapDestinationSyncResult = (result: DestinationSyncResult): Record<string, number> => ({
+const mapDestinationSyncResult = (result: SyncDestinationsResult): Record<string, number> => ({
   eventsAdded: result.added,
   eventsAddFailed: result.addFailed,
   eventsRemoved: result.removed,
   eventsRemoveFailed: result.removeFailed,
 });
 
-const runDestinationSyncTrigger = (
-  userId: string,
-  dependencies: DestinationSyncDependencies,
-): void => {
-  dependencies.spawnBackgroundJob("destination-sync", { userId }, async () => {
-    const result = await dependencies.syncDestinationsForUser(userId);
+const buildSyncConfig = async (): Promise<SyncConfig> => {
+  const { database, redis, env } = await import("@/context");
+
+  return {
+    database,
+    redis,
+    encryptionKey: env.ENCRYPTION_KEY,
+    oauthConfig: {
+      googleClientId: env.GOOGLE_CLIENT_ID,
+      googleClientSecret: env.GOOGLE_CLIENT_SECRET,
+      microsoftClientId: env.MICROSOFT_CLIENT_ID,
+      microsoftClientSecret: env.MICROSOFT_CLIENT_SECRET,
+    },
+  };
+};
+
+const activeSyncAbortControllers = new Map<string, AbortController>();
+
+const triggerDestinationSync = (userId: string): void => {
+  const correlationId = crypto.randomUUID();
+
+  widelog.set("destination_sync.correlation_id", correlationId);
+  widelog.set("destination_sync.triggered", true);
+
+  const previousController = activeSyncAbortControllers.get(userId);
+  if (previousController) {
+    previousController.abort();
+  }
+
+  const abortController = new AbortController();
+  activeSyncAbortControllers.set(userId, abortController);
+
+  spawnBackgroundJob("destination-sync", { "user.id": userId, "correlation.id": correlationId }, async () => {
+    const syncConfig = await buildSyncConfig();
+    const { getSyncAggregateRuntime } = await import("@/context");
+    const syncAggregateRuntime = getSyncAggregateRuntime();
+
+    const result = await syncDestinationsForUser(userId, { ...syncConfig, abortSignal: abortController.signal }, {
+      onProgress: (update) => {
+        syncAggregateRuntime.onSyncProgress(update);
+      },
+      onSyncEvent: (syncEvent) => {
+        const calendarId = syncEvent["calendar.id"];
+        const localCount = syncEvent["local_events.count"];
+        const remoteCount = syncEvent["remote_events.count"];
+
+        if (typeof calendarId !== "string") {
+          return;
+        }
+
+        syncAggregateRuntime.onDestinationSync({
+          userId,
+          calendarId,
+          localEventCount: resolveCount(localCount),
+          remoteEventCount: resolveCount(remoteCount),
+        });
+      },
+    });
+
+    const currentController = activeSyncAbortControllers.get(userId);
+    if (currentController === abortController) {
+      activeSyncAbortControllers.delete(userId);
+    }
+
     return mapDestinationSyncResult(result);
   });
 };
 
-const triggerDestinationSync = (userId: string): void => {
-  const resolveDependencies = async (): Promise<DestinationSyncDependencies> => {
-    const { destinationProviders, syncCoordinator } = await import("@/context");
-    return {
-      spawnBackgroundJob,
-      syncDestinationsForUser: (userIdToSync) =>
-        syncDestinationsForUser(userIdToSync, destinationProviders, syncCoordinator),
-    };
-  };
-
-  const startSync = async (): Promise<void> => {
-    const dependencies = await resolveDependencies();
-    runDestinationSyncTrigger(userId, dependencies);
-  };
-
-  startSync().catch((error) => {
-    runApiWideEventContext(() => {
-      setWideEventFields({
-        duration_ms: 0,
-        operation: {
-          name: "destination-sync:trigger",
-          type: "background-job",
-        },
-        request: {
-          id: crypto.randomUUID(),
-        },
-        user: {
-          id: userId,
-        },
-      });
-      widelog.set("outcome", "error");
-      widelog.set("status_code", 500);
-      widelog.errorFields(error);
-      widelog.flush();
-    });
-  });
-};
-
-export { triggerDestinationSync, runDestinationSyncTrigger };
+export { triggerDestinationSync };
