@@ -34,6 +34,7 @@ const oauthCredentialsTable = pgTable(
   (table) => [
     index("oauth_credentials_user_idx").on(table.userId),
     index("oauth_credentials_provider_idx").on(table.provider),
+    index("oauth_credentials_expires_at_idx").on(table.expiresAt),
   ],
 );
 
@@ -77,6 +78,7 @@ const calendarAccountsTable = pgTable(
   (table) => [
     index("calendar_accounts_user_idx").on(table.userId),
     index("calendar_accounts_provider_idx").on(table.provider),
+    index("calendar_accounts_needs_reauth_idx").on(table.needsReauthentication),
   ],
 );
 
@@ -98,6 +100,7 @@ const calendarsTable = pgTable(
     excludeWorkingLocation: boolean().notNull().default(false),
     includeInIcalFeed: boolean().notNull().default(false),
     customEventName: text().notNull().default(""),
+    disabled: boolean().notNull().default(false),
     externalCalendarId: text(),
     id: uuid().notNull().primaryKey().defaultRandom(),
     capabilities: text().array().notNull().default(["pull"]),
@@ -124,7 +127,8 @@ const calendarsTable = pgTable(
 const calendarSnapshotsTable = pgTable("calendar_snapshots", {
   calendarId: uuid()
     .notNull()
-    .references(() => calendarsTable.id, { onDelete: "cascade" }),
+    .references(() => calendarsTable.id, { onDelete: "cascade" })
+    .unique(),
   contentHash: text(),
   createdAt: timestamp().notNull().defaultNow(),
   ical: text().notNull(),
@@ -155,6 +159,7 @@ const eventStatesTable = pgTable(
   },
   (table) => [
     index("event_states_start_time_idx").on(table.startTime),
+    index("event_states_end_time_idx").on(table.endTime),
     index("event_states_calendar_idx").on(table.calendarId),
     uniqueIndex("event_states_identity_idx").on(
       table.calendarId,
@@ -162,6 +167,39 @@ const eventStatesTable = pgTable(
       table.startTime,
       table.endTime,
     ),
+  ],
+);
+
+const userEventsTable = pgTable(
+  "user_events",
+  {
+    id: uuid().notNull().primaryKey().defaultRandom(),
+    calendarId: uuid()
+      .notNull()
+      .references(() => calendarsTable.id, { onDelete: "cascade" }),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    sourceEventUid: text(),
+    title: text(),
+    description: text(),
+    location: text(),
+    availability: text(),
+    isAllDay: boolean(),
+    startTime: timestamp().notNull(),
+    endTime: timestamp().notNull(),
+    startTimeZone: text(),
+    createdAt: timestamp().notNull().defaultNow(),
+    updatedAt: timestamp()
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("user_events_user_idx").on(table.userId),
+    index("user_events_calendar_idx").on(table.calendarId),
+    index("user_events_start_time_idx").on(table.startTime),
+    index("user_events_end_time_idx").on(table.endTime),
   ],
 );
 
@@ -216,6 +254,7 @@ const eventMappingsTable = pgTable(
   (table) => [
     uniqueIndex("event_mappings_event_cal_idx").on(table.eventStateId, table.calendarId),
     index("event_mappings_calendar_idx").on(table.calendarId),
+    index("event_mappings_sync_hash_idx").on(table.syncEventHash),
   ],
 );
 
@@ -256,6 +295,26 @@ const feedbackTable = pgTable(
   (table) => [index("feedback_user_idx").on(table.userId)],
 );
 
+const apiTokensTable = pgTable(
+  "api_tokens",
+  {
+    id: uuid().notNull().primaryKey().defaultRandom(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    tokenHash: text().notNull().unique(),
+    tokenPrefix: text().notNull(),
+    lastUsedAt: timestamp(),
+    expiresAt: timestamp(),
+    createdAt: timestamp().notNull().defaultNow(),
+  },
+  (table) => [
+    index("api_tokens_user_idx").on(table.userId),
+    uniqueIndex("api_tokens_hash_idx").on(table.tokenHash),
+  ],
+);
+
 const icalFeedSettingsTable = pgTable("ical_feed_settings", {
   userId: text()
     .notNull()
@@ -273,6 +332,7 @@ const icalFeedSettingsTable = pgTable("ical_feed_settings", {
 });
 
 export {
+  apiTokensTable,
   caldavCredentialsTable,
   calendarAccountsTable,
   calendarSnapshotsTable,
@@ -284,5 +344,6 @@ export {
   oauthCredentialsTable,
   sourceDestinationMappingsTable,
   syncStatusTable,
+  userEventsTable,
   userSubscriptionsTable,
 };

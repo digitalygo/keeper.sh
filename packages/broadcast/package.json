@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@keeper.sh/data-schemas": "workspace:*",
-    "widelogger": "^0.2.1"
+    "ioredis": "^5.10.0"
   },
   "devDependencies": {
     "@keeper.sh/typescript-config": "workspace:*",

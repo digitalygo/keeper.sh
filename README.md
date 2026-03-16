@@ -1,4 +1,4 @@
-![](./applications/canary-web/public/open-graph.png)
+![](./applications/web/public/open-graph.png)
 
 # About
 
@@ -21,6 +21,68 @@ If you encounter a bug or have an idea for a feature, you may [open an issue on 
 # Contributing
 
 High-value and high-quality contributions are appreciated. Before working on large features you intend to see merged, please open an issue first to discuss beforehand.
+
+## Local Development
+
+The dev environment runs behind HTTPS at `https://keeper.localhost` using a [Caddy](https://caddyserver.com/) reverse proxy with automatic TLS. The `.localhost` TLD resolves to `127.0.0.1` automatically per [RFC 6761](https://datatracker.ietf.org/doc/html/rfc6761) — no `/etc/hosts` entry is needed.
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) (v1.3.5+)
+- [Docker](https://docs.docker.com/get-started/) & Docker Compose
+
+### Getting Started
+
+```bash
+bun install
+```
+
+#### Generate and Trust a Root CA
+
+The dev environment runs behind HTTPS via Caddy. You need to generate a local root certificate authority and trust it so your browser accepts the certificate.
+
+```bash
+mkdir -p .pki
+openssl req -x509 -new -nodes \
+  -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+  -keyout .pki/root.key -out .pki/root.crt \
+  -days 3650 -subj "/CN=Keeper.sh CA"
+```
+
+Then trust it on your platform:
+
+**macOS**
+
+```bash
+sudo security add-trusted-cert -d -r trustRoot \
+  -k /Library/Keychains/System.keychain .pki/root.crt
+```
+
+**Linux**
+
+```bash
+sudo cp .pki/root.crt /usr/local/share/ca-certificates/keeper-dev-root.crt
+sudo update-ca-certificates
+```
+
+#### Start the Dev Environment
+
+```bash
+bun dev
+```
+
+This starts PostgreSQL, Redis, and a Caddy reverse proxy via Docker Compose, along with the API, web, MCP, and cron services locally. Once running, open `https://keeper.localhost`.
+
+### Architecture
+
+| Service  | Local Port | Accessed Via                         |
+| -------- | ---------- | ------------------------------------ |
+| Caddy    | 443        | `https://keeper.localhost`           |
+| Web      | 5173       | Proxied by Caddy                     |
+| API      | 3000       | Proxied by Web at `/api`             |
+| MCP      | 3001       | Proxied by Web at `/mcp`             |
+| Postgres | 5432       | `postgresql://postgres:postgres@localhost:5432/postgres` |
+| Redis    | 6379       | `redis://localhost:6379`             |
 
 # Qs
 
@@ -81,6 +143,8 @@ There are six images currently available, two of them are designed for convenien
 | BETTER_AUTH_URL                | `api`, `mcp`  | The base URL used for auth redirects.<br><br>e.g. `http://localhost:3000`                                                                                           |
 | BETTER_AUTH_SECRET             | `api`, `mcp`  | Secret key for session signing.<br><br>e.g. `openssl rand -base64 32`                                                                                               |
 | API_PORT                       | `api`         | Port the Bun API listens on. Defaults to `3001` in container images.                                                                                                |
+| ENV                            | `web`         | Optional. Runtime environment. One of `development`, `production`, or `test`. Defaults to `production`.                                                             |
+| PORT                           | `web`         | Port the web server listens on. Defaults to `3000` in container images.                                                                                             |
 | VITE_API_URL                   | `web`         | The URL the web server uses to proxy requests to the Bun API.<br><br>e.g. `http://api:3001`                                                                         |
 | COMMERCIAL_MODE                | `api`, `cron` | Enable Polar billing flow. Set to `true` if using Polar for subscriptions.                                                                                          |
 | POLAR_ACCESS_TOKEN             | `api`, `cron` | Optional. Polar API token for subscription management.                                                                                                              |
@@ -105,8 +169,8 @@ The following environment variables are baked into the web image at **build time
 | Name                              | Description                                                        |
 | --------------------------------- | ------------------------------------------------------------------ |
 | VITE_COMMERCIAL_MODE              | Toggle commercial mode in the web UI (`true`/`false`).             |
-| VITE_POLAR_PRO_MONTHLY_PRODUCT_ID | Optional. Polar monthly product ID to power in-app upgrade links.  |
-| VITE_POLAR_PRO_YEARLY_PRODUCT_ID  | Optional. Polar yearly product ID to power in-app upgrade links.   |
+| POLAR_PRO_MONTHLY_PRODUCT_ID      | Optional. Polar monthly product ID to power in-app upgrade links.  |
+| POLAR_PRO_YEARLY_PRODUCT_ID       | Optional. Polar yearly product ID to power in-app upgrade links.   |
 | VITE_VISITORS_NOW_TOKEN           | Optional. [visitors.now](https://visitors.now) token for analytics |
 | VITE_GOOGLE_ADS_ID                | Optional. Google Ads conversion tracking ID (e.g., `AW-123456789`) |
 | VITE_GOOGLE_ADS_CONVERSION_LABEL  | Optional. Google Ads conversion label for purchase tracking        |
@@ -409,7 +473,6 @@ services:
     image: ghcr.io/ridafkih/keeper-web:latest
     environment:
       VITE_API_URL: ${VITE_API_URL}
-      ENV: production
       PORT: 3000
     ports:
       - "3000:3000"
@@ -478,7 +541,7 @@ To enable MCP on a self-hosted instance:
 1. [@keeper.sh/api](./applications/api)
 2. [@keeper.sh/cron](./applications/cron)
 3. [@keeper.sh/mcp](./applications/mcp)
-4. [canary-web](./applications/canary-web)
+4. [@keeper.sh/web](./applications/canary-web)
 5. @keeper.sh/cli _(Coming Soon)_
 6. @keeper.sh/mobile _(Coming Soon)_
 7. @keeper.sh/ssh _(Coming Soon)_

@@ -8,7 +8,7 @@ import {
   KEEPER_API_SCOPES,
   KEEPER_API_SOURCE_SCOPE,
   KEEPER_API_SYNC_SCOPE,
-} from "@keeper.sh/keeper-api/scopes";
+} from "@keeper.sh/constants";
 
 const KEEPER_MCP_OAUTH_SCOPES = [
   "openid",
@@ -23,8 +23,13 @@ interface ResolveMcpAuthOptionsInput {
   webBaseUrl?: string;
 }
 
+const MCP_ACCESS_TOKEN_EXPIRES_IN = 2_592_000;
+const MCP_REFRESH_TOKEN_EXPIRES_IN = 7_776_000;
+
 interface ResolvedMcpAuthOptions {
   oauthProvider: {
+    accessTokenExpiresIn: number;
+    refreshTokenExpiresIn: number;
     allowDynamicClientRegistration: true;
     allowUnauthenticatedClientRegistration: true;
     clientRegistrationAllowedScopes: string[];
@@ -32,6 +37,9 @@ interface ResolvedMcpAuthOptions {
     consentPage: string;
     loginPage: string;
     scopes: string[];
+    silenceWarnings: {
+      oauthAuthServerConfig: boolean;
+    };
     validAudiences: string[];
   };
   protectedResourceMetadata: {
@@ -64,13 +72,18 @@ const resolveMcpAuthOptions = (
 
   return {
     oauthProvider: {
+      accessTokenExpiresIn: MCP_ACCESS_TOKEN_EXPIRES_IN,
+      refreshTokenExpiresIn: MCP_REFRESH_TOKEN_EXPIRES_IN,
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true,
-      clientRegistrationAllowedScopes: ["offline_access", ...KEEPER_API_RESOURCE_SCOPES],
+      clientRegistrationAllowedScopes: KEEPER_MCP_OAUTH_SCOPES,
       clientRegistrationDefaultScopes: ["offline_access", ...KEEPER_API_RESOURCE_SCOPES],
       consentPage: resolveAbsoluteUrl("/oauth/consent", input.webBaseUrl),
       loginPage: resolveAbsoluteUrl("/login", input.webBaseUrl),
       scopes: KEEPER_MCP_OAUTH_SCOPES,
+      silenceWarnings: {
+        oauthAuthServerConfig: true,
+      },
       validAudiences: resolveValidAudiences(input.resourceBaseUrl),
     },
     protectedResourceMetadata: {

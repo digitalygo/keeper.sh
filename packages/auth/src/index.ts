@@ -9,7 +9,7 @@ import { passkey as passkeyPlugin } from "@better-auth/passkey";
 import { checkout, polar, portal } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import { Resend } from "resend";
-import { usernameOnly } from "@keeper.sh/auth-plugin-username-only";
+import { usernameOnly } from "./plugins/username-only";
 import { deletePolarCustomerByExternalId } from "./polar-customer-delete";
 import { writeAuthStderr } from "./runtime-environment";
 import { resolveAuthCapabilities } from "./capabilities";
@@ -429,7 +429,11 @@ const isKeeperMcpEnabledAuth = <TAuth extends { api: object }>(
 
 type AuthResult = ReturnType<typeof createAuth>;
 
-export { createAuth, hasOAuthProviderApi, isKeeperMcpEnabledAuth };
+export {
+  createAuth,
+  hasOAuthProviderApi,
+  isKeeperMcpEnabledAuth,
+};
 export { resolveAuthCapabilities } from "./capabilities";
 export {
   KEEPER_API_DEFAULT_SCOPE,

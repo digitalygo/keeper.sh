@@ -17,13 +17,18 @@ describe("resolveMcpAuthOptions", () => {
       }),
     ).toEqual({
       oauthProvider: {
+        accessTokenExpiresIn: 2_592_000,
+        refreshTokenExpiresIn: 7_776_000,
         allowDynamicClientRegistration: true,
         allowUnauthenticatedClientRegistration: true,
-        clientRegistrationAllowedScopes: ["offline_access", ...KEEPER_API_RESOURCE_SCOPES],
+        clientRegistrationAllowedScopes: KEEPER_MCP_OAUTH_SCOPES,
         clientRegistrationDefaultScopes: ["offline_access", ...KEEPER_API_RESOURCE_SCOPES],
         consentPage: "https://app.keeper.sh/oauth/consent",
         loginPage: "https://app.keeper.sh/login",
         scopes: KEEPER_MCP_OAUTH_SCOPES,
+        silenceWarnings: {
+          oauthAuthServerConfig: true,
+        },
         validAudiences: ["https://mcp.keeper.sh"],
       },
       protectedResourceMetadata: {

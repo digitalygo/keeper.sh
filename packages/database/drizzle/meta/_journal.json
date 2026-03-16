@@ -428,6 +428,41 @@
       "when": 1773304717977,
       "tag": "0060_condemned_imperial_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1773428430422,
+      "tag": "0061_brief_toxin",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1773466950385,
+      "tag": "0062_lame_white_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1773474587817,
+      "tag": "0063_friendly_black_panther",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1773599952851,
+      "tag": "0064_talented_black_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1773625829428,
+      "tag": "0065_dizzy_zarda",
+      "breakpoints": true
     }
   ]
 }

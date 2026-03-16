@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "ui": "tui",
+  "ui": "stream",
   "globalPassThroughEnv": ["CI", "ENV"],
   "tasks": {
     "dev": {
@@ -13,7 +13,7 @@
     },
     "types": {
       "dependsOn": ["^types"],
-      "inputs": ["src/**", "scripts/**", "tsconfig.json"]
+      "inputs": ["src/**", "scripts/**", "tsconfig.json", "package.json"]
     },
     "build": {
       "dependsOn": ["^build"],
@@ -23,6 +23,12 @@
       "cache": false
     },
     "migrate": {
+      "cache": false
+    },
+    "test": {
+      "cache": false
+    },
+    "test": {
       "cache": false
     },
     "lint": {
